@@ -31,7 +31,7 @@ class ConvoPanel extends StatelessWidget {
 
                     SizedBox(width: 10.w),
 
-                    TextWidget("Elite CRM", labelLarge: true),
+                    TextWidget("Elite CRM", labelLarge: true,color: Colors.black,),
 
                     const Spacer(),
 
@@ -93,7 +93,7 @@ class ConvoPanel extends StatelessWidget {
                 _buildChannelTile(
                   title: "WhatsApp",
                   color: Colors.green,
-                  icon: Icons.whatshot,
+                  icon: 'assets/images/social.png',
                   count: 19,
                 ),
 
@@ -102,7 +102,7 @@ class ConvoPanel extends StatelessWidget {
                 _buildChannelTile(
                   title: "Instagram",
                   color: Colors.pink,
-                  icon: Icons.camera_alt,
+                  icon: 'assets/images/instagram.png',
                   count: 8,
                 ),
 
@@ -111,7 +111,7 @@ class ConvoPanel extends StatelessWidget {
                 _buildChannelTile(
                   title: "Messenger",
                   color: Colors.blue,
-                  icon: Icons.message,
+                  icon: 'assets/images/facebook.png',
                   count: 4,
                 ),
 
@@ -120,7 +120,7 @@ class ConvoPanel extends StatelessWidget {
                 _buildChannelTile(
                   title: "Email",
                   color: Colors.orange,
-                  icon: Icons.email_outlined,
+                  icon: 'assets/images/gmail.png',
                   count: 11,
                 ),
 
@@ -183,7 +183,7 @@ class ConvoPanel extends StatelessWidget {
   Widget _buildChannelTile({
     required String title,
     required Color color,
-    required IconData icon,
+    required String icon,
     required int count,
   }) {
     return Theme(
@@ -235,7 +235,7 @@ class ConvoPanel extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14.r),
                 ),
 
-                child: Icon(icon, color: color, size: 22.sp),
+                child: Image.asset(icon, color: color, height: 22.sp),
               ),
 
               SizedBox(width: 14.w),
@@ -295,8 +295,7 @@ class ConvoPanel extends StatelessWidget {
           ),
 
           /// CONVERSATIONS
-          children: List.generate(1, (index) {
-            var msg = ctrl.messages[index];
+          children: List.generate(4, (index) {
             return ListTile(
               onTap: () {
                 ctrl.selectConversation(ctrl.conversations[index]);
@@ -305,20 +304,22 @@ class ConvoPanel extends StatelessWidget {
                 horizontal: 12.w,
                 vertical: 6.h,
               ),
+              /// PROFILE
               leading: CircleAvatar(
                 radius: 24.r,
                 backgroundColor: color.withOpacity(0.15),
-                // child: Text(
-                //   "A",
-                //   style: TextStyle(color: color, fontWeight: FontWeight.bold),
-                // ),
+                child: Text(
+                  "A",
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                ),
               ),
+
               /// NAME + MESSAGE
               title: Row(
                 children: [
                   Expanded(
                     child: TextWidget(
-                      'text',
+                      "Aisha Ali",
 
                       overflow: TextOverflow.ellipsis,
 
@@ -328,7 +329,8 @@ class ConvoPanel extends StatelessWidget {
                   ),
 
                   Text(
-                   'lkj',
+                    "10:30",
+
                     style: TextStyle(color: Colors.grey, fontSize: 11.sp),
                   ),
                 ],
@@ -340,14 +342,15 @@ class ConvoPanel extends StatelessWidget {
                 children: [
                   SizedBox(height: 5.h),
 
-                  TextWidget(
+                  Text(
                     "Need pricing details...",
 
                     overflow: TextOverflow.ellipsis,
 
-                       color: Colors.grey.shade600,
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
                       fontSize: 12.sp,
-
+                    ),
                   ),
 
                   SizedBox(height: 8.h),
