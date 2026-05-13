@@ -128,9 +128,9 @@ class LoginView extends StatelessWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                       TextWidget(
+                                       Text(
                                         "Welcome Back",
-                                         style: Theme.of(context).textTheme.labelLarge,
+                                         style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 16),
 
                                        ),
 

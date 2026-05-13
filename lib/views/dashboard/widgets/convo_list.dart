@@ -76,7 +76,7 @@ class ConvoPanel extends StatelessWidget {
             ],
           ),
 
-          SizedBox(height: 18.h),
+          SizedBox(height: 15.h),
 
           /// CHANNELS
           Expanded(

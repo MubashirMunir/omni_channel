@@ -58,30 +58,24 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return GetMaterialApp(
           debugShowCheckedModeBanner: false,
-
           title: 'Elite CRM',
 
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.dark,
+          themeMode: ThemeMode.system,
 
           initialRoute: AppRoutes.login,
           getPages: AppPages.pages,
 
           builder: (context, widget) {
-
             return MediaQuery(
               data: MediaQuery.of(context).copyWith(
                 textScaler: const TextScaler.linear(1.0),
               ),
-
-              child: SizedBox.expand(
-                child: widget!,
-              ),
+              child: widget!,
             );
           },
         );
       },
-    );
-  }
+    );  }
 }

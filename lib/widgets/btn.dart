@@ -28,15 +28,18 @@ class CustomButton extends StatelessWidget {
         onPressed: onPressed,
 
         child: icon == null
-            ? TextWidget(text,                                          style: Theme.of(context).textTheme.labelMedium,
-        )
+            ? Text(
+                text,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontSize: 15),
+              )
             : Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   icon!,
                   const SizedBox(width: 8),
-                  TextWidget(text,                                          style: Theme.of(context).textTheme.labelLarge,
-                  ),
+                  Text(text, style: Theme.of(context).textTheme.labelLarge),
                 ],
               ),
       ),
