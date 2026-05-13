@@ -32,14 +32,14 @@ class CustomButton extends StatelessWidget {
                 text,
                 style: Theme.of(
                   context,
-                ).textTheme.labelLarge?.copyWith(fontSize: 15),
+                ).textTheme.labelMedium,
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   icon!,
                   const SizedBox(width: 8),
-                  Text(text, style: Theme.of(context).textTheme.labelLarge),
+                  Text(text, style: Theme.of(context).textTheme.labelMedium),
                 ],
               ),
       ),

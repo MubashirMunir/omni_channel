@@ -21,9 +21,9 @@ class LoginView extends StatelessWidget {
           body: Stack(
             children: [
               /// Background Image
-              Positioned.fill(
-                child: Image.asset('assets/images/bg1.jpeg', fit: BoxFit.cover),
-              ),
+              // Positioned.fill(
+              //   child: Image.asset('assets/images/bg1.jpeg', fit: BoxFit.cover),
+              // ),
 
               /// Dark Overlay
               Positioned.fill(
@@ -130,7 +130,7 @@ class LoginView extends StatelessWidget {
                                     children: [
                                        Text(
                                         "Welcome Back",
-                                         style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 16),
+                                         style: Theme.of(context).textTheme.labelLarge,
 
                                        ),
 
