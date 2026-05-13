@@ -24,7 +24,9 @@ class ProfilePanel extends StatelessWidget {
             ),
             child: Row(
               children: [
-                TextWidget("Profile",                                          style: Theme.of(context).textTheme.labelLarge,
+                TextWidget(
+                  "Profile",
+                  style: Theme.of(context).textTheme.labelLarge,
                 ),
 
                 SizedBox(width: 24.w),

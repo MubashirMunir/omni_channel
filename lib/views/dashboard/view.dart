@@ -22,99 +22,118 @@ class DashboardView extends StatelessWidget {
         return Scaffold(
           body: Row(
             children: [
+              /// CHAT LIST
               SizedBox(
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
-                child: Row(
-                  children: [
-                    /// LEFT ICON SIDEBAR
+                width: isMobile
+                    ? 100.w
+                    : isTablet
+                    ? 320.w
+                    : 380.w,
+                child: ConvoPanel(ctrl: ctrl),
+              ),
 
-                    /// CHAT LIST
-                    SizedBox(
-                      width: isMobile
-                          ? 100.w
-                          : isTablet
-                          ? 320.w
-                          : 340.w,
-                      child: ConvoPanel(ctrl: ctrl),
-                    ),
+              /// CENTER CHAT AREA
+              if (!isMobile)
+                // how to show conversation inbox buble messages here
+                Expanded(
+                  child: Obx(() {
+                    final chat = ctrl.selectedConversation.value;
+                    if (chat == null) {
+                      return Center(
+                        child: Text(
+                          "Select a conversation",
+                          style: Theme.of(
+                            context,
+                          ).textTheme.labelLarge?.copyWith(),
+                        ),
+                      );
+                    }
+                    return Column(
+                      children: [
+                        /// HEADER
+                        Container(
+                          padding: EdgeInsets.all(16),
 
-                    /// CENTER CHAT AREA
-                    if (!isMobile)
-                      // how to show conversation inbox buble messages here
-                      Expanded(
-                        child: Obx(() {
-                          final chat = ctrl.selectedConversation.value;
-                          if (chat == null) {
-                            return Center(
-                              child: Text(
-                                "Select a conversation",
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+
+                                radius: 22,
+
+                                // backgroundColor: Colors.blue.shade100,
+
+                                backgroundImage:
+                                chat.profile != null &&
+                                    chat.profile.isNotEmpty
+                                    ? NetworkImage(chat.profile!)
+                                    : null,
+
+                                child:
+                                chat.profile == null ||
+                                    chat.profile.isEmpty
+
+                                    ? Text(
+
+                                  chat.name.isNotEmpty
+                                      ? chat.name[0].toUpperCase()
+                                      : "U",
+
+                                  style: const TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                )
+
+                                    : null,
+                              ),
+                              SizedBox(width: 10),
+
+                              Text(
+                                chat.name,
                                 style: Theme.of(
                                   context,
-                                ).textTheme.labelLarge?.copyWith(),
-                              ),
-                            );
-                          }
-                          return Column(
-                            children: [
-                              /// HEADER
-                              Container(
-                                padding: EdgeInsets.all(16),
-
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(),
-
-                                    SizedBox(width: 10),
-
-                                    Text(
-                                      chat.name,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.labelMedium?.copyWith(),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              /// CHAT BUBBLES
-                              ///
-                              Expanded(
-                                child: ListView.builder(
-                                  reverse: false,
-                                  padding: EdgeInsets.all(16),
-                                  itemCount: ctrl.messages.length,
-                                  itemBuilder: (_, index) {
-                                    final msg = ctrl.messages[index];
-                                    return MessageBubble(message: msg);
-                                  },
-                                ),
-                              ),
-
-                              MessageInput(
-                                controller: ctrl.msgController,
-                                onSend: () {
-                                  ctrl.sendMessage();
-                                },
+                                ).textTheme.labelMedium?.copyWith(),
                               ),
                             ],
-                          );
-                        }),
-                      ),
+                          ),
+                        ),
 
-                    /// RIGHT PROFILE PANEL
-                    if (!isMobile)
-                      SizedBox(
-                        width: isMobile
-                            ? 80
-                            : isTablet
-                            ? 300.w
-                            : 380.w,
-                        child: ProfilePanel(),
-                      ),
-                  ],
+                        /// CHAT BUBBLES
+                        ///
+                        Expanded(
+                          child: ListView.builder(
+                            reverse: false,
+                            padding: EdgeInsets.all(16),
+                            itemCount: ctrl.messages.length,
+                            itemBuilder: (_, index) {
+                              final msg = ctrl.messages[index];
+                              return MessageBubble(message: msg);
+                            },
+                          ),
+                        ),
+
+                        MessageInput(
+                          controller: ctrl.msgController,
+                          onSend: () {
+                            ctrl.sendMessage();
+                          },
+                        ),
+                      ],
+                    );
+                  }),
                 ),
-              ),
+
+              /// RIGHT PROFILE PANEL
+              if (!isMobile)
+                SizedBox(
+                  width: isMobile
+                      ? 80
+                      : isTablet
+                      ? 300.w
+                      : 360.w,
+                  child: ProfilePanel(),
+                ),
             ],
           ),
           // bottomNavigationBar: BottomWidget(),

@@ -51,7 +51,7 @@ class StatisticsView extends StatelessWidget {
 
                       SizedBox(height: 18.h),
 
-                      _dateFilter(),
+                      _dateFilter(context),
                     ],
                   )
                 : Row(
@@ -64,7 +64,7 @@ class StatisticsView extends StatelessWidget {
                             "Statistics Dashboard",
 
                             style: TextStyle(
-                              fontSize: 28.sp,
+                              fontSize: 20.sp,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -84,11 +84,11 @@ class StatisticsView extends StatelessWidget {
 
                       const Spacer(),
 
-                      _dateFilter(),
+                      _dateFilter(context),
                     ],
                   ),
 
-            SizedBox(height: 28.h),
+            SizedBox(height: 20.h),
 
             /// =====================================
             /// STATS GRID
@@ -104,10 +104,10 @@ class StatisticsView extends StatelessWidget {
                   ? 2
                   : 4,
 
-              crossAxisSpacing: 18.w,
-              mainAxisSpacing: 18.h,
+              crossAxisSpacing: 15.w,
+              mainAxisSpacing: 15.h,
 
-              childAspectRatio: isMobile ? 2.4 : 1.7,
+              childAspectRatio: isMobile ? 2.5 : 2.1,
 
               children: [
                 _statCard(
@@ -175,7 +175,7 @@ class StatisticsView extends StatelessWidget {
                         child: _lineChartCard(context, isMobile),
                       ),
 
-                      SizedBox(width: 24.w),
+                      SizedBox(width: 16.w),
 
                       Expanded(flex: 2, child: _pieChartCard(context)),
                     ],
@@ -189,7 +189,7 @@ class StatisticsView extends StatelessWidget {
             isMobile
                 ? Column(
                     children: [
-                      _bottomCard(
+                      _bottomCard(context,
                         title: "Top Performing Agent",
                         subtitle: "Sarah Wilson",
                         value: "1.8K replies",
@@ -199,7 +199,7 @@ class StatisticsView extends StatelessWidget {
 
                       SizedBox(height: 18.h),
 
-                      _bottomCard(
+                      _bottomCard(context,
                         title: "Customer Satisfaction",
                         subtitle: "Excellent",
                         value: "94% Positive",
@@ -209,7 +209,7 @@ class StatisticsView extends StatelessWidget {
 
                       SizedBox(height: 18.h),
 
-                      _bottomCard(
+                      _bottomCard(context,
                         title: "Peak Activity",
                         subtitle: "7PM - 10PM",
                         value: "Highest Engagement",
@@ -221,7 +221,7 @@ class StatisticsView extends StatelessWidget {
                 : Row(
                     children: [
                       Expanded(
-                        child: _bottomCard(
+                        child: _bottomCard(context,
                           title: "Top Performing Agent",
                           subtitle: "Sarah Wilson",
                           value: "1.8K replies",
@@ -233,7 +233,7 @@ class StatisticsView extends StatelessWidget {
                       SizedBox(width: 18.w),
 
                       Expanded(
-                        child: _bottomCard(
+                        child: _bottomCard(context,
                           title: "Customer Satisfaction",
                           subtitle: "Excellent",
                           value: "94% Positive",
@@ -245,7 +245,7 @@ class StatisticsView extends StatelessWidget {
                       SizedBox(width: 18.w),
 
                       Expanded(
-                        child: _bottomCard(
+                        child: _bottomCard(context,
                           title: "Peak Activity",
                           subtitle: "7PM - 10PM",
                           value: "Highest Engagement",
@@ -265,9 +265,9 @@ class StatisticsView extends StatelessWidget {
   /// DATE FILTER
   /// =====================================
 
-  Widget _dateFilter() {
+  Widget _dateFilter(context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
 
       decoration: _cardDecoration(),
 
@@ -282,7 +282,9 @@ class StatisticsView extends StatelessWidget {
           Text(
             "Last 30 Days",
 
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.sp),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: Colors.grey),
           ),
         ],
       ),
@@ -295,9 +297,9 @@ class StatisticsView extends StatelessWidget {
 
   Widget _lineChartCard(BuildContext context, bool isMobile) {
     return Container(
-      height: isMobile ? 340.h : 420.h,
+      height: isMobile ? 340.h : 380.h,
 
-      padding: EdgeInsets.all(24.w),
+      padding: EdgeInsets.all(15.w),
 
       decoration: _cardDecoration(),
 
@@ -311,9 +313,9 @@ class StatisticsView extends StatelessWidget {
                 "Messages Analytics",
 
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: Colors.black,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
 
               const Spacer(),
@@ -425,9 +427,9 @@ class StatisticsView extends StatelessWidget {
 
   Widget _pieChartCard(BuildContext context) {
     return Container(
-      height: 420.h,
+      height: 380.h,
 
-      padding: EdgeInsets.all(24.w),
+      padding: EdgeInsets.all(15.w),
 
       decoration: _cardDecoration(),
 
@@ -438,10 +440,12 @@ class StatisticsView extends StatelessWidget {
           Text(
             "Traffic Sources",
 
-            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(color: Colors.black),
           ),
 
-          SizedBox(height: 24.h),
+          SizedBox(height: 100.h),
 
           Expanded(
             child: PieChart(
@@ -485,19 +489,19 @@ class StatisticsView extends StatelessWidget {
 
           SizedBox(height: 20.h),
 
-          _legend(color: Colors.green, text: "WhatsApp"),
+          _legend(context, color: Colors.green, text: "WhatsApp"),
 
           SizedBox(height: 10.h),
 
-          _legend(color: Colors.pink, text: "Instagram"),
+          _legend(context, color: Colors.pink, text: "Instagram"),
 
           SizedBox(height: 10.h),
 
-          _legend(color: Colors.blue, text: "Messenger"),
+          _legend(context, color: Colors.blue, text: "Messenger"),
 
           SizedBox(height: 10.h),
 
-          _legend(color: Colors.orange, text: "Email"),
+          _legend(context, color: Colors.orange, text: "Email"),
         ],
       ),
     );
@@ -516,7 +520,7 @@ class StatisticsView extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: EdgeInsets.all(22.w),
+      padding: EdgeInsets.all(15.w),
 
       decoration: _cardDecoration(),
 
@@ -573,7 +577,7 @@ class StatisticsView extends StatelessWidget {
   /// LEGEND
   /// =====================================
 
-  Widget _legend({required Color color, required String text}) {
+  Widget _legend(context, {required Color color, required String text}) {
     return Row(
       children: [
         Container(
@@ -588,7 +592,9 @@ class StatisticsView extends StatelessWidget {
         Text(
           text,
 
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.sp),
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: Colors.black),
         ),
       ],
     );
@@ -598,7 +604,7 @@ class StatisticsView extends StatelessWidget {
   /// BOTTOM CARD
   /// =====================================
 
-  Widget _bottomCard({
+  Widget _bottomCard(context,{
     required String title,
     required String subtitle,
     required String value,
@@ -606,9 +612,9 @@ class StatisticsView extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      height: 170.h,
+      height: 240.h,
 
-      padding: EdgeInsets.all(22.w),
+      padding: EdgeInsets.all(15.w),
 
       decoration: _cardDecoration(),
 
@@ -617,8 +623,8 @@ class StatisticsView extends StatelessWidget {
 
         children: [
           Container(
-            width: 55.w,
-            height: 55.w,
+            width: 45.w,
+            height: 45.w,
 
             decoration: BoxDecoration(
               color: color.withOpacity(0.12),
@@ -642,7 +648,7 @@ class StatisticsView extends StatelessWidget {
           Text(
             subtitle,
 
-            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.labelSmall,
           ),
 
           SizedBox(height: 6.h),

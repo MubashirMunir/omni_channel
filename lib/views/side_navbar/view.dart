@@ -37,7 +37,7 @@ class MainLayoutScreen extends StatelessWidget {
           Container(
 
             width: 70,
-            color: Colors.white,
+            // color: Colors.black,
 
             child: Obx(() => Column(
 
