@@ -682,9 +682,7 @@ class StatisticsView extends StatelessWidget {
       boxShadow: [
         BoxShadow(
           color: Colors.black.withOpacity(0.03),
-
           blurRadius: 20,
-
           offset: const Offset(0, 6),
         ),
       ],
