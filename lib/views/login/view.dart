@@ -90,7 +90,7 @@ class LoginView extends StatelessWidget {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Padding(
-                          padding:  EdgeInsets.only(left: 80.w),
+                          padding: EdgeInsets.only(left: 80.w),
                           child: SingleChildScrollView(
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(
@@ -128,14 +128,11 @@ class LoginView extends StatelessWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
+                                       TextWidget(
                                         "Welcome Back",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 32,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
+                                         style: Theme.of(context).textTheme.labelLarge,
+
+                                       ),
 
                                       const SizedBox(height: 10),
 
@@ -185,20 +182,24 @@ class LoginView extends StatelessWidget {
                                       CustomButton(
                                         text: 'Login',
                                         onPressed: () {
-                                          if(
-                                          ctrl.passwordController.text.isNotEmpty && ctrl.emailController.text.isNotEmpty
-
-                                          ){
+                                          if (ctrl
+                                                  .passwordController
+                                                  .text
+                                                  .isNotEmpty &&
+                                              ctrl
+                                                  .emailController
+                                                  .text
+                                                  .isNotEmpty) {
                                             ctrl.login();
-
-                                          }else{
+                                          } else {
                                             Get.snackbar(
                                               "Login Failed",
                                               "Invalid username or password",
 
                                               snackPosition: SnackPosition.TOP,
 
-                                              backgroundColor: Colors.red.shade400,
+                                              backgroundColor:
+                                                  Colors.red.shade400,
                                               colorText: Colors.white,
 
                                               margin: const EdgeInsets.all(20),
@@ -211,8 +212,11 @@ class LoginView extends StatelessWidget {
                                                 color: Colors.white,
                                               ),
 
-                                              duration: const Duration(seconds: 3),
-                                            );                                          }
+                                              duration: const Duration(
+                                                seconds: 3,
+                                              ),
+                                            );
+                                          }
                                         },
                                       ),
                                     ],
@@ -231,11 +235,7 @@ class LoginView extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          TextWidget(
-                            "Powered by ",
-                            labelLarge: true,
-                            color: Colors.grey,
-                          ),
+                          TextWidget("Powered by ", color: Colors.grey),
                           Image.asset('assets/images/e.png', height: 25),
                         ],
                       ),

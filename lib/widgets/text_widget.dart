@@ -1,26 +1,9 @@
-
 import 'package:flutter/material.dart';
 
 class TextWidget extends StatelessWidget {
-  const TextWidget(
-      this.title, {
-        super.key,
-        this.labelLarge = false,
-        this.labelMedium = false,
-        this.color,
-        this.textAlign,
-        this.fontSize,
-        this.fontWeight,
-        this.maxLines,
-        this.fontStyle,
-        this.height,
-        this.overflow,
-      });
-
   final String title;
 
-  final bool labelLarge;
-  final bool labelMedium;
+  final TextStyle? style;
 
   final Color? color;
   final TextAlign? textAlign;
@@ -31,29 +14,35 @@ class TextWidget extends StatelessWidget {
   final double? height;
   final TextOverflow? overflow;
 
+  const TextWidget(
+      this.title, {
+        super.key,
+        this.style,
+        this.color,
+        this.textAlign,
+        this.fontSize,
+        this.fontWeight,
+        this.maxLines,
+        this.fontStyle,
+        this.height,
+        this.overflow,
+      });
+
   @override
   Widget build(BuildContext context) {
-    TextStyle baseStyle;
-
-    if (labelLarge) {
-      baseStyle = Theme.of(context).textTheme.labelLarge!;
-    } else if (labelMedium) {
-      baseStyle = Theme.of(context).textTheme.labelMedium!;
-    } else {
-      baseStyle = Theme.of(context).textTheme.labelSmall!;
-    }
-
     return Text(
       title,
+
       textAlign: textAlign,
       maxLines: maxLines,
       overflow: overflow,
-      style: baseStyle.copyWith(
+
+      style: (style ?? Theme.of(context).textTheme.bodyMedium)?.copyWith(
+        color: color,
         fontSize: fontSize,
         fontWeight: fontWeight,
         fontStyle: fontStyle,
         height: height,
-        color: color,
       ),
     );
   }

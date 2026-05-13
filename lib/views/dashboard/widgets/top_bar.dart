@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../theme/theme.dart';
 import '../../../widgets/text_widget.dart';
 
-Widget _topBar() {
+Widget _topBar(context) {
   return Container(
     height: 70.h,
     padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -36,7 +36,7 @@ Widget _topBar() {
           children: [
             TextWidget(
               "No Chat Selected",
-              labelLarge: true,
+              style: Theme.of(context).textTheme.labelLarge,
             ),
 
             SizedBox(height: 4.h),

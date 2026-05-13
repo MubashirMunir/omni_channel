@@ -25,16 +25,16 @@ class InputFields extends StatelessWidget {
       obscureText: obscure,
       maxLines: maxLines,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white),
+      // style: const TextStyle(color: Colors.white),
 
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(
-          color: Colors.white.withOpacity(0.5),
-        ),
+        // hintStyle: TextStyle(
+        //   color: Colors.white.withOpacity(0.5),
+        // ),
         prefixIcon: Icon(icon, color: Colors.white70),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.1),
+        // fillColor: Colors.white.withOpacity(0.1),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,

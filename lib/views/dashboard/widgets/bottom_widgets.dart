@@ -1,3 +1,4 @@
+import 'package:elite_csr/widgets/text_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -6,33 +7,28 @@ class BottomWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       height: 55.h,
 
-      padding: EdgeInsets.symmetric(
-        horizontal: 18.w,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 18.w),
 
       decoration: BoxDecoration(
-        color: Colors.white,
+        // color: Colors.white,
 
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey.withOpacity(0.08),
-          ),
-        ),
+        // border: Border(
+        //   top: BorderSide(
+        //     color: Colors.grey.withOpacity(0.08),
+        //   ),
+        // ),
       ),
 
       child: Row(
         children: [
-
           /// PROFILE
           CircleAvatar(
             radius: 18.r,
 
-            backgroundColor:
-            Colors.blue.withOpacity(0.1),
+            backgroundColor: Colors.blue.withOpacity(0.1),
 
             child: Icon(
               Icons.person_outline_rounded,
@@ -45,30 +41,13 @@ class BottomWidget extends StatelessWidget {
 
           /// USER INFO
           Column(
-            mainAxisAlignment:
-            MainAxisAlignment.center,
-
-            crossAxisAlignment:
-            CrossAxisAlignment.start,
-
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
-              Text(
-                "Mubashir",
-
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12.sp,
-                ),
-              ),
-
-              Text(
+              TextWidget("Mubashir", ),
+              TextWidget(
                 "Administrator",
 
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 10.sp,
-                ),
               ),
             ],
           ),
@@ -77,30 +56,19 @@ class BottomWidget extends StatelessWidget {
 
           /// DATE & TIME
           Column(
-            mainAxisAlignment:
-            MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
 
-            crossAxisAlignment:
-            CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.end,
 
             children: [
-
-              Text(
+              TextWidget(
                 "12 May 2026",
 
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 11.sp,
-                ),
               ),
 
-              Text(
+              TextWidget(
                 "09:42 AM",
 
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 10.sp,
-                ),
               ),
             ],
           ),
@@ -109,21 +77,16 @@ class BottomWidget extends StatelessWidget {
 
           /// LOGOUT
           Container(
-            width: 38.w,
-            height: 38.w,
+            width: 30.w,
+            height: 30.h,
 
             decoration: BoxDecoration(
               color: Colors.red.withOpacity(0.08),
 
-              borderRadius:
-              BorderRadius.circular(12.r),
+              borderRadius: BorderRadius.circular(12.r),
             ),
 
-            child: Icon(
-              Icons.logout_rounded,
-              color: Colors.red,
-              size: 20.sp,
-            ),
+            child: Icon(Icons.logout_rounded, color: Colors.red, size: 18.sp),
           ),
         ],
       ),

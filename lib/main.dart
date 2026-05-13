@@ -19,15 +19,12 @@ class Responsive {
   static double height(BuildContext context) =>
       MediaQuery.of(context).size.height;
 
-  static bool isMobile(BuildContext context) =>
-      width(context) < 700;
+  static bool isMobile(BuildContext context) => width(context) < 700;
 
   static bool isTablet(BuildContext context) =>
-      width(context) >= 700 &&
-          width(context) < 1100;
+      width(context) >= 700 && width(context) < 1100;
 
-  static bool isDesktop(BuildContext context) =>
-      width(context) >= 1100;
+  static bool isDesktop(BuildContext context) => width(context) >= 1100;
 
   /// Dynamic width
   static double value({
@@ -61,6 +58,7 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return GetMaterialApp(
           debugShowCheckedModeBanner: false,
+
           title: 'Elite CRM',
 
           theme: AppTheme.lightTheme,
@@ -71,14 +69,19 @@ class MyApp extends StatelessWidget {
           getPages: AppPages.pages,
 
           builder: (context, widget) {
+
             return MediaQuery(
               data: MediaQuery.of(context).copyWith(
                 textScaler: const TextScaler.linear(1.0),
               ),
-              child: widget!,
+
+              child: SizedBox.expand(
+                child: widget!,
+              ),
             );
           },
         );
       },
     );
-  }}
+  }
+}

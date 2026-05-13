@@ -81,8 +81,7 @@ class MessageInput extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: 24.w,
-        vertical: 18.h,
+        horizontal: 10.w,
       ),
 
       decoration: BoxDecoration(
@@ -187,8 +186,8 @@ class MessageInput extends StatelessWidget {
               duration:
               const Duration(milliseconds: 200),
 
-              width: 58.w,
-              height: 58.w,
+              width: 40.w,
+              height: 40.w,
 
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -229,8 +228,9 @@ class MessageInput extends StatelessWidget {
     required IconData icon,
   }) {
     return Container(
-      width: 52.w,
-      height: 52.w,
+
+      width: 40.w,
+      height: 40.w,
 
       decoration: BoxDecoration(
         color: const Color(0xffF6F8FC),

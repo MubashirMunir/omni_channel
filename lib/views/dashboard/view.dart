@@ -1,11 +1,8 @@
-import 'package:elite_csr/theme/theme.dart';
 import 'package:elite_csr/views/dashboard/controller.dart';
-import 'package:elite_csr/views/dashboard/widgets/side_bar.dart';
-import 'package:elite_csr/views/dashboard/widgets/bottom_widgets.dart';
 import 'package:elite_csr/views/dashboard/widgets/convo_list.dart';
 import 'package:elite_csr/views/dashboard/widgets/message_buble.dart';
 import 'package:elite_csr/views/dashboard/widgets/profile_panel.dart';
-import 'package:elite_csr/widgets/text_widget.dart';
+import 'package:elite_csr/views/dashboard/widgets/side_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -27,7 +24,7 @@ class DashboardView extends StatelessWidget {
           body: Row(
             children: [
               /// LEFT ICON SIDEBAR
-              if (!isMobile) const SideBar(),
+              if (!isMobile) SideBar(),
 
               /// CHAT LIST
               SizedBox(
@@ -45,9 +42,15 @@ class DashboardView extends StatelessWidget {
                 Expanded(
                   child: Obx(() {
                     final chat = ctrl.selectedConversation.value;
-
                     if (chat == null) {
-                      return Center(child: Text("Select a conversation"));
+                      return Center(
+                        child: Text(
+                          "Select a conversation",
+                          style: Theme.of(
+                            context,
+                          ).textTheme.labelLarge?.copyWith(),
+                        ),
+                      );
                     }
                     return Column(
                       children: [
@@ -61,7 +64,12 @@ class DashboardView extends StatelessWidget {
 
                               SizedBox(width: 10),
 
-                              Text(chat['name']),
+                              Text(
+                                chat.name,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.labelMedium?.copyWith(),
+                              ),
                             ],
                           ),
                         ),
@@ -82,16 +90,10 @@ class DashboardView extends StatelessWidget {
 
                         MessageInput(
                           controller: ctrl.msgController,
-
                           onSend: () {
-                            ctrl.sendMessage(
-                              ctrl.msgController.text,
-                            );
-
-                            ctrl.msgController.clear();
+                            ctrl.sendMessage();
                           },
                         ),
-
                       ],
                     );
                   }),
@@ -101,7 +103,7 @@ class DashboardView extends StatelessWidget {
               if (!isMobile)
                 SizedBox(
                   width: isMobile
-                      ? 100
+                      ? 80
                       : isTablet
                       ? 300.w
                       : 380.w,
@@ -109,7 +111,7 @@ class DashboardView extends StatelessWidget {
                 ),
             ],
           ),
-          bottomNavigationBar: BottomWidget(),
+          // bottomNavigationBar: BottomWidget(),
         );
       },
     );
