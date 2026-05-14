@@ -69,7 +69,7 @@ class UseableList extends StatelessWidget {
                       title,
                       style: Theme.of(
                         context,
-                      ).textTheme.labelMedium?.copyWith(color: Colors.black),
+                      ).textTheme.labelLarge?.copyWith(color: Colors.black),
                     ),
 
                     SizedBox(height: 4.h),
@@ -78,7 +78,7 @@ class UseableList extends StatelessWidget {
                       "$count active conversations",
                       style: Theme.of(
                         context,
-                      ).textTheme.labelSmall?.copyWith(color: Colors.black),
+                      ).textTheme.labelMedium?.copyWith(color: Colors.black),
                     ),
                   ],
                 ),
@@ -94,7 +94,7 @@ class UseableList extends StatelessWidget {
                   count.toString(),
                   style: Theme.of(
                     context,
-                  ).textTheme.labelSmall?.copyWith(color: Colors.white),
+                  ).textTheme.labelMedium,
                 ),
               ),
             ],

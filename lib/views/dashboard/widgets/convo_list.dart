@@ -83,7 +83,6 @@ class ConvoPanel extends StatelessWidget {
             child: ListView(
               children: [
                 UseableList(
-
                   title: "WhatsApp",
                   color: Colors.green,
                   icon: 'assets/images/w.png',

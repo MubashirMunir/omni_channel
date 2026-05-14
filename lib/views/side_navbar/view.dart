@@ -3,6 +3,7 @@ import 'package:elite_csr/views/states/view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../setting/view.dart';
 import 'controller.dart';
 
 class MainLayoutScreen extends StatelessWidget {
@@ -12,69 +13,126 @@ class MainLayoutScreen extends StatelessWidget {
 
   final List<IconData> icons = [
     Icons.chat,
-
     Icons.people,
-
     Icons.bar_chart,
-
     Icons.settings,
   ];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Row(
-        children: [
-          /// SIDEBAR
-          SizedBox(
-            width: 70,
-            child: Obx(
-              () => Column(
-                children: [
-                  const SizedBox(height: 20),
-                  ...List.generate(icons.length, (index) {
-                    final isActive = controller.selectedIndex.value == index;
-                    return GestureDetector(
-                      onTap: () {
-                        controller.changeIndex(index);
+
+    /// FIX FOR WEB TEXT SCALING
+    final textScale =
+    MediaQuery.of(context).textScaler.scale(1);
+
+    return MediaQuery(
+
+      /// THIS PREVENTS INITIAL WEB TEXT BUG
+      data: MediaQuery.of(context).copyWith(
+        textScaler: const TextScaler.linear(1),
+      ),
+
+      child: Scaffold(
+        body: Row(
+          children: [
+
+            /// SIDEBAR
+            SizedBox(
+              width: 70,
+
+              child: Obx(
+                    () => Column(
+                  children: [
+
+                    SizedBox(height: 20 * textScale),
+
+                    ...List.generate(
+                      icons.length,
+                          (index) {
+
+                        final isActive =
+                            controller
+                                .selectedIndex
+                                .value ==
+                                index;
+
+                        return GestureDetector(
+                          onTap: () {
+                            controller.changeIndex(
+                              index,
+                            );
+                          },
+
+                          child: Container(
+                            margin:
+                            EdgeInsets.symmetric(
+                              vertical:
+                              8 * textScale,
+                            ),
+
+                            height: 50 * textScale,
+                            width: 50 * textScale,
+
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? Colors.blue
+                                  .withOpacity(.15)
+                                  : Colors.transparent,
+
+                              borderRadius:
+                              BorderRadius.circular(
+                                14 * textScale,
+                              ),
+                            ),
+
+                            child: Icon(
+                              icons[index],
+
+                              size: 22 * textScale,
+
+                              color: isActive
+                                  ? Colors.blue
+                                  : Colors.grey,
+                            ),
+                          ),
+                        );
                       },
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        height: 50,
-                        width: 50,
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? Colors.blue.withOpacity(.15)
-                              : Colors.transparent,
+                    ),
 
-                          borderRadius: BorderRadius.circular(14),
-                        ),
+                    const Spacer(),
 
-                        child: Icon(
-                          icons[index],
+                    IconButton(
+                      onPressed: () {},
 
-                          color: isActive ? Colors.blue : Colors.grey,
-                        ),
+                      icon: Icon(
+                        Icons.logout,
+                        size: 22 * textScale,
                       ),
-                    );
-                  }),
-                  Spacer(),
-                  IconButton(onPressed: () {}, icon: Icon(Icons.logout)),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          /// BODY
-          Expanded(
-            child: Obx(
-              () => IndexedStack(
-                index: controller.selectedIndex.value,
-                children: const [DashboardView(), StatisticsView()],
+            /// BODY
+            Expanded(
+              child: Obx(
+                    () => IndexedStack(
+                  index:
+                  controller.selectedIndex.value,
+
+                  children: const [
+
+                    DashboardView(),
+
+                    StatisticsView(),
+                    SettingsView(),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

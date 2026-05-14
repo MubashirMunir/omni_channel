@@ -196,34 +196,34 @@ class AppTheme {
   // =========================================================
   static final TextTheme _lightTextTheme = ThemeData.light().textTheme.copyWith(
     labelLarge: TextStyle(
-      fontSize: 16.sp,
+      fontSize: 16,
       fontWeight: FontWeight.w700,
       color: Colors.black,
     ),
     labelMedium: TextStyle(
-      fontSize: 14.sp,
+      fontSize: 14,
       fontWeight: FontWeight.w500,
       color: textColor,
     ),
     labelSmall: TextStyle(
-      fontSize: 8.sp,
+      fontSize: 8,
       fontWeight: FontWeight.w500,
       color: textColor,
     ),
   );
   static final TextTheme _darkTextTheme = ThemeData.dark().textTheme.copyWith(
     labelLarge: TextStyle(
-      fontSize: 16.sp,
+      fontSize: 16,
       fontWeight: FontWeight.w600,
       color: Colors.white,
     ),
     labelMedium: TextStyle(
-      fontSize: 14.sp,
+      fontSize: 14,
       fontWeight: FontWeight.w500,
       color: Colors.white,
     ),
     labelSmall: TextStyle(
-      fontSize: 8.sp,
+      fontSize: 8,
       fontWeight: FontWeight.w500,
       color: Color(0xFFB6C2D2),
     ),

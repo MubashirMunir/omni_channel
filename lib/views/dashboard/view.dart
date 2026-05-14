@@ -39,13 +39,64 @@ class DashboardView extends StatelessWidget {
                   child: Obx(() {
                     final chat = ctrl.selectedConversation.value;
                     if (chat == null) {
-                      return Center(
-                        child: Text(
-                          "Select a conversation",
-                          style: Theme.of(
-                            context,
-                          ).textTheme.labelLarge?.copyWith(),
-                        ),
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+
+                        children: [
+
+                          /// IMAGE
+                          Image.asset(
+                            "assets/images/box.png",
+
+                            width: 260,
+                            height: 260,
+
+                            fit: BoxFit.contain,
+                          ),
+
+                          SizedBox(height: 24.h),
+
+                          /// TITLE
+                          Text(
+                            "Select a conversation",
+
+                            textAlign: TextAlign.center,
+
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelLarge
+                                ?.copyWith(
+
+                              fontSize: 26,
+
+                              fontWeight: FontWeight.w700,
+
+                              color: const Color(0xff111827),
+                            ),
+                          ),
+
+                          SizedBox(height: 10.h),
+
+                          /// SUBTITLE
+                          Text(
+                            "Choose a conversation from your inbox to start messaging.",
+
+                            textAlign: TextAlign.center,
+
+                            style: TextStyle(
+                              fontSize: 14,
+
+                              color: Colors.grey.shade600,
+
+                              height: 1.5,
+                            ),
+                          ),
+
+                          SizedBox(height: 30.h),
+
+                          /// BUTTON
+                        ],
                       );
                     }
                     return Column(
@@ -57,34 +108,25 @@ class DashboardView extends StatelessWidget {
                           child: Row(
                             children: [
                               CircleAvatar(
-
                                 radius: 22,
 
                                 // backgroundColor: Colors.blue.shade100,
-
-                                backgroundImage:
-                                chat.profile != null &&
-                                    chat.profile.isNotEmpty
+                                backgroundImage: chat.profile.isNotEmpty
                                     ? NetworkImage(chat.profile!)
                                     : null,
 
-                                child:
-                                chat.profile == null ||
-                                    chat.profile.isEmpty
-
+                                child: chat.profile.isEmpty
                                     ? Text(
+                                        chat.name.isNotEmpty
+                                            ? chat.name[0].toUpperCase()
+                                            : "U",
 
-                                  chat.name.isNotEmpty
-                                      ? chat.name[0].toUpperCase()
-                                      : "U",
-
-                                  style: const TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
-                                )
-
+                                        style: const TextStyle(
+                                          color: Colors.blue,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                      )
                                     : null,
                               ),
                               SizedBox(width: 10),

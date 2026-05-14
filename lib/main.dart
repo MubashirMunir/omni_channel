@@ -33,7 +33,6 @@ class Responsive {
   static bool isDesktop(BuildContext context) =>
       width(context) >= 1100;
 
-  /// Dynamic width
   static double value({
     required BuildContext context,
     required double mobile,
@@ -62,41 +61,46 @@ class MyApp extends StatelessWidget {
 
     return ScreenUtilInit(
 
-      /// YOUR FIGMA DESIGN SIZE
       designSize: const Size(1440, 1024),
 
-      /// IMPORTANT FOR WEB
       minTextAdapt: true,
 
-      /// IMPORTANT FOR WEB
       splitScreenMode: true,
 
-      /// IMPORTANT FIX
-      useInheritedMediaQuery: true,
+      /// REMOVE THIS
+      // useInheritedMediaQuery: true,
 
-      builder: (_, child) {
-        return GetMaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Elite CRM',
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.system,
-          /// ROUTES
-          initialRoute: AppRoutes.home,
-          getPages: AppPages.pages,
-          builder: (context, widget) {
-            return MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler:
-                const TextScaler.linear(1.0),
-              ),
-              child: widget!,
-            );
-          },
+      builder: (context, child) {
+
+        return MediaQuery(
+
+          /// FIX WEB TEXT SCALING
+          data: MediaQuery.of(context).copyWith(
+            textScaler:
+            const TextScaler.linear(1),
+          ),
+
+          child: GetMaterialApp(
+
+            debugShowCheckedModeBanner: false,
+
+            title: 'Elite CRM',
+
+            theme: AppTheme.lightTheme,
+
+            darkTheme: AppTheme.darkTheme,
+
+            themeMode: ThemeMode.dark,
+
+            initialRoute: AppRoutes.home,
+
+            getPages: AppPages.pages,
+          ),
         );
       },
-      /// IMPORTANT
-      child: const SizedBox(),
+
+      /// REMOVE EMPTY SIZEDBOX
+      child: Container(),
     );
   }
 }

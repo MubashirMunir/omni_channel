@@ -189,7 +189,8 @@ class StatisticsView extends StatelessWidget {
             isMobile
                 ? Column(
                     children: [
-                      _bottomCard(context,
+                      _bottomCard(
+                        context,
                         title: "Top Performing Agent",
                         subtitle: "Sarah Wilson",
                         value: "1.8K replies",
@@ -199,7 +200,8 @@ class StatisticsView extends StatelessWidget {
 
                       SizedBox(height: 18.h),
 
-                      _bottomCard(context,
+                      _bottomCard(
+                        context,
                         title: "Customer Satisfaction",
                         subtitle: "Excellent",
                         value: "94% Positive",
@@ -209,7 +211,8 @@ class StatisticsView extends StatelessWidget {
 
                       SizedBox(height: 18.h),
 
-                      _bottomCard(context,
+                      _bottomCard(
+                        context,
                         title: "Peak Activity",
                         subtitle: "7PM - 10PM",
                         value: "Highest Engagement",
@@ -221,7 +224,8 @@ class StatisticsView extends StatelessWidget {
                 : Row(
                     children: [
                       Expanded(
-                        child: _bottomCard(context,
+                        child: _bottomCard(
+                          context,
                           title: "Top Performing Agent",
                           subtitle: "Sarah Wilson",
                           value: "1.8K replies",
@@ -233,7 +237,8 @@ class StatisticsView extends StatelessWidget {
                       SizedBox(width: 18.w),
 
                       Expanded(
-                        child: _bottomCard(context,
+                        child: _bottomCard(
+                          context,
                           title: "Customer Satisfaction",
                           subtitle: "Excellent",
                           value: "94% Positive",
@@ -245,7 +250,8 @@ class StatisticsView extends StatelessWidget {
                       SizedBox(width: 18.w),
 
                       Expanded(
-                        child: _bottomCard(context,
+                        child: _bottomCard(
+                          context,
                           title: "Peak Activity",
                           subtitle: "7PM - 10PM",
                           value: "Highest Engagement",
@@ -284,7 +290,7 @@ class StatisticsView extends StatelessWidget {
 
             style: Theme.of(
               context,
-            ).textTheme.labelSmall?.copyWith(color: Colors.grey),
+            ).textTheme.labelMedium?.copyWith(color: Colors.grey),
           ),
         ],
       ),
@@ -378,7 +384,7 @@ class StatisticsView extends StatelessWidget {
                         return Padding(
                           padding: EdgeInsets.only(top: 10.h),
 
-                          child: Text(
+                          child: TextWidget(
                             days[value.toInt()],
                             style: TextStyle(fontSize: 11.sp),
                           ),
@@ -594,7 +600,7 @@ class StatisticsView extends StatelessWidget {
 
           style: Theme.of(
             context,
-          ).textTheme.labelSmall?.copyWith(color: Colors.black),
+          ).textTheme.labelMedium?.copyWith(color: Colors.grey),
         ),
       ],
     );
@@ -604,7 +610,8 @@ class StatisticsView extends StatelessWidget {
   /// BOTTOM CARD
   /// =====================================
 
-  Widget _bottomCard(context,{
+  Widget _bottomCard(
+    context, {
     required String title,
     required String subtitle,
     required String value,
@@ -622,46 +629,48 @@ class StatisticsView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
 
         children: [
-          Container(
-            width: 45.w,
-            height: 45.w,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 45.w,
+                height: 45.w,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.12),
 
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
 
-              borderRadius: BorderRadius.circular(16.r),
-            ),
+                child: Icon(icon, color: color),
+              ),
+              Text(
+                value,
 
-            child: Icon(icon, color: color),
+                style: TextStyle(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12.sp,
+                ),
+              ),
+
+            ],
           ),
 
-          const Spacer(),
-
-          Text(
-            title,
-
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp),
-          ),
-
-          SizedBox(height: 8.h),
-
+Spacer(),
           Text(
             subtitle,
-
-            style: Theme.of(context).textTheme.labelSmall,
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: Colors.grey),
           ),
 
           SizedBox(height: 6.h),
 
           Text(
-            value,
-
-            style: TextStyle(
-              color: AppTheme.primaryColor,
-              fontWeight: FontWeight.w600,
-              fontSize: 12.sp,
-            ),
+            title,
+            style: TextStyle(color: Colors.grey, fontSize: 12.sp),
           ),
+
         ],
       ),
     );
