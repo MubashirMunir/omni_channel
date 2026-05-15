@@ -9,11 +9,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../responsive/sizes.dart';
+
 class LoginView extends StatelessWidget {
   const LoginView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    var isMobile =Responsive.isMobile(context);
+    var isTab =Responsive.isTablet(context);
+    var isWeb =Responsive.isDesktop(context);
     return GetBuilder<LoginController>(
       init: LoginController(),
       builder: (ctrl) {
@@ -55,7 +60,7 @@ class LoginView extends StatelessWidget {
                 bottom: -120,
                 right: -100,
                 child: _blurCircle(
-                  size: 260,
+                  size:   260,
                   color: Colors.blue.withOpacity(0.12),
                 ),
               ),
@@ -66,7 +71,6 @@ class LoginView extends StatelessWidget {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 40,
                         vertical: 30,
                       ),
                       child: Row(
@@ -74,13 +78,10 @@ class LoginView extends StatelessWidget {
                         children: [
                           Image.asset('assets/images/e.png', height: 36),
                           const SizedBox(width: 12),
-                          const Text(
+                           Text(
                             "Elite CRM",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context).textTheme.bodyLarge
+
                           ),
                         ],
                       ),
@@ -88,139 +89,139 @@ class LoginView extends StatelessWidget {
 
                     Expanded(
                       child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: EdgeInsets.only(left: 80.w),
-                          child: SingleChildScrollView(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radiusSM(context),
+                        alignment:
+                        isMobile?
+                        Alignment.center:
+                        Alignment.centerLeft,
+                        child: SingleChildScrollView(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusSM(context),
+                            ),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(
+                                sigmaX: 10,
+                                sigmaY: 14,
                               ),
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(
-                                  sigmaX: 10,
-                                  sigmaY: 14,
+                              child: Container(
+                                width: isMobile? 350:isTab?400:isWeb ?400:0,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 30,
+                                  vertical: 40,
                                 ),
-                                child: Container(
-                                  width: 460,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 34,
-                                    vertical: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radiusSM(context),
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.08),
-                                    borderRadius: BorderRadius.circular(
-                                      AppTheme.radiusSM(context),
-                                    ),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.15),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.25),
-                                        blurRadius: 30,
-                                        offset: const Offset(0, 15),
-                                      ),
-                                    ],
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.15),
                                   ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.25),
+                                      blurRadius: 30,
+                                      offset: const Offset(0, 15),
+                                    ),
+                                  ],
+                                ),
 
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                       Text(
-                                        "Welcome Back",
-                                         style: Theme.of(context).textTheme.labelLarge,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                     Text(
+                                      "Welcome Back",
+                                       style: Theme.of(context).textTheme.labelLarge,
 
-                                       ),
+                                     ),
 
-                                      const SizedBox(height: 10),
+                                    const SizedBox(height: 10),
 
-                                      Text(
-                                        "Login to continue managing your customer conversations.",
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(0.7),
-                                          height: 1.5,
-                                          fontSize: 14,
-                                        ),
+                                    Text(
+                                      "Login to continue managing your customer conversations.",
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.7),
+                                        height: 1.5,
+                                        fontSize: 14,
                                       ),
+                                    ),
 
-                                      const SizedBox(height: 35),
+                                    const SizedBox(height: 35),
 
-                                      InputFields(
-                                        controller: ctrl.emailController,
-                                        hint: "Email",
-                                        icon: Icons.email_outlined,
-                                      ),
+                                    InputFields(
+                                      controller: ctrl.emailController,
+                                      hint: "Email",
+                                      icon: Icons.email_outlined,
+                                    ),
 
-                                      const SizedBox(height: 18),
+                                    const SizedBox(height: 18),
 
-                                      InputFields(
-                                        controller: ctrl.passwordController,
-                                        hint: "Password",
-                                        icon: Icons.lock_outline,
-                                        obscure: true,
-                                      ),
+                                    InputFields(
+                                      controller: ctrl.passwordController,
+                                      hint: "Password",
+                                      icon: Icons.lock_outline,
+                                      obscure: true,
+                                    ),
 
-                                      const SizedBox(height: 14),
+                                    const SizedBox(height: 14),
 
-                                      Align(
-                                        alignment: Alignment.centerRight,
-                                        child: TextButton(
-                                          onPressed: () {},
-                                          child: Text(
-                                            "Forgot Password?",
-                                            style: TextStyle(
-                                              color: AppTheme.primaryColor,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: TextButton(
+                                        onPressed: () {},
+                                        child: Text(
+                                          "Forgot Password?",
+                                          style: TextStyle(
+                                            color: AppTheme.primaryColor,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
                                       ),
+                                    ),
 
-                                      const SizedBox(height: 10),
-                                      CustomButton(
-                                        text: 'Login',
-                                        onPressed: () {
-                                          if (ctrl
-                                                  .passwordController
-                                                  .text
-                                                  .isNotEmpty &&
-                                              ctrl
-                                                  .emailController
-                                                  .text
-                                                  .isNotEmpty) {
-                                            ctrl.login();
-                                          } else {
-                                            Get.snackbar(
-                                              "Login Failed",
-                                              "Invalid username or password",
+                                    const SizedBox(height: 10),
+                                    CustomButton(
+                                      text: 'Login',
+                                      onPressed: () {
+                                        if (ctrl
+                                                .passwordController
+                                                .text
+                                                .isNotEmpty &&
+                                            ctrl
+                                                .emailController
+                                                .text
+                                                .isNotEmpty) {
+                                          ctrl.login();
+                                        } else {
+                                          Get.snackbar(
+                                            "Login Failed",
+                                            "Invalid username or password",
 
-                                              snackPosition: SnackPosition.TOP,
+                                            snackPosition: SnackPosition.TOP,
 
-                                              backgroundColor:
-                                                  Colors.red.shade400,
-                                              colorText: Colors.white,
+                                            backgroundColor:
+                                                Colors.red.shade400,
+                                            colorText: Colors.white,
 
-                                              margin: const EdgeInsets.all(20),
-                                              borderRadius: 12,
+                                            margin: const EdgeInsets.all(20),
+                                            borderRadius: 12,
 
-                                              maxWidth: 400,
+                                            maxWidth: 400,
 
-                                              icon: const Icon(
-                                                Icons.error_outline,
-                                                color: Colors.white,
-                                              ),
+                                            icon: const Icon(
+                                              Icons.error_outline,
+                                              color: Colors.white,
+                                            ),
 
-                                              duration: const Duration(
-                                                seconds: 3,
-                                              ),
-                                            );
-                                          }
-                                        },
-                                      ),
-                                    ],
-                                  ),
+                                            duration: const Duration(
+                                              seconds: 3,
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
