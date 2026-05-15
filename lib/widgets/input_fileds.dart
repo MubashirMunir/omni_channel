@@ -32,13 +32,13 @@ class InputFields extends StatelessWidget {
         // hintStyle: TextStyle(
         //   color: Colors.white.withOpacity(0.5),
         // ),
-        prefixIcon: Icon(icon, color: Colors.white70),
+        prefixIcon: Icon(icon, color: Colors.white54),
         filled: true,
         // fillColor: Colors.white.withOpacity(0.1),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
+        // border: OutlineInputBorder(
+        //   borderRadius: BorderRadius.circular(10),
+        //   borderSide: BorderSide.none,
+        // ),
       ),
     );
   }

@@ -7,7 +7,7 @@ class CustomButton extends StatelessWidget {
     required this.text,
     required this.onPressed,
     this.icon,
-    this.height = 45,
+    this.height = 43,
     this.width,
     this.borderRadius = 8,
   });
@@ -25,6 +25,7 @@ class CustomButton extends StatelessWidget {
       height: height,
       width: width,
       child: ElevatedButton(
+
         onPressed: onPressed,
 
         child: icon == null
@@ -32,14 +33,14 @@ class CustomButton extends StatelessWidget {
                 text,
                 style: Theme.of(
                   context,
-                ).textTheme.labelMedium,
+                ).textTheme.bodyMedium,
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   icon!,
                   const SizedBox(width: 8),
-                  Text(text, style: Theme.of(context).textTheme.labelMedium),
+                  Text(text, style: Theme.of(context).textTheme.bodyMedium),
                 ],
               ),
       ),

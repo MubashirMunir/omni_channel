@@ -358,7 +358,7 @@ class AppTheme {
 
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(
-            radiusMD(context),
+            radiusSM(context),
           ),
           borderSide: BorderSide(
             color: Colors.grey.shade300,
@@ -367,7 +367,7 @@ class AppTheme {
 
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(
-            radiusMD(context),
+            radiusSM(context),
           ),
           borderSide: const BorderSide(
             color: primaryColor,
@@ -377,7 +377,7 @@ class AppTheme {
 
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(
-            radiusMD(context),
+            radiusSM(context),
           ),
           borderSide: const BorderSide(
             color: errorColor,
@@ -412,7 +412,7 @@ class AppTheme {
 
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(
-              radiusMD(context),
+              radiusSM(context),
             ),
           ),
         ),
@@ -526,7 +526,7 @@ class AppTheme {
 
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(
-            radiusMD(context),
+            radiusSM(context),
           ),
           borderSide: BorderSide(
             color: Colors.white.withOpacity(0.08),
@@ -535,7 +535,7 @@ class AppTheme {
 
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(
-            radiusMD(context),
+            radiusSM(context),
           ),
           borderSide: const BorderSide(
             color: primaryColor,
@@ -567,7 +567,7 @@ class AppTheme {
 
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(
-              radiusMD(context),
+              radiusSM(context),
             ),
           ),
         ),
