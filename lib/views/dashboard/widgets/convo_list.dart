@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 
 import '../../../main.dart';
+import '../../../responsive/sizes.dart';
 import '../../../theme/theme.dart';
 import '../../../widgets/input_fileds.dart';
 import '../../../widgets/text_widget.dart';
@@ -17,9 +18,11 @@ class ConvoPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+    final isTablet = Responsive.isTablet(context);
     return Container(
       padding: EdgeInsets.all(10),
-      color: AppTheme.cupertinoWhite,
+      color: AppTheme.white,
       child: Column(
         children: [
           /// HEADER
@@ -34,7 +37,7 @@ class ConvoPanel extends StatelessWidget {
 
                   TextWidget(
                     "Elite CRM",
-                    style: Theme.of(context).textTheme.labelLarge,
+                    style: Theme.of(context).textTheme.bodyLarge,
                     color: Colors.black,
                   ),
 
@@ -61,20 +64,19 @@ class ConvoPanel extends StatelessWidget {
           ),
           SizedBox(height: 18.h),
 
-          /// FILTER TABS
           Row(
-            children: [
-              _topTab(text: "All", context),
+                  children: [
+                    _topTab(text: "All", context),
 
-              SizedBox(width: 10.w),
+                    SizedBox(width: 10.w),
 
-              _topTab(text: "Unread", context),
+                    _topTab(text: "Unread", context),
 
-              SizedBox(width: 10.w),
+                    SizedBox(width: 10.w),
 
-              _topTab(text: "Assigned", context),
-            ],
-          ),
+                    _topTab(text: "Assigned", context),
+                  ],
+                ),
 
           SizedBox(height: 15.h),
 
@@ -91,44 +93,43 @@ class ConvoPanel extends StatelessWidget {
                   data: ctrl.conversations,
                   onTap: (model) {
                     ctrl.selectConversation(model);
-
                   },
                 ),
 
                 SizedBox(height: 14.h),
 
-              UseableList(
-
-                title: "Facebook",
-                color: Colors.green,
-                icon: 'assets/images/facebook.png',
-                count: 19, subtitle: '',
-                data: [],
-                onTap: (model) {  },
-              ),
-
-                SizedBox(height: 14.h),
-
                 UseableList(
-
-                  title: "Instagram",
+                  title: "Facebook",
                   color: Colors.green,
-                  icon: 'assets/images/instagram.png',
-                  count: 19, subtitle: '',
+                  icon: 'assets/images/facebook.png',
+                  count: 19,
+                  subtitle: '',
                   data: [],
-                  onTap: (model) {  },
+                  onTap: (model) {},
                 ),
 
                 SizedBox(height: 14.h),
 
                 UseableList(
+                  title: "Instagram",
+                  color: Colors.green,
+                  icon: 'assets/images/instagram.png',
+                  count: 19,
+                  subtitle: '',
+                  data: [],
+                  onTap: (model) {},
+                ),
 
+                SizedBox(height: 14.h),
+
+                UseableList(
                   title: "Gmail",
                   color: Colors.green,
                   icon: 'assets/images/gmail.png',
-                  count: 19, subtitle: '',
+                  count: 19,
+                  subtitle: '',
                   data: [],
-                  onTap: (model) {  },
+                  onTap: (model) {},
                 ),
 
                 SizedBox(height: 20.h),
@@ -144,10 +145,7 @@ class ConvoPanel extends StatelessWidget {
   /// TOP FILTER TAB
   /// ===================================
 
-  Widget _topTab(
-      BuildContext context, {
-        required String text,
-      }) {
+  Widget _topTab(BuildContext context, {required String text}) {
     return Obx(() {
       final isMobile = Responsive.isMobile(context);
       final isTablet = Responsive.isTablet(context);
@@ -193,9 +191,8 @@ class ConvoPanel extends StatelessWidget {
       );
     });
   }
+
   /// ===================================
   /// CHANNEL TILE
   /// ===================================
-
-
 }

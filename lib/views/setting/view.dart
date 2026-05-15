@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../theme/theme.dart';
+import '../../widgets/btn.dart';
+import '../../widgets/input_fileds.dart';
 import 'ctrl.dart';
 
 class SettingsView extends StatelessWidget {
@@ -54,16 +57,14 @@ class SettingsView extends StatelessWidget {
                           height: 50.w,
 
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xff4F46E5), Color(0xff7C3AED)],
-                            ),
+                            color: Colors.grey.shade50,
 
                             borderRadius: BorderRadius.circular(16.r),
                           ),
 
-                          child: const Icon(
+                          child: Icon(
                             Icons.settings,
-                            color: Colors.white,
+                            color: AppTheme.textColor,
                           ),
                         ),
 
@@ -247,6 +248,8 @@ class SettingsView extends StatelessWidget {
                           children: [
                             Expanded(
                               child: _statCard(
+                                context: context,
+
                                 title: "Connected Channels",
                                 value: "12",
                                 icon: Icons.link,
@@ -257,6 +260,7 @@ class SettingsView extends StatelessWidget {
 
                             Expanded(
                               child: _statCard(
+                                context: context,
                                 title: "Messages Today",
                                 value: "8.4k",
                                 icon: Icons.message,
@@ -267,6 +271,8 @@ class SettingsView extends StatelessWidget {
 
                             Expanded(
                               child: _statCard(
+                                context: context,
+
                                 title: "AI Replies",
                                 value: "1.2k",
                                 icon: Icons.smart_toy,
@@ -278,6 +284,7 @@ class SettingsView extends StatelessWidget {
                         SizedBox(height: 30.h),
 
                         _sectionCard(
+                          context,
                           title: "Workspace Information",
 
                           child: Column(
@@ -288,6 +295,9 @@ class SettingsView extends StatelessWidget {
                                     child: _inputField(
                                       "Workspace Name",
                                       "Elite CRM",
+                                      ctrl.workSpace,
+                                      context,
+                                      Icons.workspace_premium,
                                     ),
                                   ),
 
@@ -297,6 +307,9 @@ class SettingsView extends StatelessWidget {
                                     child: _inputField(
                                       "Business Email",
                                       "support@elitecrm.ai",
+                                      ctrl.emailController,
+                                      context,
+                                      Icons.email,
                                     ),
                                   ),
                                 ],
@@ -310,13 +323,22 @@ class SettingsView extends StatelessWidget {
                                     child: _inputField(
                                       "Timezone",
                                       "Asia/Karachi",
+                                      ctrl.timeZone,
+                                      context,
+                                      Icons.watch_later_outlined,
                                     ),
                                   ),
 
                                   SizedBox(width: 20.w),
 
                                   Expanded(
-                                    child: _inputField("Language", "English"),
+                                    child: _inputField(
+                                      "Language",
+                                      "English",
+                                      ctrl.lang,
+                                      context,
+                                      Icons.language,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -327,6 +349,7 @@ class SettingsView extends StatelessWidget {
                         SizedBox(height: 24.h),
 
                         _sectionCard(
+                          context,
                           title: "Automation & AI",
 
                           child: Column(
@@ -389,6 +412,7 @@ class SettingsView extends StatelessWidget {
 
                       children: [
                         _sectionCard(
+                          context,
                           title: "Connected Channels",
 
                           child: Column(
@@ -435,19 +459,35 @@ class SettingsView extends StatelessWidget {
 
                       children: [
                         _sectionCard(
+                          context,
                           title: "Security",
 
                           child: Row(
                             children: [
-                              Expanded(child: _actionButton("Change Password")),
+                              Expanded(
+                                child: CustomButton(
+                                  text: 'Change Password',
+                                  onPressed: () {},
+                                ),
+                              ),
 
                               SizedBox(width: 18.w),
 
-                              Expanded(child: _actionButton("Enable 2FA")),
+                              Expanded(
+                                child: CustomButton(
+                                  text: 'Enable 2FA',
+                                  onPressed: () {},
+                                ),
+                              ),
 
                               SizedBox(width: 18.w),
 
-                              Expanded(child: _actionButton("View Sessions")),
+                              Expanded(
+                                child: CustomButton(
+                                  text: 'View Sessions',
+                                  onPressed: () {},
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -556,7 +596,7 @@ class SettingsView extends StatelessWidget {
             child: const Icon(
               Icons.settings,
               size: 44,
-              color: Color(0xff4F46E5),
+              color: AppTheme.primaryColor,
             ),
           ),
 
@@ -617,7 +657,7 @@ class SettingsView extends StatelessWidget {
             Icon(
               icon,
 
-              color: active ? const Color(0xff4F46E5) : const Color(0xff6B7280),
+              color: active ? AppTheme.primaryColor : AppTheme.iconColor,
             ),
 
             SizedBox(width: 12.w),
@@ -630,9 +670,7 @@ class SettingsView extends StatelessWidget {
 
                 fontSize: 14,
 
-                color: active
-                    ? const Color(0xff4F46E5)
-                    : const Color(0xff111827),
+                color: active ? AppTheme.primaryColor : AppTheme.hintTextColor,
               ),
             ),
           ],
@@ -641,15 +679,13 @@ class SettingsView extends StatelessWidget {
     );
   }
 
-  Widget _sectionCard({required String title, required Widget child}) {
+  Widget _sectionCard(context, {required String title, required Widget child}) {
     return Container(
       width: double.infinity,
 
       padding: EdgeInsets.all(24.w),
 
       decoration: BoxDecoration(
-        color: Colors.white,
-
         borderRadius: BorderRadius.circular(24.r),
 
         boxShadow: [
@@ -670,13 +706,9 @@ class SettingsView extends StatelessWidget {
           Text(
             title,
 
-            style: const TextStyle(
-              fontSize: 20,
-
-              fontWeight: FontWeight.w700,
-
-              color: Color(0xff111827),
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(color: Colors.black),
           ),
 
           SizedBox(height: 24.h),
@@ -687,7 +719,7 @@ class SettingsView extends StatelessWidget {
     );
   }
 
-  Widget _inputField(String label, String hint) {
+  Widget _inputField(String label, String hint, ctrl, context, icon) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
 
@@ -695,37 +727,16 @@ class SettingsView extends StatelessWidget {
         Text(
           label,
 
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-
-            color: Color(0xff6B7280),
-
-            fontSize: 13,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.labelLarge?.copyWith(color: AppTheme.textColor),
         ),
 
         SizedBox(height: 8.h),
 
-        TextField(
-          decoration: InputDecoration(
-            hintText: hint,
+        InputFields(
 
-            filled: true,
-
-            fillColor: const Color(0xffF9FAFB),
-
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 18.w,
-              vertical: 18.h,
-            ),
-
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14.r),
-
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
+            controller: ctrl, hint: hint, icon: icon),
       ],
     );
   }
@@ -829,6 +840,7 @@ class SettingsView extends StatelessWidget {
   }
 
   Widget _statCard({
+    required BuildContext context,
     required String title,
     required String value,
     required IconData icon,
@@ -856,20 +868,16 @@ class SettingsView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
 
         children: [
-          Icon(icon, color: const Color(0xff4F46E5)),
+          Icon(icon, color: AppTheme.primaryColor),
 
           SizedBox(height: 18.h),
 
           Text(
             value,
 
-            style: const TextStyle(
-              fontSize: 30,
-
-              fontWeight: FontWeight.w700,
-
-              color: Color(0xff111827),
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(color: AppTheme.textColor),
           ),
 
           SizedBox(height: 6.h),
@@ -877,33 +885,11 @@ class SettingsView extends StatelessWidget {
           Text(
             title,
 
-            style: const TextStyle(color: Color(0xff6B7280), fontSize: 13),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: AppTheme.textColor),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _actionButton(String title) {
-    return SizedBox(
-      height: 52.h,
-
-      child: ElevatedButton(
-        onPressed: () {},
-
-        style: ElevatedButton.styleFrom(
-          elevation: 0,
-
-          backgroundColor: const Color(0xff111827),
-
-          foregroundColor: Colors.white,
-
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14.r),
-          ),
-        ),
-
-        child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:elite_csr/theme/theme.dart';
 import 'package:elite_csr/widgets/text_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -31,19 +32,18 @@ class UseableList extends StatelessWidget {
 
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24.r),
+          borderRadius: BorderRadius.circular(12.r),
         ),
 
         child: ExpansionTile(
           childrenPadding: EdgeInsets.only(bottom: 12.h),
 
           collapsedShape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24.r),
+            borderRadius: BorderRadius.circular(12.r),
           ),
 
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24.r),
+            borderRadius: BorderRadius.circular(12.r),
           ),
 
           backgroundColor: Colors.white,
@@ -65,20 +65,20 @@ class UseableList extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextWidget(
+                    Text(
                       title,
                       style: Theme.of(
                         context,
-                      ).textTheme.labelLarge?.copyWith(color: Colors.black),
+                      ).textTheme.bodyLarge?.copyWith(color: Colors.black),
                     ),
 
                     SizedBox(height: 4.h),
 
-                    TextWidget(
+                    Text(
                       "$count active conversations",
                       style: Theme.of(
                         context,
-                      ).textTheme.labelMedium?.copyWith(color: Colors.black),
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.black),
                     ),
                   ],
                 ),
@@ -86,7 +86,7 @@ class UseableList extends StatelessWidget {
 
               Container(
                 width: 26.w,
-                height: 26.w,
+                height: 26.h,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(color: color, shape: BoxShape.circle),
 
@@ -94,7 +94,7 @@ class UseableList extends StatelessWidget {
                   count.toString(),
                   style: Theme.of(
                     context,
-                  ).textTheme.labelMedium,
+                  ).textTheme.bodySmall,
                 ),
               ),
             ],
@@ -134,7 +134,7 @@ class UseableList extends StatelessWidget {
               title: Row(
                 children: [
                   Expanded(
-                    child: TextWidget(
+                    child: Text(
                       item.name,
                       style: Theme.of(
                         context,
@@ -144,7 +144,7 @@ class UseableList extends StatelessWidget {
 
                   Text(
                     item.time,
-                    style: TextStyle(color: Colors.grey, fontSize: 11.sp),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textColor),
                   ),
                 ],
               ),
@@ -152,7 +152,7 @@ class UseableList extends StatelessWidget {
               subtitle: Text(
                 item.message,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: Colors.grey, fontSize: 11.sp),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textColor),
               ),
 
               trailing: Container(

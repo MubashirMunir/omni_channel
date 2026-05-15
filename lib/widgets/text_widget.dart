@@ -31,7 +31,7 @@ class TextWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final baseStyle =
         style ??
-            Theme.of(context).textTheme.labelMedium ??
+            Theme.of(context).textTheme.bodyMedium ??
             const TextStyle();
 
     return Text(

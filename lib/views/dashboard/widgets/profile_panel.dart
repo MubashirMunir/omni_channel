@@ -33,10 +33,7 @@ class ProfilePanel extends StatelessWidget {
 
                 Text(
                   "Calling List",
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 14.sp,
-                  ),
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppTheme.textColor)
                 ),
               ],
             ),

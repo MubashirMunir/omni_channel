@@ -49,7 +49,8 @@ class MessageBubble extends StatelessWidget {
             TextWidget(
               message.text,
               color: message.isMe ? Colors.white : Colors.black87,
-              fontSize: 14,
+              // fontSize: 14,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
 
             const SizedBox(height: 6),
@@ -57,7 +58,8 @@ class MessageBubble extends StatelessWidget {
             /// TIME
             TextWidget(
               message.time,
-              fontSize: 10,
+              // fontSize: 10,
+              style: Theme.of(context).textTheme.bodySmall,
               color: message.isMe ? Colors.white70 : Colors.grey,
             ),
           ],
@@ -96,7 +98,7 @@ class MessageInput extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
-            blurRadius: 20,
+            blurRadius: 12,
             offset: const Offset(0, -4),
           ),
         ],
@@ -131,7 +133,7 @@ class MessageInput extends StatelessWidget {
                 color: const Color(0xffF6F8FC),
 
                 borderRadius:
-                BorderRadius.circular(20.r),
+                BorderRadius.circular(12.r),
 
                 border: Border.all(
                   color: Colors.grey.withOpacity(0.06),
@@ -215,7 +217,7 @@ class MessageInput extends StatelessWidget {
               child: Icon(
                 Icons.send_rounded,
                 color: Colors.white,
-                size: 22.sp,
+                size: 18.sp,
               ),
             ),
           ),

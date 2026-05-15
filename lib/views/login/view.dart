@@ -21,9 +21,9 @@ class LoginView extends StatelessWidget {
           body: Stack(
             children: [
               /// Background Image
-              // Positioned.fill(
-              //   child: Image.asset('assets/images/bg1.jpeg', fit: BoxFit.cover),
-              // ),
+              Positioned.fill(
+                child: Image.asset('assets/images/bg1.jpeg', fit: BoxFit.cover),
+              ),
 
               /// Dark Overlay
               Positioned.fill(
@@ -94,7 +94,7 @@ class LoginView extends StatelessWidget {
                           child: SingleChildScrollView(
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(
-                                AppTheme.radiusSM,
+                                AppTheme.radiusSM(context),
                               ),
                               child: BackdropFilter(
                                 filter: ImageFilter.blur(
@@ -110,7 +110,7 @@ class LoginView extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.08),
                                     borderRadius: BorderRadius.circular(
-                                      AppTheme.radiusSM,
+                                      AppTheme.radiusSM(context),
                                     ),
                                     border: Border.all(
                                       color: Colors.white.withOpacity(0.15),

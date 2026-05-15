@@ -37,7 +37,7 @@ class DashboardController extends GetxController {
     ConversationModel(
       id: "2",
       name: "Sana Khan",
-      platform: "Facebook",
+      platform: "WhatsApp",
       message: "Can you share package details?",
       time: "09:15 AM",
       unread: 0,
@@ -46,7 +46,7 @@ class DashboardController extends GetxController {
     ), ConversationModel(
       id: "2",
       name: "Mubashir Munir",
-      platform: "Facebook",
+      platform: "WhatsApp",
       message: "Can you share package pictures too?",
       time: "09:15 AM",
       unread: 0,

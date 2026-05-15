@@ -7,6 +7,11 @@ import 'package:get/get.dart';
 /// ===============================================
 
 class SettingsController extends GetxController {
+  TextEditingController emailController = TextEditingController();
+  TextEditingController timeZone = TextEditingController();
+  TextEditingController workSpace = TextEditingController();
+  TextEditingController lang = TextEditingController();
+
   int selectedMenu = 0;
 
   bool darkMode = true;

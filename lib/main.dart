@@ -15,42 +15,6 @@ void main() {
 ///
 /// GLOBAL RESPONSIVE HELPERS
 ///
-class Responsive {
-
-  static double width(BuildContext context) =>
-      MediaQuery.of(context).size.width;
-
-  static double height(BuildContext context) =>
-      MediaQuery.of(context).size.height;
-
-  static bool isMobile(BuildContext context) =>
-      width(context) < 700;
-
-  static bool isTablet(BuildContext context) =>
-      width(context) >= 700 &&
-          width(context) < 1100;
-
-  static bool isDesktop(BuildContext context) =>
-      width(context) >= 1100;
-
-  static double value({
-    required BuildContext context,
-    required double mobile,
-    double? tablet,
-    double? desktop,
-  }) {
-
-    if (isMobile(context)) {
-      return mobile;
-    }
-
-    if (isTablet(context)) {
-      return tablet ?? mobile;
-    }
-
-    return desktop ?? tablet ?? mobile;
-  }
-}
 
 class MyApp extends StatelessWidget {
 
@@ -86,9 +50,9 @@ class MyApp extends StatelessWidget {
 
             title: 'Elite CRM',
 
-            theme: AppTheme.lightTheme,
+            theme: AppTheme.lightTheme(context),
 
-            darkTheme: AppTheme.darkTheme,
+            darkTheme: AppTheme.darkTheme(context),
 
             themeMode: ThemeMode.dark,
 

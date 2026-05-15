@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../main.dart';
 import '../../../theme/theme.dart';
+import '../../responsive/sizes.dart';
 import '../../widgets/text_widget.dart';
 
 class StatisticsView extends StatelessWidget {
