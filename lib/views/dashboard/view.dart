@@ -28,7 +28,7 @@ class DashboardView extends StatelessWidget {
               ///
               SizedBox(
                 width: isMobile
-                    ? 0
+                    ?  0
                     : isTablet
                     ? 320
                     : 380,
