@@ -72,11 +72,10 @@ class LoginView extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.symmetric(
                         vertical: 40,
-                        horizontal: isWeb ? 200 : 0,
+                        horizontal: (isWeb || isTab) ? 200 : 0,
                       ),
-
                       child: Row(
-                        mainAxisAlignment: isWeb
+                        mainAxisAlignment: (isWeb || isTab)
                             ? MainAxisAlignment.start
                             : MainAxisAlignment.center,
                         children: [
@@ -89,10 +88,9 @@ class LoginView extends StatelessWidget {
                         ],
                       ),
                     ),
-
                     Expanded(
                       child: Padding(
-                        padding: EdgeInsets.only(left: isWeb ? 80 : 0),
+                        padding: EdgeInsets.only(left: isWeb || isTab ? 80 : 0),
                         child: Align(
                           alignment: isMobile
                               ? Alignment.center
@@ -245,10 +243,10 @@ class LoginView extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.only(
                         bottom: 10,
-                        left: isWeb ? 200 : 0,
+                        left: (isWeb || isTab) ? 200 : 0,
                       ),
                       child: Row(
-                        mainAxisAlignment: isWeb
+                        mainAxisAlignment: (isWeb || isTab)
                             ? MainAxisAlignment.start
                             : MainAxisAlignment.center,
                         children: [
@@ -256,7 +254,7 @@ class LoginView extends StatelessWidget {
                           Image.asset('assets/images/e.png', height: 25),
                         ],
                       ),
-                    ),
+                    )
                   ],
                 ),
               ),
