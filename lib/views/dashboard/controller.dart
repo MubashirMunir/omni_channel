@@ -20,7 +20,7 @@ class DashboardController extends GetxController {
 
   /// ACTIVE TAB
   var selectedTab = "All".obs;
-
+  String? expandedList;
   /// CONVERSATIONS
   List<ConversationModel> conversations = [
     ConversationModel(

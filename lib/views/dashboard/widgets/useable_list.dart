@@ -1,5 +1,4 @@
 import 'package:elite_csr/theme/theme.dart';
-import 'package:elite_csr/widgets/text_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -12,6 +11,9 @@ class UseableList extends StatelessWidget {
   final int count;
   final List<ConversationModel> data;
   final Function(ConversationModel) onTap;
+  final bool isExpanded;
+  final Function(bool) onExpansionChanged;
+
 
   const UseableList({
     super.key,
@@ -21,6 +23,8 @@ class UseableList extends StatelessWidget {
     required this.count,
     required this.data,
     required this.onTap,
+    required this.isExpanded,
+    required this.onExpansionChanged,
   });
 
   @override
@@ -34,6 +38,9 @@ class UseableList extends StatelessWidget {
         ),
 
         child: ExpansionTile(
+          key: ValueKey('$title-$isExpanded'),
+          initiallyExpanded: isExpanded,
+          onExpansionChanged: onExpansionChanged,
           childrenPadding: EdgeInsets.only(bottom: 12.h),
 
           collapsedShape: RoundedRectangleBorder(
@@ -99,68 +106,86 @@ class UseableList extends StatelessWidget {
           ),
 
           /// LIST
-          children: List.generate(data.length, (index) {
-            final item = data[index];
+          children: [
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              itemCount: data.length,
+              itemBuilder: (context, index) {
+                final item = data[index];
 
-            return ListTile(
-              onTap: () => onTap(item),
+                return ListTile(
+                  onTap: () => onTap(item),
 
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 0,
-                vertical: 6.h,
-              ),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 0,
+                    vertical: 6.h,
+                  ),
 
-              leading: CircleAvatar(
-                radius: 24.r,
-                backgroundColor: color.withOpacity(0.15),
+                  leading: CircleAvatar(
+                    radius: 24.r,
+                    backgroundColor: color.withOpacity(0.15),
+                    child: item.profile.isNotEmpty
+                        ? ClipOval(
+                      child: Image.network(
+                        item.profile,
+                        width: 48.r,
+                        height: 48.r,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _fallbackAvatar(item);
+                        },
+                      ),
+                    )
+                        : _fallbackAvatar(item),
+                  ),
 
-                child: (item.profile.isNotEmpty)
-                    ? ClipOval(
-                        child: Image.network(
-                          item.profile,
-                          width: 48.r,
-                          height: 48.r,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return _fallbackAvatar(item);
-                          },
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.black,
+                          ),
                         ),
-                      )
-                    : _fallbackAvatar(item),
-              ),
+                      ),
 
-              title: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      item.name,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: Colors.black),
+                      SizedBox(width: 8.w),
+
+                      Text(
+                        item.time,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textColor,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  subtitle: Text(
+                    item.message,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textColor,
                     ),
                   ),
 
-                  Text(
-                    item.time,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textColor),
+                  trailing: Container(
+                    width: 10.w,
+                    height: 10.w,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                ],
-              ),
-
-              subtitle: Text(
-                item.message,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textColor),
-              ),
-
-              trailing: Container(
-                width: 10.w,
-                height: 10.w,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-            );
-          }),
-        ),
+                );
+              },
+            ),
+          ],        ),
       ),
     );
   }

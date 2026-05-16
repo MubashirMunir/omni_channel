@@ -18,8 +18,6 @@ class ConvoPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = Responsive.isMobile(context);
-    final isTablet = Responsive.isTablet(context);
     return Container(
       padding: EdgeInsets.all(10),
       color: AppTheme.white,
@@ -34,7 +32,6 @@ class ConvoPanel extends StatelessWidget {
                   Image.asset('assets/images/e.png', height: 35.h),
 
                   SizedBox(width: 5.w),
-
                   TextWidget(
                     "Elite CRM",
                     style: Theme.of(context).textTheme.bodyLarge,
@@ -65,18 +62,18 @@ class ConvoPanel extends StatelessWidget {
           SizedBox(height: 18.h),
 
           Row(
-                  children: [
-                    _topTab(text: "All", context),
+            children: [
+              _topTab(text: "All", context),
 
-                    SizedBox(width: 10.w),
+              SizedBox(width: 10.w),
 
-                    _topTab(text: "Unread", context),
+              _topTab(text: "Unread", context),
 
-                    SizedBox(width: 10.w),
+              SizedBox(width: 10.w),
 
-                    _topTab(text: "Assigned", context),
-                  ],
-                ),
+              _topTab(text: "Assigned", context),
+            ],
+          ),
 
           SizedBox(height: 15.h),
 
@@ -93,11 +90,23 @@ class ConvoPanel extends StatelessWidget {
                   onTap: (model) {
                     ctrl.selectConversation(model);
                   },
+                  isExpanded: ctrl.expandedList == "Instagram",
+                  onExpansionChanged: (value) {
+
+                    ctrl.  expandedList = value ? "Instagram" : null;
+
+                  },
                 ),
 
                 SizedBox(height: 14.h),
 
                 UseableList(
+                  isExpanded: ctrl.expandedList == "Instagram",
+                  onExpansionChanged: (value) {
+
+                    ctrl.  expandedList = value ? "Instagram" : null;
+
+                  },
                   title: "Facebook",
                   color: Colors.green,
                   icon: 'assets/images/facebook.png',
@@ -109,6 +118,12 @@ class ConvoPanel extends StatelessWidget {
                 SizedBox(height: 14.h),
 
                 UseableList(
+                  isExpanded: ctrl.expandedList == "Instagram",
+                  onExpansionChanged: (value) {
+
+                    ctrl.  expandedList = value ? "Instagram" : null;
+
+                  },
                   title: "Instagram",
                   color: Colors.green,
                   icon: 'assets/images/instagram.png',
@@ -120,6 +135,12 @@ class ConvoPanel extends StatelessWidget {
                 SizedBox(height: 14.h),
 
                 UseableList(
+                  isExpanded: ctrl.expandedList == "Instagram",
+                  onExpansionChanged: (value) {
+
+                    ctrl.  expandedList = value ? "Instagram" : null;
+
+                  },
                   title: "Gmail",
                   color: Colors.green,
                   icon: 'assets/images/gmail.png',
