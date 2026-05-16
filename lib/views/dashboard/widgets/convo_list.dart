@@ -20,8 +20,7 @@ class ConvoPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(10),
-      color: AppTheme.white,
-      child: Column(
+       child: Column(
         children: [
           /// HEADER
           Column(
@@ -35,15 +34,13 @@ class ConvoPanel extends StatelessWidget {
                   TextWidget(
                     "Elite CRM",
                     style: Theme.of(context).textTheme.bodyLarge,
-                    color: Colors.black,
-                  ),
+                   ),
 
                   const Spacer(),
 
                   IconButton(
                     icon: Icon(Icons.menu),
-                    color: Colors.grey.shade700,
-                    onPressed: () {},
+                     onPressed: () {},
                   ),
                 ],
               ),
@@ -59,7 +56,7 @@ class ConvoPanel extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 18.h),
+          SizedBox(height: 20.h),
 
           Row(
             children: [
@@ -185,7 +182,7 @@ class ConvoPanel extends StatelessWidget {
           ),
 
           decoration: BoxDecoration(
-            color: active ? AppTheme.primaryColor : Colors.white,
+            color: active ? AppTheme.primaryColor : Colors.black,
             borderRadius: BorderRadius.circular(20),
           ),
 
@@ -200,10 +197,9 @@ class ConvoPanel extends StatelessWidget {
                 ? 12
                 : 13,
 
-            fontWeight: FontWeight.w600,
+            fontWeight: active? FontWeight.w600: FontWeight.w400,
 
-            color: active ? Colors.white : Colors.black87,
-          ),
+           ),
         ),
       );
     });

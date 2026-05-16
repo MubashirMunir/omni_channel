@@ -6,8 +6,7 @@ import 'package:elite_csr/views/dashboard/widgets/profile_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-
-import '../../main.dart';
+import '../../models/convo_list.dart';
 import '../../responsive/sizes.dart';
 
 class DashboardView extends StatelessWidget {
@@ -29,7 +28,7 @@ class DashboardView extends StatelessWidget {
                     ? 0
                     : isTablet
                     ? 320
-                    : 380,
+                    : 500,
                 child: ConvoPanel(ctrl: ctrl),
               ),
 
@@ -142,7 +141,6 @@ class DashboardView extends StatelessWidget {
                         );
                       }
 
-                      final String profile = chat.profile.trim();
                       final String name = chat.name.trim();
 
                       final String backgroundImage =
@@ -167,42 +165,25 @@ class DashboardView extends StatelessWidget {
                                   horizontal: horizontalPadding,
                                   vertical: isCompact ? 10 : 14,
                                 ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.90),
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color: Colors.black.withOpacity(0.06),
-                                    ),
-                                  ),
-                                ),
+
                                 child: Row(
                                   children: [
-                                    CircleAvatar(
-                                      radius: avatarRadius,
+                                     CircleAvatar(
+                                      radius: 24.r,
                                       backgroundColor: AppTheme.primaryColor,
-                                      backgroundImage: profile.isNotEmpty
-                                          ? NetworkImage(profile)
-                                          : null,
-                                      onBackgroundImageError: profile.isNotEmpty
-                                          ? (_, __) {}
-                                          : null,
-                                      child: profile.isEmpty
-                                          ? Text(
-                                              name.isNotEmpty
-                                                  ? name[0].toUpperCase()
-                                                  : "U",
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall
-                                                  ?.copyWith(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.w700,
-                                                    fontSize: isCompact
-                                                        ? 12
-                                                        : 14,
-                                                  ),
-                                            )
-                                          : null,
+                                      child: chat.profile.isNotEmpty
+                                          ? ClipOval(
+                                        child: Image.network(
+                                          chat.profile,
+                                          width: 48.r,
+                                          height: 48.r,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return _fallbackAvatar(chat,context);
+                                          },
+                                        ),
+                                      )
+                                          : _fallbackAvatar(chat,context),
                                     ),
 
                                     SizedBox(width: isCompact ? 10 : 12),
@@ -245,6 +226,8 @@ class DashboardView extends StatelessWidget {
                                         ],
                                       ),
                                     ),
+                                    Spacer(),
+                                    IconButton(onPressed: (){}, icon: Icon(Icons.more_vert))
                                   ],
                                 ),
                               ),
@@ -275,27 +258,13 @@ class DashboardView extends StatelessWidget {
                               ),
 
                               /// INPUT
-                              Container(
-                                padding: EdgeInsets.only(
-                                  left: horizontalPadding,
-                                  right: horizontalPadding,
-                                  top: isCompact ? 8 : 10,
-                                  bottom: isCompact ? 8 : 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.94),
-                                  border: Border(
-                                    top: BorderSide(
-                                      color: Colors.black.withOpacity(0.06),
-                                    ),
-                                  ),
-                                ),
-                                child: MessageInput(
-                                  controller: ctrl.msgController,
+
+                                MessageInput(
+                                  controller: ctrl,
                                   onSend: () {
                                     ctrl.sendMessage();
                                   },
-                                ),
+
                               ),
                             ],
                           ),
@@ -322,3 +291,10 @@ class DashboardView extends StatelessWidget {
 }
 
 
+Widget _fallbackAvatar(ConversationModel item,context) {
+  return Center(
+    child: Text(
+      item.name.isNotEmpty ? item.name[0].toUpperCase() : '?',style: Theme.of(context).textTheme.bodyMedium,
+     ),
+  );
+}

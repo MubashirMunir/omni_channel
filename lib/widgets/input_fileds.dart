@@ -32,7 +32,7 @@ class InputFields extends StatelessWidget {
         // hintStyle: TextStyle(
         //   color: Colors.white.withOpacity(0.5),
         // ),
-        prefixIcon: Icon(icon, color: Colors.white54),
+        prefixIcon: Icon(icon,),
         filled: true,
         // fillColor: Colors.white.withOpacity(0.1),
         // border: OutlineInputBorder(

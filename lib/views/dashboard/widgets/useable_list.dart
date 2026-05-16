@@ -14,7 +14,6 @@ class UseableList extends StatelessWidget {
   final bool isExpanded;
   final Function(bool) onExpansionChanged;
 
-
   const UseableList({
     super.key,
     required this.title,
@@ -33,9 +32,7 @@ class UseableList extends StatelessWidget {
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
 
       child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12.r)),
 
         child: ExpansionTile(
           key: ValueKey('$title-$isExpanded'),
@@ -51,8 +48,8 @@ class UseableList extends StatelessWidget {
             borderRadius: BorderRadius.circular(12.r),
           ),
 
-          backgroundColor: Colors.white,
-          collapsedBackgroundColor: Colors.white,
+          // backgroundColor: Colors.white,
+          collapsedBackgroundColor: AppTheme.black,
 
           /// HEADER
           title: Row(
@@ -70,28 +67,22 @@ class UseableList extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyLarge?.copyWith(color: AppTheme.textColor),
-                    ),
+                    Text(title, style: Theme.of(context).textTheme.bodyLarge),
 
                     SizedBox(height: 4.h),
 
                     Text(
                       "$count active conversations",
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: AppTheme.textColor),
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
                 ),
               ),
 
+              /// green count container
               Container(
-                width: 26.w,
-                height: 26.h,
+                width: 24,
+                height: 24,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(color: color, shape: BoxShape.circle),
 
@@ -99,7 +90,7 @@ class UseableList extends StatelessWidget {
                   count.toString(),
                   style: Theme.of(
                     context,
-                  ).textTheme.bodySmall,
+                  ).textTheme.bodySmall?.copyWith(color: AppTheme.black),
                 ),
               ),
             ],
@@ -124,21 +115,21 @@ class UseableList extends StatelessWidget {
                   ),
 
                   leading: CircleAvatar(
-                    radius: 24.r,
+                    radius: 20,
                     backgroundColor: color.withOpacity(0.15),
                     child: item.profile.isNotEmpty
                         ? ClipOval(
-                      child: Image.network(
-                        item.profile,
-                        width: 48.r,
-                        height: 48.r,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return _fallbackAvatar(item);
-                        },
-                      ),
-                    )
-                        : _fallbackAvatar(item),
+                            child: Image.network(
+                              item.profile,
+                              width: 48.r,
+                              height: 48.r,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return _fallbackAvatar(item, context);
+                              },
+                            ),
+                          )
+                        : _fallbackAvatar(item, context),
                   ),
 
                   title: Row(
@@ -148,9 +139,8 @@ class UseableList extends StatelessWidget {
                           item.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.black,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppTheme.white),
                         ),
                       ),
 
@@ -158,9 +148,9 @@ class UseableList extends StatelessWidget {
 
                       Text(
                         item.time,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textColor,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(),
                       ),
                     ],
                   ),
@@ -169,14 +159,12 @@ class UseableList extends StatelessWidget {
                     item.message,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textColor,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(),
                   ),
 
                   trailing: Container(
-                    width: 10.w,
-                    height: 10.w,
+                    width: 10,
+                    height: 10,
                     decoration: BoxDecoration(
                       color: color,
                       shape: BoxShape.circle,
@@ -185,17 +173,18 @@ class UseableList extends StatelessWidget {
                 );
               },
             ),
-          ],        ),
+          ],
+        ),
       ),
     );
   }
 }
 
-Widget _fallbackAvatar(ConversationModel item) {
+Widget _fallbackAvatar(ConversationModel item, context) {
   return Center(
     child: Text(
       item.name.isNotEmpty ? item.name[0].toUpperCase() : '?',
-      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+      style: Theme.of(context).textTheme.bodyMedium,
     ),
   );
 }

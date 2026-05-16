@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/message_model.dart';
 import '../../../theme/theme.dart';
 import '../../../widgets/text_widget.dart';
+import '../controller.dart';
 
 class MessageBubble extends StatelessWidget {
   final MessageModel message;
@@ -70,7 +71,7 @@ class MessageBubble extends StatelessWidget {
 }
 
 class MessageInput extends StatelessWidget {
-  final TextEditingController controller;
+  final DashboardController controller;
   final VoidCallback onSend;
 
   const MessageInput({
@@ -82,174 +83,262 @@ class MessageInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 10.w,
-      ),
-
+      margin: EdgeInsets.all(4),
+      constraints: const BoxConstraints(minHeight: 50, maxHeight: 145),
       decoration: BoxDecoration(
-        color: Colors.white,
-
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey.withOpacity(0.08),
-          ),
-        ),
-
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-        ],
+        color: AppTheme.black,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
       ),
-
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-
-          /// ATTACHMENT BUTTON
-          _actionButton(
-            icon: Icons.attach_file_rounded,
+          /// PREFIX ICONS - BOTTOM FIXED
+          Padding(
+            padding: const EdgeInsets.only(left: 8, bottom: 7),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.emoji_emotions_outlined),
+                  color: AppTheme.white,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.add),
+                  color: AppTheme.white,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                ),
+              ],
+            ),
           ),
 
-          SizedBox(width: 12.w),
-
-          /// EMOJI BUTTON
-          _actionButton(
-            icon: Icons.emoji_emotions_outlined,
-          ),
-
-          SizedBox(width: 16.w),
-
-          /// MESSAGE FIELD
+          /// TEXT FIELD
           Expanded(
-            child: Container(
-              constraints: BoxConstraints(
-                minHeight: 58.h,
-                maxHeight: 140.h,
-              ),
+            child: TextField(
+              controller: controller.msgController,
+              minLines: 1,
+              maxLines: 5,
+              keyboardType: TextInputType.multiline,
+              textInputAction: TextInputAction.newline,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppTheme.white),
+              decoration: InputDecoration(
+                hintText: "Type a message",
+                fillColor: AppTheme.textColor,
 
-              decoration: BoxDecoration(
-                color: const Color(0xffF6F8FC),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
 
-                borderRadius:
-                BorderRadius.circular(12.r),
-
-                border: Border.all(
-                  color: Colors.grey.withOpacity(0.06),
-                ),
-              ),
-
-              child: TextField(
-                controller: controller,
-
-                maxLines: null,
-
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                ),
-
-                decoration: InputDecoration(
-                  hintText:
-                  "Write a message...",
-
-                  hintStyle: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 13.sp,
-                  ),
-
-                  border: InputBorder.none,
-
-                  contentPadding:
-                  EdgeInsets.symmetric(
-                    horizontal: 20.w,
-                    vertical: 18.h,
-                  ),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 18,
                 ),
               ),
             ),
           ),
 
-          SizedBox(width: 16.w),
+          /// SUFFIX SEND BUTTON - BOTTOM FIXED
+          Padding(
+            padding: const EdgeInsets.only(right: 6, bottom: 5),
+            child: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller.msgController,
+              builder: (context, value, child) {
+                final hasText = value.text.trim().isNotEmpty;
 
-          /// VOICE BUTTON
-          _actionButton(
-            icon: Icons.mic_none_rounded,
-          ),
-
-          SizedBox(width: 12.w),
-
-          /// SEND BUTTON
-          GestureDetector(
-            onTap: onSend,
-
-            child: AnimatedContainer(
-              duration:
-              const Duration(milliseconds: 200),
-
-              width: 40.w,
-              height: 40.w,
-
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.primaryColor,
-                    AppTheme.primaryColor
-                        .withOpacity(0.85),
-                  ],
-                ),
-
-                borderRadius:
-                BorderRadius.circular(18.r),
-
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primaryColor
-                        .withOpacity(0.35),
-
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-
-              child: Icon(
-                Icons.send_rounded,
-                color: Colors.white,
-                size: 18.sp,
-              ),
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 120),
+                  child: hasText
+                      ? IconButton(
+                          key: const ValueKey("send_button"),
+                          onPressed: onSend,
+                          style: IconButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                            fixedSize: const Size(40, 40),
+                            shape: const CircleBorder(),
+                            padding: EdgeInsets.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          icon: const Icon(
+                            Icons.send_rounded,
+                            color: Colors.white,
+                            size: 15,
+                          ),
+                        )
+                      : IconButton(
+                          key: const ValueKey("send_button"),
+                          onPressed: () {},
+                          style: IconButton.styleFrom(
+                             fixedSize: const Size(40, 40),
+                            shape: const CircleBorder(),
+                            padding: EdgeInsets.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          icon: const Icon(
+                            Icons.mic,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                );
+              },
             ),
           ),
         ],
       ),
     );
   }
+} // class MessageInput extends StatelessWidget {
 
-  Widget _actionButton({
-    required IconData icon,
-  }) {
-    return Container(
-
-      width: 40.w,
-      height: 40.w,
-
-      decoration: BoxDecoration(
-        color: const Color(0xffF6F8FC),
-
-        borderRadius:
-        BorderRadius.circular(16.r),
-
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.06),
-        ),
-      ),
-
-      child: Icon(
-        icon,
-        color: Colors.grey.shade700,
-        size: 22.sp,
-      ),
-    );
-  }
-}
+//   final DashboardController controller;
+//   final VoidCallback onSend;
+//
+//   const MessageInput({
+//     super.key,
+//     required this.controller,
+//     required this.onSend,
+//   });
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return TextField(
+//       controller: controller.msgController,
+//       maxLines: 5,
+//       minLines: 1,
+//       style: Theme.of(
+//         context,
+//       ).textTheme.bodyMedium?.copyWith(color: AppTheme.white),
+//       decoration: InputDecoration(
+//         prefixIcon: Row(
+//           crossAxisAlignment: CrossAxisAlignment.end,
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             const SizedBox(width: 8),
+//
+//             IconButton(
+//               onPressed: () {},
+//               icon: const Icon(Icons.emoji_emotions_outlined),
+//               color: AppTheme.white,
+//               padding: EdgeInsets.zero,
+//               constraints: const BoxConstraints(
+//                 minWidth: 36,
+//                 minHeight: 36,
+//               ),
+//             ),
+//
+//             IconButton(
+//               onPressed: () {},
+//               icon: const Icon(Icons.add),
+//               color: AppTheme.white,
+//               padding: EdgeInsets.zero,
+//               constraints: const BoxConstraints(
+//                 minWidth: 36,
+//                 minHeight: 36,
+//               ),
+//             ),
+//
+//             // const SizedBox(width: 6),
+//           ],
+//         ),
+//         suffixIcon: ValueListenableBuilder<TextEditingValue>(
+//           valueListenable: controller.msgController,
+//           builder: (context, value, child) {
+//             final hasText = value.text.trim().isNotEmpty;
+//
+//             return AnimatedSwitcher(
+//               duration: const Duration(milliseconds: 10),
+//               child: hasText
+//                   ? IconButton(
+//                 key: const ValueKey("send_button"),
+//                 onPressed: onSend,
+//                 style: IconButton.styleFrom(
+//                   backgroundColor: AppTheme.primaryColor,
+//                   fixedSize: const Size(40, 40), // button size
+//                   // minimumSize: const Size(34, 34),
+//                   // maximumSize: const Size(34, 34),
+//                   shape: const CircleBorder(),
+//                   padding: EdgeInsets.zero,
+//                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+//                 ),
+//                 icon: const Icon(
+//                   Icons.send_rounded,
+//                   color: Colors.white,
+//                   size: 15, // icon size
+//                 ),
+//               )
+//                   : const SizedBox(
+//                 key: ValueKey("empty_button"),
+//                 width: 40,
+//                 height: 40,
+//               ),
+//             );
+//           },
+//         ),
+//
+//         suffixIconConstraints: const BoxConstraints(
+//           minWidth: 46,
+//           minHeight: 0,
+//         ),
+//         prefixIconConstraints: const BoxConstraints(
+//           minWidth: 80,
+//           minHeight: 0,
+//         ),
+//
+//         hintText: "Type a message",
+//         filled: true,
+//         fillColor: Theme.of(context).cardColor,
+//
+//         border: OutlineInputBorder(
+//           borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
+//           borderSide: BorderSide.none,
+//         ),
+//
+//         enabledBorder: OutlineInputBorder(
+//           borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
+//           borderSide: BorderSide.none,
+//         ),
+//
+//         focusedBorder: OutlineInputBorder(
+//           borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
+//           borderSide: BorderSide.none,
+//         ),
+//
+//         disabledBorder: OutlineInputBorder(
+//           borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
+//           borderSide: BorderSide.none,
+//         ),
+//
+//         errorBorder: OutlineInputBorder(
+//           borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
+//           borderSide: BorderSide.none,
+//         ),
+//
+//         focusedErrorBorder: OutlineInputBorder(
+//           borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
+//           borderSide: BorderSide.none,
+//         ),
+//
+//         isDense: true,
+//         contentPadding: const EdgeInsets.symmetric(
+//           horizontal: 15,
+//           vertical: 18,
+//         ),
+//       ),
+//     );
+//   }
+// }
