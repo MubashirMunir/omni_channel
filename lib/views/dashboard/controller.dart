@@ -10,7 +10,19 @@ import '../../models/message_model.dart';
 
 class DashboardController extends GetxController {
   RxInt selectedIndex = 0.obs;
+  final RxBool showEmojiBoard = false.obs;
 
+  void toggleEmojiBoard() {
+    showEmojiBoard.value = !showEmojiBoard.value;
+  }
+
+  void hideEmojiBoard() {
+    showEmojiBoard.value = false;
+  }
+
+  void showEmojiKeyboard() {
+    showEmojiBoard.value = true;
+  }
   void changeIndex(int index) {
     selectedIndex.value = index;
   }

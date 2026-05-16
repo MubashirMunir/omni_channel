@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 
 import '../../../models/message_model.dart';
 import '../../../theme/theme.dart';
@@ -49,12 +50,11 @@ class MessageBubble extends StatelessWidget {
             /// MESSAGE TEXT
             TextWidget(
               message.text,
-              color: message.isMe ? Colors.white : Colors.black87,
+              color: message.isMe ? Colors.white : Colors.black,
               // fontSize: 14,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
 
-            const SizedBox(height: 6),
 
             /// TIME
             TextWidget(
@@ -94,18 +94,18 @@ class MessageInput extends StatelessWidget {
         children: [
           /// PREFIX ICONS - BOTTOM FIXED
           Padding(
-            padding: const EdgeInsets.only(left: 8, bottom: 7),
+            padding: const EdgeInsets.only(left: 8, bottom: 5),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.emoji_emotions_outlined),
-                  color: AppTheme.white,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 36,
-                    minHeight: 36,
+                  onPressed: controller.toggleEmojiBoard,
+                  icon: Obx(
+                    () => Icon(
+                      controller.showEmojiBoard.value
+                          ? Icons.keyboard_alt_outlined
+                          : Icons.emoji_emotions_outlined,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -184,7 +184,7 @@ class MessageInput extends StatelessWidget {
                           key: const ValueKey("send_button"),
                           onPressed: () {},
                           style: IconButton.styleFrom(
-                             fixedSize: const Size(40, 40),
+                            fixedSize: const Size(40, 40),
                             shape: const CircleBorder(),
                             padding: EdgeInsets.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,

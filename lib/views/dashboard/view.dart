@@ -3,6 +3,7 @@ import 'package:elite_csr/views/dashboard/controller.dart';
 import 'package:elite_csr/views/dashboard/widgets/convo_list.dart';
 import 'package:elite_csr/views/dashboard/widgets/message_buble.dart';
 import 'package:elite_csr/views/dashboard/widgets/profile_panel.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -258,7 +259,19 @@ class DashboardView extends StatelessWidget {
                               ),
 
                               /// INPUT
-
+                              Obx(
+                                    () => ctrl.showEmojiBoard.value
+                                    ? SizedBox(
+                                  height: 300,
+                                  child: EmojiPicker(
+                                    textEditingController: ctrl.msgController,
+                                    config: const Config(
+                                      height: 300,
+                                    ),
+                                  ),
+                                )
+                                    : const SizedBox.shrink(),
+                              ),
                                 MessageInput(
                                   controller: ctrl,
                                   onSend: () {
