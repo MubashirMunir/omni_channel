@@ -89,7 +89,6 @@ class ConvoPanel extends StatelessWidget {
                   color: Colors.green,
                   icon: 'assets/images/w.png',
                   count: 19,
-                  subtitle: 'need it',
                   data: ctrl.conversations,
                   onTap: (model) {
                     ctrl.selectConversation(model);
@@ -103,7 +102,6 @@ class ConvoPanel extends StatelessWidget {
                   color: Colors.green,
                   icon: 'assets/images/facebook.png',
                   count: 19,
-                  subtitle: '',
                   data: [],
                   onTap: (model) {},
                 ),
@@ -115,7 +113,6 @@ class ConvoPanel extends StatelessWidget {
                   color: Colors.green,
                   icon: 'assets/images/instagram.png',
                   count: 19,
-                  subtitle: '',
                   data: [],
                   onTap: (model) {},
                 ),
@@ -127,7 +124,6 @@ class ConvoPanel extends StatelessWidget {
                   color: Colors.green,
                   icon: 'assets/images/gmail.png',
                   count: 19,
-                  subtitle: '',
                   data: [],
                   onTap: (model) {},
                 ),

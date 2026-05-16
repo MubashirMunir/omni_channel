@@ -243,7 +243,7 @@ class LoginView extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.only(
                         bottom: 10,
-                        left: (isWeb || isTab) ? 200 : 0,
+                        left: (isWeb || isTab) ? 220 : 0,
                       ),
                       child: Row(
                         mainAxisAlignment: (isWeb || isTab)

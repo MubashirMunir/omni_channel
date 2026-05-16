@@ -7,7 +7,6 @@ import '../../../models/convo_list.dart';
 
 class UseableList extends StatelessWidget {
   final String title;
-  final String subtitle;
   final String icon;
   final Color color;
   final int count;
@@ -17,7 +16,6 @@ class UseableList extends StatelessWidget {
   const UseableList({
     super.key,
     required this.title,
-    required this.subtitle,
     required this.icon,
     required this.color,
     required this.count,
@@ -69,7 +67,7 @@ class UseableList extends StatelessWidget {
                       title,
                       style: Theme.of(
                         context,
-                      ).textTheme.bodyLarge?.copyWith(color: Colors.black),
+                      ).textTheme.bodyLarge?.copyWith(color: AppTheme.textColor),
                     ),
 
                     SizedBox(height: 4.h),
@@ -78,7 +76,7 @@ class UseableList extends StatelessWidget {
                       "$count active conversations",
                       style: Theme.of(
                         context,
-                      ).textTheme.bodyMedium?.copyWith(color: Colors.black),
+                      ).textTheme.bodyMedium?.copyWith(color: AppTheme.textColor),
                     ),
                   ],
                 ),
@@ -138,7 +136,7 @@ class UseableList extends StatelessWidget {
                       item.name,
                       style: Theme.of(
                         context,
-                      ).textTheme.labelMedium?.copyWith(color: Colors.black),
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.black),
                     ),
                   ),
 
