@@ -81,7 +81,7 @@ class ConvoPanel extends StatelessWidget {
                   color: Colors.green,
                   icon: 'assets/images/w.png',
                   count: 19,
-                  data: ctrl.list,
+                  data: ctrl.filteredConversations,
                   onTap: (model) {
                     ctrl.selectConversation(model);
                   },

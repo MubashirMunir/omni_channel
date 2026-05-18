@@ -51,7 +51,6 @@ class MessageBubble extends StatelessWidget {
             TextWidget(
               message.text,
               color: message.isMe ? Colors.white : Colors.black,
-              // fontSize: 14,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
 
@@ -59,9 +58,8 @@ class MessageBubble extends StatelessWidget {
             /// TIME
             TextWidget(
               message.time,
-              // fontSize: 10,
               style: Theme.of(context).textTheme.bodySmall,
-              color: message.isMe ? Colors.white70 : Colors.grey,
+              color: message.isMe ? Colors.white70 : AppTheme.textColor,
             ),
           ],
         ),
