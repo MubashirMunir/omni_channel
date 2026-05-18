@@ -18,7 +18,8 @@ class ConversationModel {
     required this.unread,
     required this.profile,
     required this.assigned,
-    DateTime? updatedAt,}) : updatedAt = updatedAt ?? DateTime.now();
+    DateTime? updatedAt,
+  }) : updatedAt = updatedAt ?? DateTime.now();
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
     return ConversationModel(
@@ -115,12 +116,10 @@ List<ConversationModel> conversations = [
     assigned: false,
     updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
   ),
-];
-List<ConversationModel> messanger = [
   ConversationModel(
-    id: "1",
-    name: "Alisha Ali",
-    platform: "WhatsApp",
+    id: "5",
+    name: "Naveed Ali",
+    platform: "Facebook",
     message: "Hello, I need help with pricing.",
     time: "10:30 AM",
     unread: 2,
@@ -130,9 +129,9 @@ List<ConversationModel> messanger = [
   ),
 
   ConversationModel(
-    id: "2",
-    name: "Sana Khan",
-    platform: "WhatsApp",
+    id: "6",
+    name: "Shakier Khan",
+    platform: "Facebook",
     message: "Can you share package details?",
     time: "09:15 AM",
     unread: 0,
@@ -142,9 +141,45 @@ List<ConversationModel> messanger = [
   ),
 
   ConversationModel(
-    id: "3",
-    name: "Mubashir Munir",
-    platform: "WhatsApp",
+    id: "7",
+    name: "Ghafoor Ali",
+    platform: "Facebook",
+    message: "Can you share package pictures too?",
+    time: "09:15 AM",
+    unread: 0,
+    profile: "https://i.pravatar.cc/150?img=3",
+    assigned: false,
+    updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
+  ),
+
+  ConversationModel(
+    id: "8",
+    name: "Naveed Ali",
+    platform: "Instagram",
+    message: "Hello, I need help with pricing.",
+    time: "10:30 AM",
+    unread: 2,
+    profile: "https://i.pravatar.cc/150?img=1",
+    assigned: true,
+    updatedAt: DateTime.now().subtract(const Duration(minutes: 10)),
+  ),
+
+  ConversationModel(
+    id: "10",
+    name: "Shakier Khan",
+    platform: "Instagram",
+    message: "Can you share package details?",
+    time: "09:15 AM",
+    unread: 0,
+    profile: "https://i.pravatar.cc/150?img=2",
+    assigned: false,
+    updatedAt: DateTime.now().subtract(const Duration(hours: 1)),
+  ),
+
+  ConversationModel(
+    id: "7",
+    name: "Ghafoor Ali",
+    platform: "Facebook",
     message: "Can you share package pictures too?",
     time: "09:15 AM",
     unread: 0,

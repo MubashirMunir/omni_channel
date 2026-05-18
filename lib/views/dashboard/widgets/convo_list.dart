@@ -80,32 +80,32 @@ class ConvoPanel extends StatelessWidget {
                   title: "WhatsApp",
                   color: Colors.green,
                   icon: 'assets/images/w.png',
-                  count: 19,
-                  data: ctrl.filteredConversations,
+                  count: ctrl.countByPlatform("WhatsApp"),
+                  data: ctrl.getByPlatform("WhatsApp"),
                   onTap: (model) {
                     ctrl.selectConversation(model);
                   },
                   isExpanded: ctrl.expandedList == "WhatsApp",
                   onExpansionChanged: (value) {
-                    ctrl.expandedList = value ? "WhatsApp" : null;
-                    ctrl.update();
+                    ctrl.toggleExpandedList("WhatsApp", value);
                   },
                 ),
 
                 SizedBox(height: 14.h),
 
                 UseableList(
-                  isExpanded: ctrl.expandedList == "Facebook",
-                  onExpansionChanged: (value) {
-                    ctrl.expandedList = value ? "Facebook" : null;                    ctrl.update();
-
-                  },
                   title: "Facebook",
                   color: Colors.green,
                   icon: 'assets/images/facebook.png',
-                  count: 19,
-                  data: [],
-                  onTap: (model) {},
+                  count: ctrl.countByPlatform("Facebook"),
+                  data: ctrl.getByPlatform("Facebook"),
+                  onTap: (model) {
+                    ctrl.selectConversation(model);
+                  },
+                  isExpanded: ctrl.expandedList == "Facebook",
+                  onExpansionChanged: (value) {
+                    ctrl.toggleExpandedList("Facebook", value);
+                  },
                 ),
 
                 SizedBox(height: 14.h),
@@ -113,8 +113,8 @@ class ConvoPanel extends StatelessWidget {
                 UseableList(
                   isExpanded: ctrl.expandedList == "Instagram",
                   onExpansionChanged: (value) {
-                    ctrl.expandedList = value ? "Instagram" : null;                    ctrl.update();
-
+                    ctrl.expandedList = value ? "Instagram" : null;
+                    ctrl.update();
                   },
                   title: "Instagram",
                   color: Colors.green,

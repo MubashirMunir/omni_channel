@@ -142,7 +142,7 @@ class DashboardView extends StatelessWidget {
                         );
                       }
 
-                      final String name = chat.name!.trim();
+                      final String name = chat.name.trim();
 
                       final String backgroundImage =
                           chat.platform!.toLowerCase() == "whatsapp"
