@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 
 import '../../../main.dart';
+import '../../../models/convo_list.dart';
 import '../../../responsive/sizes.dart';
 import '../../../theme/theme.dart';
 import '../../../widgets/input_fileds.dart';
@@ -20,7 +21,7 @@ class ConvoPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(10),
-       child: Column(
+      child: Column(
         children: [
           /// HEADER
           Column(
@@ -34,14 +35,11 @@ class ConvoPanel extends StatelessWidget {
                   TextWidget(
                     "Elite CRM",
                     style: Theme.of(context).textTheme.bodyLarge,
-                   ),
+                  ),
 
                   const Spacer(),
 
-                  IconButton(
-                    icon: Icon(Icons.menu),
-                     onPressed: () {},
-                  ),
+                  IconButton(icon: Icon(Icons.menu), onPressed: () {}),
                 ],
               ),
 
@@ -83,25 +81,23 @@ class ConvoPanel extends StatelessWidget {
                   color: Colors.green,
                   icon: 'assets/images/w.png',
                   count: 19,
-                  data: ctrl.conversations,
+                  data: ctrl.list,
                   onTap: (model) {
                     ctrl.selectConversation(model);
                   },
-                  isExpanded: ctrl.expandedList == "Instagram",
+                  isExpanded: ctrl.expandedList == "WhatsApp",
                   onExpansionChanged: (value) {
-
-                    ctrl.  expandedList = value ? "Instagram" : null;
-
+                    ctrl.expandedList = value ? "WhatsApp" : null;
+                    ctrl.update();
                   },
                 ),
 
                 SizedBox(height: 14.h),
 
                 UseableList(
-                  isExpanded: ctrl.expandedList == "Instagram",
+                  isExpanded: ctrl.expandedList == "Facebook",
                   onExpansionChanged: (value) {
-
-                    ctrl.  expandedList = value ? "Instagram" : null;
+                    ctrl.expandedList = value ? "Facebook" : null;                    ctrl.update();
 
                   },
                   title: "Facebook",
@@ -117,8 +113,7 @@ class ConvoPanel extends StatelessWidget {
                 UseableList(
                   isExpanded: ctrl.expandedList == "Instagram",
                   onExpansionChanged: (value) {
-
-                    ctrl.  expandedList = value ? "Instagram" : null;
+                    ctrl.expandedList = value ? "Instagram" : null;                    ctrl.update();
 
                   },
                   title: "Instagram",
@@ -132,11 +127,10 @@ class ConvoPanel extends StatelessWidget {
                 SizedBox(height: 14.h),
 
                 UseableList(
-                  isExpanded: ctrl.expandedList == "Instagram",
+                  isExpanded: ctrl.expandedList == "Gmail",
                   onExpansionChanged: (value) {
-
-                    ctrl.  expandedList = value ? "Instagram" : null;
-
+                    ctrl.expandedList = value ? "Gmail" : null;
+                    ctrl.update();
                   },
                   title: "Gmail",
                   color: Colors.green,
@@ -197,9 +191,8 @@ class ConvoPanel extends StatelessWidget {
                 ? 12
                 : 13,
 
-            fontWeight: active? FontWeight.w600: FontWeight.w400,
-
-           ),
+            fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+          ),
         ),
       );
     });

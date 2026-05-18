@@ -6,9 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../models/convo_list.dart';
 import '../../models/message_model.dart';
+import '../../widgets/formatted_time.dart';
 
 
 class DashboardController extends GetxController {
+  var convoModel = Rxn<ConversationModel>();
+  List<ConversationModel> list =[];
   RxInt selectedIndex = 0.obs;
   final RxBool showEmojiBoard = false.obs;
 
@@ -34,50 +37,16 @@ class DashboardController extends GetxController {
   var selectedTab = "All".obs;
   String? expandedList;
   /// CONVERSATIONS
-  List<ConversationModel> conversations = [
-    ConversationModel(
-      id: "1",
-      name: "Alisha Ali",
-      platform: "WhatsApp",
-      message: "Hello, I need help with pricing.",
-      time: "10:30 AM",
-      unread: 2,
-      profile: "https://i.pravatar.cc/150?img=1",
-      assigned: true,
-    ),
-
-    ConversationModel(
-      id: "2",
-      name: "Sana Khan",
-      platform: "WhatsApp",
-      message: "Can you share package details?",
-      time: "09:15 AM",
-      unread: 0,
-      profile: "https://i.pravatar.cc/150?img=2",
-      assigned: false,
-    ), ConversationModel(
-      id: "2",
-      name: "Mubashir Munir",
-      platform: "WhatsApp",
-      message: "Can you share package pictures too?",
-      time: "09:15 AM",
-      unread: 0,
-      profile: "https://i.pravatar.cc/150?img=2",
-      assigned: false,
-    ),
-  ];
 
   /// SELECTED CHAT
-  var selectedConversation =
-  Rxn<ConversationModel>();
 
   /// MESSAGES
   List<MessageModel> messages = [];
 
   /// OPEN CHAT
   void selectConversation(ConversationModel convo) {
-    selectedConversation.value = convo;
-    loadMessages(convo.id);
+    convoModel.value = convo;
+    loadMessages(convo.id??'');
   }
 
   /// LOAD CHAT MESSAGES
@@ -102,31 +71,51 @@ class DashboardController extends GetxController {
 
     update();
   }
-
   /// SEND MESSAGE
   void sendMessage() {
+    final text = msgController.text.trim();
 
-    if (msgController.text.trim().isEmpty) {
-      return;
-    }
+    if (text.isEmpty) return;
+
+    final now = DateTime.now();
 
     messages.add(
       MessageModel(
-        id: DateTime.now().toString(),
-
-        text: msgController.text,
-
+        id: now.toString(),
+        text: text,
         isMe: true,
-
         time: "Now",
       ),
     );
+
+    final selected = convoModel.value;
+
+    if (selected != null) {
+      final index = conversations.indexWhere(
+            (e) => e.id == selected.id,
+      );
+
+      if (index != -1) {
+        conversations[index] = conversations[index].copyWith(
+          message: text,
+          time: formatTime(now),
+          updatedAt: now,
+        );
+
+        conversations.sort(
+              (a, b) => b.updatedAt.compareTo(a.updatedAt),
+        );
+
+        convoModel.value = conversations.firstWhere(
+              (e) => e.id == selected.id,
+        );
+      }
+    }
 
     msgController.clear();
 
     update();
   }
-
   /// FILTERS
   List<ConversationModel>
   get filteredConversations {

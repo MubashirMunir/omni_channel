@@ -36,7 +36,7 @@ class DashboardView extends StatelessWidget {
               /// CENTER CHAT AREA
               Expanded(
                 child: Obx(() {
-                  final chat = ctrl.selectedConversation.value;
+                  final chat = ctrl.convoModel.value;
 
                   return LayoutBuilder(
                     builder: (context, constraints) {
@@ -142,10 +142,10 @@ class DashboardView extends StatelessWidget {
                         );
                       }
 
-                      final String name = chat.name.trim();
+                      final String name = chat.name!.trim();
 
                       final String backgroundImage =
-                          chat.platform.toLowerCase() == "whatsapp"
+                          chat.platform!.toLowerCase() == "whatsapp"
                           ? "assets/images/w_bg.png"
                           : "assets/images/w_bg.png";
 
@@ -172,10 +172,10 @@ class DashboardView extends StatelessWidget {
                                      CircleAvatar(
                                       radius: 24.r,
                                       backgroundColor: AppTheme.primaryColor,
-                                      child: chat.profile.isNotEmpty
+                                      child: chat.profile!.isNotEmpty
                                           ? ClipOval(
                                         child: Image.network(
-                                          chat.profile,
+                                          chat.profile??'',
                                           width: 48.r,
                                           height: 48.r,
                                           fit: BoxFit.cover,
@@ -307,7 +307,7 @@ class DashboardView extends StatelessWidget {
 Widget _fallbackAvatar(ConversationModel item,context) {
   return Center(
     child: Text(
-      item.name.isNotEmpty ? item.name[0].toUpperCase() : '?',style: Theme.of(context).textTheme.bodyMedium,
+      item.name!.isNotEmpty ? item.name![0].toUpperCase() : '?',style: Theme.of(context).textTheme.bodyMedium,
      ),
   );
 }
