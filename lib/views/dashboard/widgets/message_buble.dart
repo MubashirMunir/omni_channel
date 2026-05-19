@@ -8,8 +8,14 @@ import '../../../widgets/text_widget.dart';
 
 class MessageBubble extends StatefulWidget {
   final MessageModel message;
+  final String platform;
 
-  const MessageBubble({super.key, required this.message});
+
+  const MessageBubble({super.key, required this.message
+  ,
+    required this.platform,
+
+  });
 
   @override
   State<MessageBubble> createState() => _MessageBubbleState();
@@ -21,7 +27,8 @@ class _MessageBubbleState extends State<MessageBubble> {
   @override
   Widget build(BuildContext context) {
     final message = widget.message;
-
+    final platform = widget.platform;
+    final bool isWhatsApp = platform.toLowerCase() == "whatsapp";
     return Align(
       alignment: message.isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: MouseRegion(
@@ -71,10 +78,20 @@ class _MessageBubbleState extends State<MessageBubble> {
 
                     const SizedBox(height: 4),
 
-                    TextWidget(
-                      message.time,
-                      style: Theme.of(context).textTheme.bodySmall,
-                      color: message.isMe ? Colors.white70 : AppTheme.textColor,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextWidget(
+                          message.time,
+                          style: Theme.of(context).textTheme.bodySmall,
+                          color: message.isMe ? Colors.white70 : AppTheme.textColor,
+                        ),
+
+                        if (message.isMe && isWhatsApp) ...[
+                          const SizedBox(width: 4),
+                          _messageStatusIcon(message.status),
+                        ],
+                      ],
                     ),
                   ],
                 ),
@@ -123,12 +140,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                         ClipboardData(text: message.text),
                       );
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Message copied"),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
+
                     }
 
                     if (value == "reply") {
@@ -178,5 +190,43 @@ class _MessageBubbleState extends State<MessageBubble> {
         ),
       ),
     );
+  }
+}
+Widget _messageStatusIcon(MessageStatus status) {
+  switch (status) {
+    case MessageStatus.sending:
+      return const Icon(
+        Icons.access_time_rounded,
+        size: 14,
+        color: Colors.white70,
+      );
+
+    case MessageStatus.sent:
+      return const Icon(
+        Icons.done,
+        size: 15,
+        color: Colors.white70,
+      );
+
+    case MessageStatus.delivered:
+      return const Icon(
+        Icons.done_all,
+        size: 15,
+        color: Colors.white70,
+      );
+
+    case MessageStatus.read:
+      return const Icon(
+        Icons.done_all,
+        size: 15,
+        color: Colors.lightBlueAccent,
+      );
+
+    case MessageStatus.failed:
+      return const Icon(
+        Icons.error_outline,
+        size: 15,
+        color: Colors.redAccent,
+      );
   }
 }

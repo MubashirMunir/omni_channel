@@ -60,49 +60,48 @@ class MessageInput extends StatelessWidget {
 
           /// TEXT FIELD
           Expanded(
-            child: Expanded(
-              child: CallbackShortcuts(
-                bindings: {
-                  const SingleActivator(
-                    LogicalKeyboardKey.enter,
-                    control: true,
-                  ): () {
-                    onSend(); // ya controller.sendMessage();
-                  },
-
-                  // Mac ke liye Command + Enter
-                  const SingleActivator(
-                    LogicalKeyboardKey.enter,
-                    meta: true,
-                  ): () {
-                    onSend(); // ya controller.sendMessage();
-                  },
+            child: CallbackShortcuts(
+              bindings: {
+                const SingleActivator(
+                  LogicalKeyboardKey.enter,
+                  control: true,
+                ): () {
+                  onSend(); // ya controller.sendMessage();
                 },
-                child: TextField(
-                  controller: controller.msgController,
-                  minLines: 1,
-                  maxLines: 5,
-                  keyboardType: TextInputType.multiline,
-                  textInputAction: TextInputAction.newline,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.white,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: "Type a message",
-                    fillColor: AppTheme.textColor,
 
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    disabledBorder: InputBorder.none,
-                    errorBorder: InputBorder.none,
-                    focusedErrorBorder: InputBorder.none,
+                // Mac ke liye Command + Enter
+                const SingleActivator(
+                  LogicalKeyboardKey.enter,
+                  meta: true,
+                ): () {
+                  onSend(); // ya controller.sendMessage();
+                },
+              },
+              child: TextField(
+                controller: controller.msgController,
+                minLines: 1,
+                maxLines: 5,
+                keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  color: AppTheme.white,
+                ),
+                decoration: InputDecoration(
+                  hintText: "Type a message",
+                  fillColor: AppTheme.textColor,
 
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 18,
-                    ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  focusedErrorBorder: InputBorder.none,
+
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 20,
                   ),
                 ),
               ),
@@ -111,7 +110,7 @@ class MessageInput extends StatelessWidget {
 
           /// SUFFIX SEND BUTTON - BOTTOM FIXED
           Padding(
-            padding: const EdgeInsets.only(right: 6, bottom: 5),
+            padding: const EdgeInsets.only(right: 6, bottom: 6),
             child: ValueListenableBuilder<TextEditingValue>(
               valueListenable: controller.msgController,
               builder: (context, value, child) {

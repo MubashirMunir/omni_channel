@@ -265,7 +265,7 @@ class DashboardView extends StatelessWidget {
                                       padding: EdgeInsets.only(
                                         bottom: isCompact ? 8 : 10,
                                       ),
-                                      child: MessageBubble(message: msg),
+                                      child: MessageBubble(message: msg, platform: chat.platform,),
                                     );
                                   },
                                 ),

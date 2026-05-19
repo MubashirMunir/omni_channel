@@ -38,7 +38,7 @@ class UseableList extends StatelessWidget {
           key: ValueKey('$title-$isExpanded'),
           initiallyExpanded: isExpanded,
           onExpansionChanged: onExpansionChanged,
-          childrenPadding: EdgeInsets.only(bottom: 12.h),
+          // childrenPadding: EdgeInsets.only(bottom: 0.h),
 
           collapsedShape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),
@@ -49,8 +49,9 @@ class UseableList extends StatelessWidget {
           ),
 
           // backgroundColor: Colors.white,
-          collapsedBackgroundColor: AppTheme.black,
-
+          collapsedBackgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? AppTheme.textColor
+              : AppTheme.white,
           /// HEADER
           title: Row(
             children: [
@@ -108,7 +109,6 @@ class UseableList extends StatelessWidget {
 
                 return ListTile(
                   onTap: () => onTap(item),
-
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 0,
                     vertical: 6.h,

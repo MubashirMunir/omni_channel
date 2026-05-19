@@ -285,6 +285,11 @@ class DashboardController extends GetxController {
   /// =========================
 
   void selectConversation(convo_data.ConversationModel convo) {
+    final currentId = convoModel.value?.id;
+    if(currentId != convo.id){
+      msgController.clear();
+      hideEmojiBoard();
+    }
     final index = conversations.indexWhere((e) => e.id == convo.id);
 
     if (index != -1) {
@@ -293,12 +298,15 @@ class DashboardController extends GetxController {
       );
 
       convoModel.value = conversations[index];
-    } else {
+
+    } else {msgController.clear();
+    hideEmojiBoard();
       convoModel.value = convo;
     }
 
     loadMessages(convo.id);
     update();
+
   }
 
   /// =========================
