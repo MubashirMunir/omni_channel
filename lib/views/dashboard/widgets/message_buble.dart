@@ -1,342 +1,182 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:flutter/services.dart';
 
 import '../../../models/message_model.dart';
 import '../../../theme/theme.dart';
 import '../../../widgets/text_widget.dart';
-import '../controller.dart';
 
-class MessageBubble extends StatelessWidget {
+class MessageBubble extends StatefulWidget {
   final MessageModel message;
 
   const MessageBubble({super.key, required this.message});
 
   @override
+  State<MessageBubble> createState() => _MessageBubbleState();
+}
+
+class _MessageBubbleState extends State<MessageBubble> {
+  bool isHover = false;
+  bool isMenuOpen = false;
+  @override
   Widget build(BuildContext context) {
+    final message = widget.message;
+
     return Align(
       alignment: message.isMe ? Alignment.centerRight : Alignment.centerLeft,
-
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-
-        constraints: const BoxConstraints(maxWidth: 380),
-
-        decoration: BoxDecoration(
-          color: message.isMe ? AppTheme.primaryColor : const Color(0xffF3F6FA),
-
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(message.isMe ? 16 : 0),
-            bottomRight: Radius.circular(message.isMe ? 0 : 16),
-          ),
-
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-
+      child: MouseRegion(
+        onEnter: (_) {
+          setState(() {
+            isHover = true;
+          });
+        },
+        onExit: (_) {
+          if (!isMenuOpen) {
+            setState(() {
+              isHover = false;
+            });
+          }
+        },
+        child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            /// MESSAGE TEXT
-            TextWidget(
-              message.text,
-              color: message.isMe ? Colors.white : Colors.black,
-              style: Theme.of(context).textTheme.bodyMedium,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              constraints: const BoxConstraints(maxWidth: 380),
+              decoration: BoxDecoration(
+                color: message.isMe
+                    ? AppTheme.primaryColor
+                    : const Color(0xffF3F6FA),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(AppTheme.radiusSM(context)),
+                  topRight: Radius.circular(AppTheme.radiusSM(context)),
+                  bottomLeft: Radius.circular(
+                    message.isMe ? AppTheme.radiusSM(context) : 0,
+                  ),
+                  bottomRight: Radius.circular(
+                    message.isMe ? 0 : AppTheme.radiusSM(context),
+                  ),
+                ),
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(right: message.isMe ? 10 : 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    TextWidget(
+                      message.text,
+                      color: message.isMe ? Colors.white : Colors.black,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    TextWidget(
+                      message.time,
+                      style: Theme.of(context).textTheme.bodySmall,
+                      color: message.isMe ? Colors.white70 : AppTheme.textColor,
+                    ),
+                  ],
+                ),
+              ),
             ),
 
+            if (isHover)
+              Positioned(
+                top: -8,
+                right: -7,
 
-            /// TIME
-            TextWidget(
-              message.time,
-              style: Theme.of(context).textTheme.bodySmall,
-              color: message.isMe ? Colors.white70 : AppTheme.textColor,
-            ),
+                child: PopupMenuButton<String>(
+                  padding: EdgeInsets.zero,
+                  menuPadding: EdgeInsets.zero,
+                  tooltip: "",
+                  position: PopupMenuPosition.under,
+
+                  onOpened: () {
+                    setState(() {
+                      isMenuOpen = true;
+                      isHover = true;
+                    });
+                  },
+
+                  onCanceled: () {
+                    setState(() {
+                      isMenuOpen = false;
+                      isHover = false;
+                    });
+                  },
+
+                  icon: Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 25,
+                    color: message.isMe ? Colors.white : Colors.black,
+                  ),
+
+                  onSelected: (value) async {
+                    setState(() {
+                      isMenuOpen = false;
+                      isHover = false;
+                    });
+
+                    if (value == "copy") {
+                      await Clipboard.setData(
+                        ClipboardData(text: message.text),
+                      );
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Message copied"),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    }
+
+                    if (value == "reply") {
+                      // reply logic
+                    }
+
+                    if (value == "delete") {
+                      // delete logic
+                    }
+                  },
+
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: "reply",
+                      child: Row(
+                        children: [
+                          Icon(Icons.arrow_back, size: 15),
+                          SizedBox(width: 6),
+                          Text("Reply"),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: "copy",
+                      child: Row(
+                        children: [
+                          Icon(Icons.copy_rounded, size: 15),
+                          SizedBox(width: 6),
+                          Text("Copy"),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: "delete",
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, size: 15),
+                          SizedBox(width: 6),
+                          Text("Delete"),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              ),
           ],
         ),
       ),
     );
   }
 }
-
-class MessageInput extends StatelessWidget {
-  final DashboardController controller;
-  final VoidCallback onSend;
-
-  const MessageInput({
-    super.key,
-    required this.controller,
-    required this.onSend,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.all(4),
-      constraints: const BoxConstraints(minHeight: 50, maxHeight: 145),
-      decoration: BoxDecoration(
-        color: AppTheme.black,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          /// PREFIX ICONS - BOTTOM FIXED
-          Padding(
-            padding: const EdgeInsets.only(left: 8, bottom: 5),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  onPressed: controller.toggleEmojiBoard,
-                  icon: Obx(
-                    () => Icon(
-                      controller.showEmojiBoard.value
-                          ? Icons.keyboard_alt_outlined
-                          : Icons.emoji_emotions_outlined,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.add),
-                  color: AppTheme.white,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 36,
-                    minHeight: 36,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          /// TEXT FIELD
-          Expanded(
-            child: TextField(
-              controller: controller.msgController,
-              minLines: 1,
-              maxLines: 5,
-              keyboardType: TextInputType.multiline,
-              textInputAction: TextInputAction.newline,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppTheme.white),
-              decoration: InputDecoration(
-                hintText: "Type a message",
-                fillColor: AppTheme.textColor,
-
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                disabledBorder: InputBorder.none,
-                errorBorder: InputBorder.none,
-                focusedErrorBorder: InputBorder.none,
-
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 18,
-                ),
-              ),
-            ),
-          ),
-
-          /// SUFFIX SEND BUTTON - BOTTOM FIXED
-          Padding(
-            padding: const EdgeInsets.only(right: 6, bottom: 5),
-            child: ValueListenableBuilder<TextEditingValue>(
-              valueListenable: controller.msgController,
-              builder: (context, value, child) {
-                final hasText = value.text.trim().isNotEmpty;
-
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 120),
-                  child: hasText
-                      ? IconButton(
-                          key: const ValueKey("send_button"),
-                          onPressed: onSend,
-                          style: IconButton.styleFrom(
-                            backgroundColor: AppTheme.primaryColor,
-                            fixedSize: const Size(40, 40),
-                            shape: const CircleBorder(),
-                            padding: EdgeInsets.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          icon: const Icon(
-                            Icons.send_rounded,
-                            color: Colors.white,
-                            size: 15,
-                          ),
-                        )
-                      : IconButton(
-                          key: const ValueKey("send_button"),
-                          onPressed: () {},
-                          style: IconButton.styleFrom(
-                            fixedSize: const Size(40, 40),
-                            shape: const CircleBorder(),
-                            padding: EdgeInsets.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          icon: const Icon(
-                            Icons.mic,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-} // class MessageInput extends StatelessWidget {
-
-//   final DashboardController controller;
-//   final VoidCallback onSend;
-//
-//   const MessageInput({
-//     super.key,
-//     required this.controller,
-//     required this.onSend,
-//   });
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return TextField(
-//       controller: controller.msgController,
-//       maxLines: 5,
-//       minLines: 1,
-//       style: Theme.of(
-//         context,
-//       ).textTheme.bodyMedium?.copyWith(color: AppTheme.white),
-//       decoration: InputDecoration(
-//         prefixIcon: Row(
-//           crossAxisAlignment: CrossAxisAlignment.end,
-//           mainAxisSize: MainAxisSize.min,
-//           children: [
-//             const SizedBox(width: 8),
-//
-//             IconButton(
-//               onPressed: () {},
-//               icon: const Icon(Icons.emoji_emotions_outlined),
-//               color: AppTheme.white,
-//               padding: EdgeInsets.zero,
-//               constraints: const BoxConstraints(
-//                 minWidth: 36,
-//                 minHeight: 36,
-//               ),
-//             ),
-//
-//             IconButton(
-//               onPressed: () {},
-//               icon: const Icon(Icons.add),
-//               color: AppTheme.white,
-//               padding: EdgeInsets.zero,
-//               constraints: const BoxConstraints(
-//                 minWidth: 36,
-//                 minHeight: 36,
-//               ),
-//             ),
-//
-//             // const SizedBox(width: 6),
-//           ],
-//         ),
-//         suffixIcon: ValueListenableBuilder<TextEditingValue>(
-//           valueListenable: controller.msgController,
-//           builder: (context, value, child) {
-//             final hasText = value.text.trim().isNotEmpty;
-//
-//             return AnimatedSwitcher(
-//               duration: const Duration(milliseconds: 10),
-//               child: hasText
-//                   ? IconButton(
-//                 key: const ValueKey("send_button"),
-//                 onPressed: onSend,
-//                 style: IconButton.styleFrom(
-//                   backgroundColor: AppTheme.primaryColor,
-//                   fixedSize: const Size(40, 40), // button size
-//                   // minimumSize: const Size(34, 34),
-//                   // maximumSize: const Size(34, 34),
-//                   shape: const CircleBorder(),
-//                   padding: EdgeInsets.zero,
-//                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-//                 ),
-//                 icon: const Icon(
-//                   Icons.send_rounded,
-//                   color: Colors.white,
-//                   size: 15, // icon size
-//                 ),
-//               )
-//                   : const SizedBox(
-//                 key: ValueKey("empty_button"),
-//                 width: 40,
-//                 height: 40,
-//               ),
-//             );
-//           },
-//         ),
-//
-//         suffixIconConstraints: const BoxConstraints(
-//           minWidth: 46,
-//           minHeight: 0,
-//         ),
-//         prefixIconConstraints: const BoxConstraints(
-//           minWidth: 80,
-//           minHeight: 0,
-//         ),
-//
-//         hintText: "Type a message",
-//         filled: true,
-//         fillColor: Theme.of(context).cardColor,
-//
-//         border: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
-//           borderSide: BorderSide.none,
-//         ),
-//
-//         enabledBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
-//           borderSide: BorderSide.none,
-//         ),
-//
-//         focusedBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
-//           borderSide: BorderSide.none,
-//         ),
-//
-//         disabledBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
-//           borderSide: BorderSide.none,
-//         ),
-//
-//         errorBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
-//           borderSide: BorderSide.none,
-//         ),
-//
-//         focusedErrorBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(AppTheme.radiusLG(context)),
-//           borderSide: BorderSide.none,
-//         ),
-//
-//         isDense: true,
-//         contentPadding: const EdgeInsets.symmetric(
-//           horizontal: 15,
-//           vertical: 18,
-//         ),
-//       ),
-//     );
-//   }
-// }

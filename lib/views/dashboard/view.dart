@@ -2,11 +2,13 @@ import 'package:elite_csr/theme/theme.dart';
 import 'package:elite_csr/views/dashboard/controller.dart';
 import 'package:elite_csr/views/dashboard/widgets/convo_list.dart';
 import 'package:elite_csr/views/dashboard/widgets/message_buble.dart';
+import 'package:elite_csr/views/dashboard/widgets/message_input.dart';
 import 'package:elite_csr/views/dashboard/widgets/profile_panel.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+
 import '../../models/convo_list.dart';
 import '../../responsive/sizes.dart';
 
@@ -145,7 +147,7 @@ class DashboardView extends StatelessWidget {
                       final String name = chat.name.trim();
 
                       final String backgroundImage =
-                          chat.platform!.toLowerCase() == "whatsapp"
+                          chat.platform.toLowerCase() == "whatsapp"
                           ? "assets/images/w_bg.png"
                           : "assets/images/w_bg.png";
 
@@ -169,22 +171,30 @@ class DashboardView extends StatelessWidget {
 
                                 child: Row(
                                   children: [
-                                     CircleAvatar(
+                                    CircleAvatar(
                                       radius: 24.r,
                                       backgroundColor: AppTheme.primaryColor,
-                                      child: chat.profile!.isNotEmpty
+                                      child: chat.profile.isNotEmpty
                                           ? ClipOval(
-                                        child: Image.network(
-                                          chat.profile??'',
-                                          width: 48.r,
-                                          height: 48.r,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return _fallbackAvatar(chat,context);
-                                          },
-                                        ),
-                                      )
-                                          : _fallbackAvatar(chat,context),
+                                              child: Image.network(
+                                                chat.profile,
+                                                width: 48.r,
+                                                height: 48.r,
+                                                fit: BoxFit.cover,
+                                                errorBuilder:
+                                                    (
+                                                      context,
+                                                      error,
+                                                      stackTrace,
+                                                    ) {
+                                                      return _fallbackAvatar(
+                                                        chat,
+                                                        context,
+                                                      );
+                                                    },
+                                              ),
+                                            )
+                                          : _fallbackAvatar(chat, context),
                                     ),
 
                                     SizedBox(width: isCompact ? 10 : 12),
@@ -228,14 +238,18 @@ class DashboardView extends StatelessWidget {
                                       ),
                                     ),
                                     Spacer(),
-                                    IconButton(onPressed: (){}, icon: Icon(Icons.more_vert))
+                                    IconButton(
+                                      onPressed: () {},
+                                      icon: Icon(Icons.more_vert),
+                                    ),
                                   ],
                                 ),
                               ),
 
                               /// CHAT BUBBLES
                               Expanded(
-                                child: ListView.builder(
+                                child: ListView.builder(controller: ctrl.messageScrollController,
+
                                   padding: EdgeInsets.symmetric(
                                     horizontal: isCompact
                                         ? 10
@@ -247,7 +261,6 @@ class DashboardView extends StatelessWidget {
                                   itemCount: ctrl.messages.length,
                                   itemBuilder: (_, index) {
                                     final msg = ctrl.messages[index];
-
                                     return Padding(
                                       padding: EdgeInsets.only(
                                         bottom: isCompact ? 8 : 10,
@@ -260,24 +273,19 @@ class DashboardView extends StatelessWidget {
 
                               /// INPUT
                               Obx(
-                                    () => ctrl.showEmojiBoard.value
-                                    ? SizedBox(
-                                  height: 300,
-                                  child: EmojiPicker(
-                                    textEditingController: ctrl.msgController,
-                                    config: const Config(
-                                      height: 300,
-                                    ),
-                                  ),
-                                )
+                                () => ctrl.showEmojiBoard.value
+                                    ? EmojiPicker(
+                                        textEditingController:
+                                            ctrl.msgController,
+                                        config: const Config(height: 300),
+                                      )
                                     : const SizedBox.shrink(),
                               ),
-                                MessageInput(
-                                  controller: ctrl,
-                                  onSend: () {
-                                    ctrl.sendMessage();
-                                  },
-
+                              MessageInput(
+                                controller: ctrl,
+                                onSend: () {
+                                  ctrl.sendMessage();
+                                },
                               ),
                             ],
                           ),
@@ -303,11 +311,11 @@ class DashboardView extends StatelessWidget {
   }
 }
 
-
-Widget _fallbackAvatar(ConversationModel item,context) {
+Widget _fallbackAvatar(ConversationModel item, context) {
   return Center(
     child: Text(
-      item.name!.isNotEmpty ? item.name![0].toUpperCase() : '?',style: Theme.of(context).textTheme.bodyMedium,
-     ),
+      item.name.isNotEmpty ? item.name[0].toUpperCase() : '?',
+      style: Theme.of(context).textTheme.bodyMedium,
+    ),
   );
 }

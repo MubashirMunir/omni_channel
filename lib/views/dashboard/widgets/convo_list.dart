@@ -111,33 +111,35 @@ class ConvoPanel extends StatelessWidget {
                 SizedBox(height: 14.h),
 
                 UseableList(
-                  isExpanded: ctrl.expandedList == "Instagram",
-                  onExpansionChanged: (value) {
-                    ctrl.expandedList = value ? "Instagram" : null;
-                    ctrl.update();
-                  },
                   title: "Instagram",
                   color: Colors.green,
                   icon: 'assets/images/instagram.png',
-                  count: 19,
-                  data: [],
-                  onTap: (model) {},
+                  count: ctrl.countByPlatform("Instagram"),
+                  data: ctrl.getByPlatform("Instagram"),
+                  onTap: (model) {
+                    ctrl.selectConversation(model);
+                  },
+                  isExpanded: ctrl.expandedList == "Instagram",
+                  onExpansionChanged: (value) {
+                    ctrl.toggleExpandedList("Instagram", value);
+                  },
                 ),
 
                 SizedBox(height: 14.h),
 
                 UseableList(
-                  isExpanded: ctrl.expandedList == "Gmail",
-                  onExpansionChanged: (value) {
-                    ctrl.expandedList = value ? "Gmail" : null;
-                    ctrl.update();
-                  },
                   title: "Gmail",
                   color: Colors.green,
                   icon: 'assets/images/gmail.png',
-                  count: 19,
-                  data: [],
-                  onTap: (model) {},
+                  count: ctrl.countByPlatform("Gmail"),
+                  data: ctrl.getByPlatform("Gmail"),
+                  onTap: (model) {
+                    ctrl.selectConversation(model);
+                  },
+                  isExpanded: ctrl.expandedList == "Gmail",
+                  onExpansionChanged: (value) {
+                    ctrl.toggleExpandedList("Gmail", value);
+                  },
                 ),
 
                 SizedBox(height: 20.h),
@@ -158,14 +160,15 @@ class ConvoPanel extends StatelessWidget {
       final isMobile = Responsive.isMobile(context);
       final isTablet = Responsive.isTablet(context);
 
-      bool active = ctrl.selectedTab.value == text;
+      final bool active = ctrl.selectedTab.value == text;
 
       return GestureDetector(
-        onTap: () => ctrl.selectedTab.value = text,
-
+        onTap: () {
+          ctrl.selectedTab.value = text;
+          ctrl.update(); // important for GetBuilder list rebuild
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-
           padding: EdgeInsets.symmetric(
             horizontal: isMobile
                 ? 10
@@ -174,30 +177,32 @@ class ConvoPanel extends StatelessWidget {
                 : 16,
             vertical: isMobile ? 6 : 8,
           ),
-
           decoration: BoxDecoration(
             color: active ? AppTheme.primaryColor : Colors.black,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: active
+                  ? AppTheme.primaryColor
+                  : Colors.grey.withOpacity(0.25),
+            ),
           ),
-
           child: TextWidget(
             text,
-
-            style: Theme.of(context).textTheme.labelMedium,
-
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: active ? Colors.white : Colors.grey,
+              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+            ),
             fontSize: isMobile
                 ? 11
                 : isTablet
                 ? 12
                 : 13,
-
             fontWeight: active ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
       );
     });
   }
-
   /// ===================================
   /// CHANNEL TILE
   /// ===================================

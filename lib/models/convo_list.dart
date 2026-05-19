@@ -143,7 +143,7 @@ List<ConversationModel> conversations = [
   ConversationModel(
     id: "7",
     name: "Ghafoor Ali",
-    platform: "Facebook",
+    platform: "Gmail",
     message: "Can you share package pictures too?",
     time: "09:15 AM",
     unread: 0,
