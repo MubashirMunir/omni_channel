@@ -398,7 +398,19 @@ class DashboardController extends GetxController {
   int countByPlatform(String platform) {
     return getByPlatform(platform).length;
   }
+  final RxString selectedCenterView = ''.obs;
 
+  void openChat(convo_data.ConversationModel model) {
+    convoModel.value = model;
+    selectedCenterView.value = model.platform;
+    update();
+  }
+
+  void openGmail() {
+    selectedCenterView.value = 'Gmail';
+    convoModel.value = null; // Gmail ke liye chat model ki zaroorat nahi
+    update();
+  }
   /// =========================
   /// TAB FILTERS
   /// =========================

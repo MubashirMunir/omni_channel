@@ -4,6 +4,7 @@ import 'package:elite_csr/views/dashboard/widgets/convo_list.dart';
 import 'package:elite_csr/views/dashboard/widgets/message_buble.dart';
 import 'package:elite_csr/views/dashboard/widgets/message_input.dart';
 import 'package:elite_csr/views/dashboard/widgets/profile_panel.dart';
+import 'package:elite_csr/views/gmail/view.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,6 +12,9 @@ import 'package:get/get.dart';
 
 import '../../models/convo_list.dart';
 import '../../responsive/sizes.dart';
+import '../gmail/controller.dart';
+import '../gmail/widgets/gmail_detail_panel.dart';
+import '../gmail/widgets/gmail_mail_list.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
@@ -38,6 +42,7 @@ class DashboardView extends StatelessWidget {
               /// CENTER CHAT AREA
               Expanded(
                 child: Obx(() {
+                  final selectedView = ctrl.selectedCenterView.value;
                   final chat = ctrl.convoModel.value;
 
                   return LayoutBuilder(
@@ -71,12 +76,6 @@ class DashboardView extends StatelessWidget {
                           ? 430
                           : 520;
 
-                      final double avatarRadius = isCompact
-                          ? 20
-                          : isMedium
-                          ? 22
-                          : 24;
-
                       final double titleSize = isCompact
                           ? 14
                           : isMedium
@@ -89,6 +88,19 @@ class DashboardView extends StatelessWidget {
                           ? 13
                           : 14;
 
+                      /// Gmail ko sab se pehle check karo
+                      if (selectedView == 'Gmail') {
+                        return GetBuilder<GmailController>(
+                          builder: (gmailCtrl) {
+                            return Container(
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              child: GmailDetailPanel(ctrl: gmailCtrl),
+                            );
+                          },
+                        );
+                      }
+
+                      /// Empty state
                       if (chat == null) {
                         return Center(
                           child: SingleChildScrollView(
@@ -115,14 +127,11 @@ class DashboardView extends StatelessWidget {
                                   Text(
                                     "Select a conversation",
                                     textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelLarge
-                                        ?.copyWith(
-                                          fontSize: titleSize,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppTheme.white.withOpacity(.8),
-                                        ),
+                                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                      fontSize: titleSize,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.white.withOpacity(.8),
+                                    ),
                                   ),
 
                                   SizedBox(height: isCompact ? 8 : 10),
@@ -130,12 +139,11 @@ class DashboardView extends StatelessWidget {
                                   Text(
                                     "Choose a conversation from your inbox to start messaging.",
                                     textAlign: TextAlign.center,
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
-                                          fontSize: subTitleSize,
-                                          color: Colors.grey.shade600,
-                                          height: 1.5,
-                                        ),
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontSize: subTitleSize,
+                                      color: Colors.grey.shade600,
+                                      height: 1.5,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -147,10 +155,11 @@ class DashboardView extends StatelessWidget {
                       final String name = chat.name.trim();
 
                       final String backgroundImage =
-                          chat.platform.toLowerCase() == "whatsapp"
+                      chat.platform.toLowerCase() == "whatsapp"
                           ? "assets/images/w_bg.png"
                           : "assets/images/w_bg.png";
 
+                      /// Normal WhatsApp / Facebook / Instagram chat
                       return Container(
                         decoration: BoxDecoration(
                           image: DecorationImage(
@@ -168,7 +177,6 @@ class DashboardView extends StatelessWidget {
                                   horizontal: horizontalPadding,
                                   vertical: isCompact ? 10 : 14,
                                 ),
-
                                 child: Row(
                                   children: [
                                     CircleAvatar(
@@ -176,24 +184,20 @@ class DashboardView extends StatelessWidget {
                                       backgroundColor: AppTheme.primaryColor,
                                       child: chat.profile.isNotEmpty
                                           ? ClipOval(
-                                              child: Image.network(
-                                                chat.profile,
-                                                width: 48.r,
-                                                height: 48.r,
-                                                fit: BoxFit.cover,
-                                                errorBuilder:
-                                                    (
-                                                      context,
-                                                      error,
-                                                      stackTrace,
-                                                    ) {
-                                                      return _fallbackAvatar(
-                                                        chat,
-                                                        context,
-                                                      );
-                                                    },
-                                              ),
-                                            )
+                                        child: Image.network(
+                                          chat.profile,
+                                          width: 48.r,
+                                          height: 48.r,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (
+                                              context,
+                                              error,
+                                              stackTrace,
+                                              ) {
+                                            return _fallbackAvatar(chat, context);
+                                          },
+                                        ),
+                                      )
                                           : _fallbackAvatar(chat, context),
                                     ),
 
@@ -201,23 +205,20 @@ class DashboardView extends StatelessWidget {
 
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            name.isNotEmpty
-                                                ? name
-                                                : "Unknown User",
+                                            name.isNotEmpty ? name : "Unknown User",
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .bodyMedium
                                                 ?.copyWith(
-                                                  fontSize: isCompact ? 13 : 15,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: Colors.black,
-                                                ),
+                                              fontSize: isCompact ? 13 : 15,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.black,
+                                            ),
                                           ),
 
                                           SizedBox(height: isCompact ? 2 : 4),
@@ -230,17 +231,19 @@ class DashboardView extends StatelessWidget {
                                                 .textTheme
                                                 .bodySmall
                                                 ?.copyWith(
-                                                  fontSize: isCompact ? 11 : 12,
-                                                  color: Colors.grey.shade600,
-                                                ),
+                                              fontSize: isCompact ? 11 : 12,
+                                              color: Colors.grey.shade600,
+                                            ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                    Spacer(),
+
+                                    const Spacer(),
+
                                     IconButton(
                                       onPressed: () {},
-                                      icon: Icon(Icons.more_vert),
+                                      icon: const Icon(Icons.more_vert),
                                     ),
                                   ],
                                 ),
@@ -248,8 +251,8 @@ class DashboardView extends StatelessWidget {
 
                               /// CHAT BUBBLES
                               Expanded(
-                                child: ListView.builder(controller: ctrl.messageScrollController,
-
+                                child: ListView.builder(
+                                  controller: ctrl.messageScrollController,
                                   padding: EdgeInsets.symmetric(
                                     horizontal: isCompact
                                         ? 10
@@ -261,26 +264,31 @@ class DashboardView extends StatelessWidget {
                                   itemCount: ctrl.messages.length,
                                   itemBuilder: (_, index) {
                                     final msg = ctrl.messages[index];
+
                                     return Padding(
                                       padding: EdgeInsets.only(
                                         bottom: isCompact ? 8 : 10,
                                       ),
-                                      child: MessageBubble(message: msg, platform: chat.platform,),
+                                      child: MessageBubble(
+                                        message: msg,
+                                        platform: chat.platform,
+                                      ),
                                     );
                                   },
                                 ),
                               ),
 
-                              /// INPUT
+                              /// EMOJI
                               Obx(
-                                () => ctrl.showEmojiBoard.value
+                                    () => ctrl.showEmojiBoard.value
                                     ? EmojiPicker(
-                                        textEditingController:
-                                            ctrl.msgController,
-                                        config: const Config(height: 300),
-                                      )
+                                  textEditingController: ctrl.msgController,
+                                  config: const Config(height: 300),
+                                )
                                     : const SizedBox.shrink(),
                               ),
+
+                              /// INPUT
                               MessageInput(
                                 controller: ctrl,
                                 onSend: () {
@@ -295,7 +303,6 @@ class DashboardView extends StatelessWidget {
                   );
                 }),
               ),
-
               /// RIGHT PROFILE PANEL
               isMobile
                   ? SizedBox()

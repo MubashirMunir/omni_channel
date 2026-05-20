@@ -1,5 +1,6 @@
 class AppRoutes {
   static const login = '/login';
+  static const gmail = '/gmail';
   static const dashboard = '/dashboard';
   static const statistics = '/Statistics';
   static const inbox = '/inbox';

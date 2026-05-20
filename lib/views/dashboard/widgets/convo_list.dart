@@ -1,16 +1,17 @@
 import 'package:elite_csr/models/convo_list.dart';
 import 'package:elite_csr/views/dashboard/controller.dart';
 import 'package:elite_csr/views/dashboard/widgets/useable_list.dart';
+import 'package:elite_csr/views/gmail/widgets/list_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
-
-import '../../../main.dart';
-import '../../../models/convo_list.dart';
+import 'package:get/get_state_manager/src/simple/get_state.dart';
+import '../../../models/gmail_model.dart';
 import '../../../responsive/sizes.dart';
 import '../../../theme/theme.dart';
 import '../../../widgets/input_fileds.dart';
 import '../../../widgets/text_widget.dart';
+import '../../gmail/controller.dart';
 
 class ConvoPanel extends StatelessWidget {
   final DashboardController ctrl;
@@ -76,69 +77,121 @@ class ConvoPanel extends StatelessWidget {
           Expanded(
             child: ListView(
               children: [
-                UseableList(
+                UseableList<ConversationModel>(
                   title: "WhatsApp",
                   color: Colors.green,
                   icon: 'assets/images/w.png',
                   count: ctrl.countByPlatform("WhatsApp"),
                   data: ctrl.getByPlatform("WhatsApp"),
-                  onTap: (model) {
-                    ctrl.selectConversation(model);
-                  },
                   isExpanded: ctrl.expandedList == "WhatsApp",
                   onExpansionChanged: (value) {
                     ctrl.toggleExpandedList("WhatsApp", value);
                   },
+                  itemBuilder: (context, item) {
+                    return conversationTile(
+                      context: context,
+                      item: item,
+                      color: Colors.green,
+                      onTap: () {
+
+                      ctrl.selectConversation(item);
+                        ctrl.openChat(item);
+
+
+                      }
+                    );
+                  },
                 ),
 
                 SizedBox(height: 14.h),
 
-                UseableList(
+                UseableList<ConversationModel>(
                   title: "Facebook",
-                  color: Colors.green,
+                  color: Colors.blue,
                   icon: 'assets/images/facebook.png',
                   count: ctrl.countByPlatform("Facebook"),
                   data: ctrl.getByPlatform("Facebook"),
-                  onTap: (model) {
-                    ctrl.selectConversation(model);
-                  },
                   isExpanded: ctrl.expandedList == "Facebook",
                   onExpansionChanged: (value) {
                     ctrl.toggleExpandedList("Facebook", value);
                   },
+                  itemBuilder: (context, item) {
+                    return conversationTile(
+                      context: context,
+                      item: item,
+                      color: Colors.blue,
+                      onTap: () {
+                      ctrl.selectConversation(item);
+                        ctrl.openChat(item);
+
+                      }
+                    );
+                  },
                 ),
 
                 SizedBox(height: 14.h),
 
-                UseableList(
+                UseableList<ConversationModel>(
                   title: "Instagram",
-                  color: Colors.green,
+                  color: Colors.pink,
                   icon: 'assets/images/instagram.png',
                   count: ctrl.countByPlatform("Instagram"),
                   data: ctrl.getByPlatform("Instagram"),
-                  onTap: (model) {
-                    ctrl.selectConversation(model);
-                  },
                   isExpanded: ctrl.expandedList == "Instagram",
                   onExpansionChanged: (value) {
                     ctrl.toggleExpandedList("Instagram", value);
                   },
+                  itemBuilder: (context, item) {
+                    return conversationTile(
+                      context: context,
+                      item: item,
+                      color: Colors.pink,
+                      onTap: () {
+
+
+                      ctrl.selectConversation(item);
+                        ctrl.openChat(item);
+
+                      }
+                    );
+                  },
                 ),
 
                 SizedBox(height: 14.h),
 
-                UseableList(
-                  title: "Gmail",
-                  color: Colors.green,
-                  icon: 'assets/images/gmail.png',
-                  count: ctrl.countByPlatform("Gmail"),
-                  data: ctrl.getByPlatform("Gmail"),
-                  onTap: (model) {
-                    ctrl.selectConversation(model);
-                  },
-                  isExpanded: ctrl.expandedList == "Gmail",
-                  onExpansionChanged: (value) {
-                    ctrl.toggleExpandedList("Gmail", value);
+                GetBuilder<GmailController>(
+                  init: GmailController(),
+                  builder: (gmailCtrl) {
+                    return UseableList<GmailMessageModel>(
+                      title: "Gmail",
+                      color: Colors.red,
+                      icon: 'assets/images/gmail.png',
+                      count: gmailCtrl.filteredEmails.length,
+                      data: gmailCtrl.filteredEmails,
+                      isExpanded: ctrl.expandedList == "Gmail",
+                      onExpansionChanged: (value) {
+                        ctrl.toggleExpandedList("Gmail", value);
+                      },
+                      itemBuilder: (context, mail) {
+                        return MailListTile(
+                          mail: mail,
+                          selected: true,
+
+                          onStarTap: () {
+                            gmailCtrl.toggleStar(mail);
+                          },
+                          onTap: () {
+                            gmailCtrl.selectEmail(mail);
+                            gmailCtrl.update();
+                            ctrl.openGmail();
+
+                            /// yahan agar center/detail panel change karwana hai
+                            /// to apne dashboard controller me Gmail selected view bhi set kar do
+                            /// ctrl.changePlatform("Gmail");
+                          },
+                        );
+                      },
+                    );
                   },
                 ),
 
@@ -203,6 +256,7 @@ class ConvoPanel extends StatelessWidget {
       );
     });
   }
+
   /// ===================================
   /// CHANNEL TILE
   /// ===================================

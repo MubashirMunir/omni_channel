@@ -4,13 +4,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../models/convo_list.dart';
 
-class UseableList extends StatelessWidget {
+class UseableList<T> extends StatelessWidget {
   final String title;
   final String icon;
   final Color color;
   final int count;
-  final List<ConversationModel> data;
-  final Function(ConversationModel) onTap;
+  final List<T> data;
+  final Widget Function(BuildContext context, T item) itemBuilder;
   final bool isExpanded;
   final Function(bool) onExpansionChanged;
 
@@ -21,7 +21,7 @@ class UseableList extends StatelessWidget {
     required this.color,
     required this.count,
     required this.data,
-    required this.onTap,
+    required this.itemBuilder,
     required this.isExpanded,
     required this.onExpansionChanged,
   });
@@ -30,29 +30,25 @@ class UseableList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-
       child: Container(
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(12.r)),
-
         child: ExpansionTile(
           key: ValueKey('$title-$isExpanded'),
           initiallyExpanded: isExpanded,
           onExpansionChanged: onExpansionChanged,
-          // childrenPadding: EdgeInsets.only(bottom: 0.h),
 
           collapsedShape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),
           ),
-
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),
           ),
 
-          // backgroundColor: Colors.white,
-          collapsedBackgroundColor: Theme.of(context).brightness == Brightness.dark
+          collapsedBackgroundColor:
+              Theme.of(context).brightness == Brightness.dark
               ? AppTheme.textColor
               : AppTheme.white,
-          /// HEADER
+
           title: Row(
             children: [
               Container(
@@ -69,9 +65,7 @@ class UseableList extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: Theme.of(context).textTheme.bodyLarge),
-
                     SizedBox(height: 4.h),
-
                     Text(
                       "$count active conversations",
                       style: Theme.of(context).textTheme.bodyMedium,
@@ -80,13 +74,11 @@ class UseableList extends StatelessWidget {
                 ),
               ),
 
-              /// green count container
               Container(
                 width: 24,
                 height: 24,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-
                 child: Text(
                   count.toString(),
                   style: Theme.of(
@@ -97,7 +89,6 @@ class UseableList extends StatelessWidget {
             ],
           ),
 
-          /// LIST
           children: [
             ListView.builder(
               shrinkWrap: true,
@@ -106,71 +97,7 @@ class UseableList extends StatelessWidget {
               itemCount: data.length,
               itemBuilder: (context, index) {
                 final item = data[index];
-
-                return ListTile(
-                  onTap: () => onTap(item),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 0,
-                    vertical: 6.h,
-                  ),
-
-                  leading: CircleAvatar(
-                    radius: 20,
-                    backgroundColor: color.withOpacity(0.15),
-                    child: item.profile.isNotEmpty
-                        ? ClipOval(
-                            child: Image.network(
-                              item.profile,
-                              width: 48.r,
-                              height: 48.r,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return _fallbackAvatar(item, context);
-                              },
-                            ),
-                          )
-                        : _fallbackAvatar(item, context),
-                  ),
-
-                  title: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: AppTheme.white),
-                        ),
-                      ),
-
-                      SizedBox(width: 8.w),
-
-                      Text(
-                        item.time,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(),
-                      ),
-                    ],
-                  ),
-
-                  subtitle: Text(
-                    item.message,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(),
-                  ),
-
-                  trailing: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                );
+                return itemBuilder(context, item);
               },
             ),
           ],
@@ -180,7 +107,64 @@ class UseableList extends StatelessWidget {
   }
 }
 
-Widget _fallbackAvatar(ConversationModel item, context) {
+Widget conversationTile({
+  required BuildContext context,
+  required ConversationModel item,
+  required Color color,
+  required VoidCallback onTap,
+}) {
+  return ListTile(
+    onTap: onTap,
+    contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 6.h),
+    leading: CircleAvatar(
+      radius: 20,
+      backgroundColor: color.withOpacity(0.15),
+      child: item.profile.isNotEmpty
+          ? ClipOval(
+              child: Image.network(
+                item.profile,
+                width: 48.r,
+                height: 48.r,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return fallbackConversationAvatar(item, context);
+                },
+              ),
+            )
+          : fallbackConversationAvatar(item, context),
+    ),
+    title: Row(
+      children: [
+        Expanded(
+          child: Text(
+            item.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+        SizedBox(width: 8.w),
+        Text(item.time, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+    subtitle: Text(
+      item.message,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Theme.of(context).textTheme.bodySmall,
+    ),
+    trailing: Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    ),
+  );
+}
+
+Widget fallbackConversationAvatar(
+  ConversationModel item,
+  BuildContext context,
+) {
   return Center(
     child: Text(
       item.name.isNotEmpty ? item.name[0].toUpperCase() : '?',
