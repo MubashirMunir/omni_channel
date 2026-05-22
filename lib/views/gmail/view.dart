@@ -1,6 +1,5 @@
 import 'package:elite_csr/views/gmail/widgets/compact_layout.dart';
-import 'package:elite_csr/views/gmail/widgets/gmail_detail_panel.dart';
-import 'package:elite_csr/views/gmail/widgets/gmail_mail_list.dart';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -38,24 +37,7 @@ class GmailCenterView extends StatelessWidget {
           ):SizedBox();
 
 
-        // return Container(
-        //   color: Theme.of(context).scaffoldBackgroundColor,
-        //   child: Row(
-        //     children: [
-        //       SizedBox(
-        //         width: 360,
-        //         child: GmailMailList(ctrl: gmailCtrl),
-        //       ),
-        //       VerticalDivider(
-        //         width: 1,
-        //         color: Theme.of(context).dividerColor.withOpacity(0.25),
-        //       ),
-        //       Expanded(
-        //         child: GmailDetailPanel(ctrl: gmailCtrl),
-        //       ),
-        //     ],
-        //   ),
-        // );
+
       },
     );
   }

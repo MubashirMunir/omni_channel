@@ -16,7 +16,6 @@ class GmailMailList extends StatelessWidget {
     final mails = ctrl.filteredEmails;
 
     return Container(
-      color: theme.scaffoldBackgroundColor,
       child: Column(
         children: [
           Container(

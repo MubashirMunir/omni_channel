@@ -173,7 +173,10 @@ class ConvoPanel extends StatelessWidget {
                         ctrl.toggleExpandedList("Gmail", value);
                       },
                       itemBuilder: (context, mail) {
-                        return MailListTile(
+                        return
+
+
+                          MailListTile(
                           mail: mail,
                           selected: true,
 
@@ -182,8 +185,8 @@ class ConvoPanel extends StatelessWidget {
                           },
                           onTap: () {
                             gmailCtrl.selectEmail(mail);
-                            gmailCtrl.update();
                             ctrl.openGmail();
+                            gmailCtrl.update();
 
                             /// yahan agar center/detail panel change karwana hai
                             /// to apne dashboard controller me Gmail selected view bhi set kar do
