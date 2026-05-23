@@ -1,8 +1,10 @@
 import 'package:elite_csr/theme/theme.dart';
+import 'package:elite_csr/views/gmail/controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../models/convo_list.dart';
+import '../../gmail/widgets/compose_dialog.dart';
 
 class UseableList<T> extends StatelessWidget {
   final String title;
@@ -30,78 +32,90 @@ class UseableList<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: Container(
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12.r)),
-        child: ExpansionTile(
-          key: ValueKey('$title-$isExpanded'),
-          initiallyExpanded: isExpanded,
-          onExpansionChanged: onExpansionChanged,
+      child: ExpansionTile(
+        leading: icon == 'assets/images/gmail.png'
+            ? SizedBox(width: 20,height: 25,
+              child: IconButton(
+                        onPressed: () {    showComposeDialog(GmailController()); },
+                        icon: Icon(Icons.add, ), // 👈 icon ka size
 
-          collapsedShape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
+                        style: ButtonStyle(
+              // backgroundColor: MaterialStateProperty.all(Colors.blue),
 
-          collapsedBackgroundColor:
-              Theme.of(context).brightness == Brightness.dark
-              ? AppTheme.textColor
-              : AppTheme.white,
+              fixedSize: MaterialStateProperty.all(Size(20, 20)), // 👈 button ka size
 
-          title: Row(
-            children: [
-              Container(
-                width: 35.w,
-                height: 35.w,
-                decoration: const BoxDecoration(shape: BoxShape.circle),
-                child: Image.asset(icon),
-              ),
+              padding: MaterialStateProperty.all(EdgeInsets.zero), // 👈 extra space hatao
 
-              SizedBox(width: 14.w),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: Theme.of(context).textTheme.bodyLarge),
-                    SizedBox(height: 4.h),
-                    Text(
-                      "$count active conversations",
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
+              shape: MaterialStateProperty.all(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
+                        ),
+                      ),
+            )
+            : SizedBox(),
+        key: ValueKey('$title-$isExpanded'),
+        initiallyExpanded: isExpanded,
+        onExpansionChanged: onExpansionChanged,
+        collapsedShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        internalAddSemanticForOnTap: true,
+        collapsedBackgroundColor:
+            Theme.of(context).brightness == Brightness.dark
+            ? AppTheme.textColor
+            : AppTheme.white,
 
-              Container(
-                width: 24,
-                height: 24,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                child: Text(
-                  count.toString(),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: AppTheme.black),
-                ),
-              ),
-            ],
-          ),
-
+        title: Row(
           children: [
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              itemCount: data.length,
-              itemBuilder: (context, index) {
-                final item = data[index];
-                return itemBuilder(context, item);
-              },
+            Image.asset(icon, height: 30),
+
+            SizedBox(width: 15.w),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: Theme.of(context).textTheme.bodyLarge),
+                  Text(
+                    "$count conversations",
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  SizedBox(height: 4.h),
+                ],
+              ),
+            ),
+
+            Container(
+              padding: EdgeInsets.all(8),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              child: Text(
+                count.toString(),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppTheme.black),
+              ),
             ),
           ],
         ),
+
+        children: [
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: data.length,
+            itemBuilder: (context, index) {
+              final item = data[index];
+              return itemBuilder(context, item);
+            },
+          ),
+        ],
       ),
     );
   }

@@ -405,8 +405,9 @@ class DashboardController extends GetxController {
     selectedCenterView.value = model.platform;
     update();
   }
-
+   bool isSelected =false;
   void openGmail() {
+    isSelected = !isSelected;
     selectedCenterView.value = 'Gmail';
     convoModel.value = null; // Gmail ke liye chat model ki zaroorat nahi
     update();

@@ -19,11 +19,10 @@ class MobileGmailHeader extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      color: theme.cardColor,
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
       child: Row(
         children: [
-          Icon(
+        Icon(
             Icons.mail_outline,
             color: theme.colorScheme.primary,
           ),

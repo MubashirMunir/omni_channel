@@ -133,7 +133,7 @@ class ConvoPanel extends StatelessWidget {
 
                 UseableList<ConversationModel>(
                   title: "Instagram",
-                  color: Colors.pink,
+                  color: Colors.blue,
                   icon: 'assets/images/instagram.png',
                   count: ctrl.countByPlatform("Instagram"),
                   data: ctrl.getByPlatform("Instagram"),
@@ -145,7 +145,7 @@ class ConvoPanel extends StatelessWidget {
                     return conversationTile(
                       context: context,
                       item: item,
-                      color: Colors.pink,
+                      color: Colors.green,
                       onTap: () {
 
 
@@ -164,7 +164,7 @@ class ConvoPanel extends StatelessWidget {
                   builder: (gmailCtrl) {
                     return UseableList<GmailMessageModel>(
                       title: "Gmail",
-                      color: Colors.red,
+                      color: Colors.yellow,
                       icon: 'assets/images/gmail.png',
                       count: gmailCtrl.filteredEmails.length,
                       data: gmailCtrl.filteredEmails,
@@ -178,7 +178,7 @@ class ConvoPanel extends StatelessWidget {
 
                           MailListTile(
                           mail: mail,
-                          selected: true,
+                          selected: ctrl.isSelected,
 
                           onStarTap: () {
                             gmailCtrl.toggleStar(mail);

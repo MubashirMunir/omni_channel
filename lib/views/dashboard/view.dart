@@ -14,7 +14,6 @@ import '../../models/convo_list.dart';
 import '../../responsive/sizes.dart';
 import '../gmail/controller.dart';
 import '../gmail/widgets/gmail_detail_panel.dart';
-import '../gmail/widgets/gmail_mail_list.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});

@@ -1,4 +1,4 @@
-import 'package:elite_csr/views/gmail/widgets/compact_layout.dart';
+import 'package:elite_csr/views/gmail/widgets/mobile_header.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -21,35 +21,22 @@ class GmailCenterView extends StatelessWidget {
     return GetBuilder<GmailController>(
       init: GmailController(),
       builder: (gmailCtrl) {
-
-
         /// Apni responsive class ka exact name yahan use kar lena.
         /// Example:
         final bool isCompact =
             Responsive.isMobile(context) || Responsive.isTablet(context);
 
-          return
-          isCompact?
-            CompactGmailLayout(
-            ctrl: gmailCtrl,
-            accountName: accountName,
-            accountEmail: accountEmail,
-          ):SizedBox();
-
-
-
+        return
+          isCompact
+            ?
+        MobileGmailHeader(
+                accountName: accountName,
+                accountEmail: accountEmail,
+                ctrl: gmailCtrl,
+              )
+            :
+        SizedBox();
       },
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-

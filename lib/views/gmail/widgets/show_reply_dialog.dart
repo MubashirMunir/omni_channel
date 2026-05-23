@@ -149,7 +149,7 @@ void showReplyDialog(
                         Row(
                           children: [
                             FilledButton.icon(
-                              onPressed: ctrl.sendReplyFromDialog,
+                              onPressed: (){ctrl.sendReplyFromDialog();},
                               icon: const Icon(Icons.send, size: 18),
                               label: const Text('Send'),
                             ),

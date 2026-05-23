@@ -21,6 +21,21 @@ class GmailController extends GetxController {
   final TextEditingController composeSubjectController = TextEditingController();
   final TextEditingController composeBodyController = TextEditingController();
 
+  /// Thread scroll controller
+  final ScrollController mailScrollController = ScrollController();
+
+  /// Apni email yahan set karo
+  final String myEmail = 'me@gmail.com';
+
+  /// Current selected conversation ki mails + replies
+  List<GmailMessageModel> threadMails = [];
+
+  /// Har conversation ki replies alag save hongi
+  final Map<String, List<GmailMessageModel>> repliesByConversation = {};
+
+  /// Dialog multiple times open na ho
+  bool isReplyDialogOpen = false;
+
   List<GmailMessageModel> get filteredEmails {
     final query = searchController.text.trim().toLowerCase();
 
@@ -39,6 +54,7 @@ class GmailController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
     fetchDemoEmails();
 
     searchController.addListener(() {
@@ -46,10 +62,74 @@ class GmailController extends GetxController {
     });
   }
 
+  String getConversationKey(GmailMessageModel mail) {
+    final threadId = mail.threadId.trim();
+
+    if (threadId.isNotEmpty) {
+      return threadId;
+    }
+
+    return mail.id;
+  }
+
+  String makeSnippet(String text) {
+    final cleanText = text.trim();
+
+    if (cleanText.length <= 45) {
+      return cleanText;
+    }
+
+    return '${cleanText.substring(0, 45)}...';
+  }
+
+  void buildCurrentThread() {
+    final mail = selectedEmail.value;
+
+    if (mail == null) {
+      threadMails = [];
+      update();
+      return;
+    }
+
+    final key = getConversationKey(mail);
+
+    threadMails = [
+      mail,
+      ...(repliesByConversation[key] ?? []),
+    ];
+  }
+
+  void scrollThreadToBottom() {
+    Future.delayed(const Duration(milliseconds: 120), () {
+      if (mailScrollController.hasClients) {
+        mailScrollController.animateTo(
+          mailScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  bool canOpenReplyDialog() {
+    if (isReplyDialogOpen) {
+      return false;
+    }
+
+    isReplyDialogOpen = true;
+    return true;
+  }
+
+  void closeReplyDialogFlag() {
+    isReplyDialogOpen = false;
+  }
+
   void fetchDemoEmails() {
     emails.assignAll([
       GmailMessageModel(
         id: '1',
+        threadId: 'thread_1',
+        labels: const [],
         fromName: 'Shopify Support',
         fromEmail: 'support@shopify.com',
         toEmail: 'you@company.com',
@@ -60,10 +140,12 @@ class GmailController extends GetxController {
         time: '10:30 AM',
         isUnread: true,
         isStarred: false,
-        hasAttachment: false, threadId: '', labels: [],
+        hasAttachment: false,
       ),
       GmailMessageModel(
         id: '2',
+        threadId: 'thread_2',
+        labels: const [],
         fromName: 'Client Project',
         fromEmail: 'client@project.com',
         toEmail: 'you@company.com',
@@ -78,6 +160,8 @@ class GmailController extends GetxController {
       ),
       GmailMessageModel(
         id: '3',
+        threadId: 'thread_3',
+        labels: const [],
         fromName: 'Google Workspace',
         fromEmail: 'workspace@google.com',
         toEmail: 'you@company.com',
@@ -92,6 +176,8 @@ class GmailController extends GetxController {
       ),
       GmailMessageModel(
         id: '4',
+        threadId: 'thread_4',
+        labels: const [],
         fromName: 'Billing Team',
         fromEmail: 'billing@saascrm.com',
         toEmail: 'you@company.com',
@@ -107,47 +193,74 @@ class GmailController extends GetxController {
     ]);
 
     selectedEmail.value = emails.isNotEmpty ? emails.first : null;
+
+    buildCurrentThread();
     update();
   }
 
   void selectEmail(GmailMessageModel mail) {
     selectedEmail.value = mail;
-
     mail.isUnread = false;
+
+    buildCurrentThread();
 
     emails.refresh();
     update();
+
+    scrollThreadToBottom();
   }
 
   void toggleStar(GmailMessageModel mail) {
     mail.isStarred = !mail.isStarred;
+
     emails.refresh();
+    buildCurrentThread();
     update();
   }
 
   void archiveSelectedEmail() {
     final mail = selectedEmail.value;
-    if (mail == null) return;
+
+    if (mail == null) {
+      return;
+    }
 
     emails.removeWhere((item) => item.id == mail.id);
+
     selectedEmail.value = emails.isNotEmpty ? emails.first : null;
 
+    buildCurrentThread();
+
+    emails.refresh();
     update();
   }
 
   void deleteSelectedEmail() {
     final mail = selectedEmail.value;
-    if (mail == null) return;
+
+    if (mail == null) {
+      return;
+    }
+
+    final key = getConversationKey(mail);
 
     emails.removeWhere((item) => item.id == mail.id);
+    repliesByConversation.remove(key);
+
     selectedEmail.value = emails.isNotEmpty ? emails.first : null;
 
+    buildCurrentThread();
+
+    emails.refresh();
     update();
   }
 
   void markSelectedUnread() {
     final mail = selectedEmail.value;
-    if (mail == null) return;
+
+    if (mail == null) {
+      return;
+    }
 
     mail.isUnread = true;
 
@@ -156,15 +269,19 @@ class GmailController extends GetxController {
   }
 
   void prepareReplyDialog(GmailMessageModel mail) {
+    selectedEmail.value = mail;
+
     replyToController.text = mail.fromEmail;
     replyCcController.clear();
 
     final subject = mail.subject.trim();
+
     replySubjectController.text = subject.toLowerCase().startsWith('re:')
         ? subject
         : 'Re: $subject';
 
     replyBodyController.clear();
+
     update();
   }
 
@@ -176,6 +293,13 @@ class GmailController extends GetxController {
   }
 
   void sendReplyFromDialog() {
+    final selectedMail = selectedEmail.value;
+
+    if (selectedMail == null) {
+      Get.snackbar('Error', 'No email selected');
+      return;
+    }
+
     final to = replyToController.text.trim();
     final subject = replySubjectController.text.trim();
     final body = replyBodyController.text.trim();
@@ -195,10 +319,53 @@ class GmailController extends GetxController {
       return;
     }
 
-    Get.back();
-    Get.snackbar('Sent', 'Reply sent successfully');
+    final key = getConversationKey(selectedMail);
+
+    final replyMail = GmailMessageModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      threadId: key,
+      labels: const [],
+      fromName: 'Me',
+      fromEmail: myEmail,
+      toEmail: to,
+      subject: subject,
+      snippet: makeSnippet(body),
+      body: body,
+      time: 'Just now',
+      isUnread: false,
+      isStarred: false,
+      hasAttachment: false,
+    );
+
+    repliesByConversation.putIfAbsent(key, () => []);
+    repliesByConversation[key]!.add(replyMail);
+
+    buildCurrentThread();
+
+    if (Get.isDialogOpen == true) {
+      Get.back();
+    }
+
+    closeReplyDialogFlag();
 
     clearReplyDialogFields();
+
+    emails.refresh();
+    update();
+
+    scrollThreadToBottom();
+
+    Get.snackbar('Sent', 'Reply sent successfully');
+  }
+
+  void cancelReplyDialog() {
+    clearReplyDialogFields();
+
+    if (Get.isDialogOpen == true) {
+      Get.back();
+    }
+
+    closeReplyDialogFlag();
     update();
   }
 
@@ -229,11 +396,41 @@ class GmailController extends GetxController {
       return;
     }
 
-    Get.back();
-    Get.snackbar('Sent', 'Email sent successfully');
+    final newMailId = DateTime.now().millisecondsSinceEpoch.toString();
+
+    final newMail = GmailMessageModel(
+      id: newMailId,
+      threadId: 'thread_$newMailId',
+      labels: const [],
+      fromName: 'Me',
+      fromEmail: myEmail,
+      toEmail: to,
+      subject: subject,
+      snippet: makeSnippet(body),
+      body: body,
+      time: 'Just now',
+      isUnread: false,
+      isStarred: false,
+      hasAttachment: false,
+    );
+
+    emails.insert(0, newMail);
+    selectedEmail.value = newMail;
+
+    buildCurrentThread();
+
+    if (Get.isDialogOpen == true) {
+      Get.back();
+    }
 
     clearComposeFields();
+
+    emails.refresh();
     update();
+
+    scrollThreadToBottom();
+
+    Get.snackbar('Sent', 'Email sent successfully');
   }
 
   @override
@@ -249,6 +446,8 @@ class GmailController extends GetxController {
     composeCcController.dispose();
     composeSubjectController.dispose();
     composeBodyController.dispose();
+
+    mailScrollController.dispose();
 
     super.onClose();
   }

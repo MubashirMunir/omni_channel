@@ -25,12 +25,12 @@ class MailListTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      child: Container(
-        color: selected
-            ? selectedColor
-            : mail.isUnread
-            ? unreadColor
-            : readColor,
+      child: Padding(
+        // color: selected
+        //     ? selectedColor
+        //     : mail.isUnread
+        //     ? unreadColor
+        //     : readColor,
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
