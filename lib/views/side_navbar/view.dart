@@ -36,7 +36,7 @@ class MainLayoutScreen extends StatelessWidget {
           children: [
             /// SIDEBAR
             SizedBox(
-              width: 70,
+              width: 80,
 
               child: Obx(
                 () => Column(
@@ -54,8 +54,8 @@ class MainLayoutScreen extends StatelessWidget {
                         child: Container(
                           margin: EdgeInsets.symmetric(vertical: 8 * textScale),
 
-                          height: 55,
-                          width: 50,
+                          height: 60,
+                          width: 60,
 
                           decoration: BoxDecoration(
                             color: isActive

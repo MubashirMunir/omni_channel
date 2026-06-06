@@ -23,77 +23,41 @@ class StatisticsView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
-            /// =====================================
-            /// HEADER
-            /// =====================================
-            isMobile
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
 
-                    children: [
-                      TextWidget(
-                        "Statistics Dashboard",
-
-                        style: Theme.of(
-                          context,
-                        ).textTheme.labelMedium?.copyWith(color: Colors.black),
+                  children: [
+                    Text(
+                      "Statistics Dashboard",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
                       ),
+                    ),
 
-                      SizedBox(height: 8.h),
+                    SizedBox(height: 6.h),
 
-                      Text(
-                        "Monitor your social media performance and engagement.",
+                    Text(
+                      "Monitor your social media performance and customer engagement.",
 
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 12.sp,
-                        ),
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: isMobile ? 10 : 14,
                       ),
+                    ),
+                  ],
+                ),
 
-                      SizedBox(height: 18.h),
+                const Spacer(),
 
-                      _dateFilter(context),
-                    ],
-                  )
-                : Row(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                _dateFilter(context),
+              ],
+            ),
 
-                        children: [
-                          Text(
-                            "Statistics Dashboard",
+            SizedBox(height: 10.h),
 
-                            style: TextStyle(
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-
-                          SizedBox(height: 6.h),
-
-                          Text(
-                            "Monitor your social media performance and customer engagement.",
-
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 13.sp,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const Spacer(),
-
-                      _dateFilter(context),
-                    ],
-                  ),
-
-            SizedBox(height: 20.h),
-
-            /// =====================================
-            /// STATS GRID
-            /// =====================================
             GridView.count(
               shrinkWrap: true,
 
@@ -152,7 +116,7 @@ class StatisticsView extends StatelessWidget {
               ],
             ),
 
-            SizedBox(height: 24.h),
+            SizedBox(height: 15.h),
 
             /// =====================================
             /// CHARTS
@@ -162,9 +126,9 @@ class StatisticsView extends StatelessWidget {
                     children: [
                       _lineChartCard(context, isMobile),
 
-                      SizedBox(height: 20.h),
+                      SizedBox(height: 15.h),
 
-                      _pieChartCard(context),
+                      _pieChartCard(context, isMobile),
                     ],
                   )
                 : Row(
@@ -178,11 +142,14 @@ class StatisticsView extends StatelessWidget {
 
                       SizedBox(width: 16.w),
 
-                      Expanded(flex: 2, child: _pieChartCard(context)),
+                      Expanded(
+                        flex: 2,
+                        child: _pieChartCard(context, isMobile),
+                      ),
                     ],
                   ),
 
-            SizedBox(height: 24.h),
+            SizedBox(height: 15.h),
 
             /// =====================================
             /// BOTTOM CARDS
@@ -199,7 +166,7 @@ class StatisticsView extends StatelessWidget {
                         color: Colors.amber,
                       ),
 
-                      SizedBox(height: 18.h),
+                      SizedBox(height: 15.h),
 
                       _bottomCard(
                         context,
@@ -210,8 +177,7 @@ class StatisticsView extends StatelessWidget {
                         color: Colors.red,
                       ),
 
-                      SizedBox(height: 18.h),
-
+                      SizedBox(height: 15.h),
                       _bottomCard(
                         context,
                         title: "Peak Activity",
@@ -235,7 +201,7 @@ class StatisticsView extends StatelessWidget {
                         ),
                       ),
 
-                      SizedBox(width: 18.w),
+                      SizedBox(width: 15.w),
 
                       Expanded(
                         child: _bottomCard(
@@ -248,7 +214,7 @@ class StatisticsView extends StatelessWidget {
                         ),
                       ),
 
-                      SizedBox(width: 18.w),
+                      SizedBox(width: 15.w),
 
                       Expanded(
                         child: _bottomCard(
@@ -304,7 +270,7 @@ class StatisticsView extends StatelessWidget {
 
   Widget _lineChartCard(BuildContext context, bool isMobile) {
     return Container(
-      height: isMobile ? 340.h : 380.h,
+      height: isMobile ? 230.h : 350.h,
 
       padding: EdgeInsets.all(15.w),
 
@@ -338,7 +304,6 @@ class StatisticsView extends StatelessWidget {
 
                 child: Text(
                   "Weekly Report",
-
                   style: TextStyle(
                     color: AppTheme.primaryColor,
                     fontWeight: FontWeight.w600,
@@ -349,7 +314,7 @@ class StatisticsView extends StatelessWidget {
             ],
           ),
 
-          SizedBox(height: 30.h),
+          SizedBox(height: 15.h),
 
           Expanded(
             child: LineChart(
@@ -432,9 +397,9 @@ class StatisticsView extends StatelessWidget {
   /// PIE CHART
   /// =====================================
 
-  Widget _pieChartCard(BuildContext context) {
+  Widget _pieChartCard(BuildContext context, isMobile) {
     return Container(
-      height: 380.h,
+      height: isMobile ? 230.h : 350.h,
 
       padding: EdgeInsets.all(15.w),
 
@@ -452,12 +417,11 @@ class StatisticsView extends StatelessWidget {
             ).textTheme.labelLarge?.copyWith(color: Colors.black),
           ),
 
-          SizedBox(height: 100.h),
-
+          // SizedBox(height: 80.h),
           Expanded(
             child: PieChart(
               PieChartData(
-                centerSpaceRadius: 80,
+                centerSpaceRadius: 50,
 
                 sectionsSpace: 4,
 
@@ -466,49 +430,52 @@ class StatisticsView extends StatelessWidget {
                     color: Colors.green,
                     value: 40,
                     title: "40%",
-                    radius: 60,
+                    radius: 40,
                   ),
 
                   PieChartSectionData(
                     color: Colors.pink,
                     value: 25,
                     title: "25%",
-                    radius: 60,
+                    radius: 40,
                   ),
 
                   PieChartSectionData(
                     color: Colors.blue,
                     value: 20,
                     title: "20%",
-                    radius: 60,
+                    radius: 40,
                   ),
 
                   PieChartSectionData(
                     color: Colors.orange,
                     value: 15,
                     title: "15%",
-                    radius: 60,
+                    radius: 40,
                   ),
                 ],
               ),
             ),
           ),
 
-          SizedBox(height: 20.h),
+          SizedBox(height: 15.w),
+          Row(
+            children: [
+              _legend(context, color: Colors.green, text: "WhatsApp"),
 
-          _legend(context, color: Colors.green, text: "WhatsApp"),
+              SizedBox(height: 15.w),
 
-          SizedBox(height: 10.h),
+              _legend(context, color: Colors.pink, text: "Instagram"),
 
-          _legend(context, color: Colors.pink, text: "Instagram"),
+              SizedBox(height: 15.w),
 
-          SizedBox(height: 10.h),
+              _legend(context, color: Colors.blue, text: "Messenger"),
 
-          _legend(context, color: Colors.blue, text: "Messenger"),
+              SizedBox(height: 15.w),
 
-          SizedBox(height: 10.h),
-
-          _legend(context, color: Colors.orange, text: "Email"),
+              _legend(context, color: Colors.orange, text: "Email"),
+            ],
+          ),
         ],
       ),
     );
@@ -527,7 +494,7 @@ class StatisticsView extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: EdgeInsets.all(15.w),
+      padding: EdgeInsets.all(15),
 
       decoration: _cardDecoration(),
 
@@ -538,13 +505,15 @@ class StatisticsView extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 40.w,
-                height: 40.w,
+                width: 40,
+                height: 40,
 
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.12),
 
-                  borderRadius: BorderRadius.circular(15.r),
+                  borderRadius: BorderRadius.circular(
+                    AppTheme.radiusSM(context),
+                  ),
                 ),
 
                 child: Icon(icon, color: color),
@@ -620,7 +589,7 @@ class StatisticsView extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      height: 240.h,
+      height: 200.h,
 
       padding: EdgeInsets.all(15.w),
 
@@ -647,17 +616,13 @@ class StatisticsView extends StatelessWidget {
               Text(
                 value,
 
-                style: TextStyle(
-                  color: AppTheme.primaryColor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12.sp,
-                ),
-              ),
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppTheme.textColor)
 
+              ),
             ],
           ),
 
-Spacer(),
+          Spacer(),
           Text(
             subtitle,
             style: Theme.of(
@@ -669,9 +634,8 @@ Spacer(),
 
           Text(
             title,
-            style: TextStyle(color: Colors.grey, fontSize: 12.sp),
+            style: TextStyle(color: Colors.grey, fontSize: 12),
           ),
-
         ],
       ),
     );
