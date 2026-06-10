@@ -614,14 +614,10 @@ class StatisticsView extends StatelessWidget {
                 child: Icon(icon, color: color),
               ),
               Text(
-                value,
-
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppTheme.textColor)
-
+                value, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppTheme.textColor)
               ),
             ],
           ),
-
           Spacer(),
           Text(
             subtitle,
@@ -641,9 +637,6 @@ class StatisticsView extends StatelessWidget {
     );
   }
 
-  /// =====================================
-  /// CARD DECORATION
-  /// =====================================
 
   BoxDecoration _cardDecoration() {
     return BoxDecoration(
