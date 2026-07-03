@@ -1,14 +1,11 @@
 import 'dart:ui';
-
 import 'package:elite_csr/theme/theme.dart';
 import 'package:elite_csr/views/login/controller.dart';
 import 'package:elite_csr/widgets/btn.dart';
 import 'package:elite_csr/widgets/input_fileds.dart';
 import 'package:elite_csr/widgets/text_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-
 import '../../responsive/sizes.dart';
 
 class LoginView extends StatelessWidget {

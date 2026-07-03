@@ -549,9 +549,6 @@ class StatisticsView extends StatelessWidget {
     );
   }
 
-  /// =====================================
-  /// LEGEND
-  /// =====================================
 
   Widget _legend(context, {required Color color, required String text}) {
     return Row(
@@ -567,7 +564,6 @@ class StatisticsView extends StatelessWidget {
 
         Text(
           text,
-
           style: Theme.of(
             context,
           ).textTheme.labelMedium?.copyWith(color: Colors.grey),
@@ -579,7 +575,6 @@ class StatisticsView extends StatelessWidget {
   /// =====================================
   /// BOTTOM CARD
   /// =====================================
-
   Widget _bottomCard(
     context, {
     required String title,
@@ -590,14 +585,10 @@ class StatisticsView extends StatelessWidget {
   }) {
     return Container(
       height: 200.h,
-
       padding: EdgeInsets.all(15.w),
-
       decoration: _cardDecoration(),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -625,9 +616,7 @@ class StatisticsView extends StatelessWidget {
               context,
             ).textTheme.labelMedium?.copyWith(color: Colors.grey),
           ),
-
           SizedBox(height: 6.h),
-
           Text(
             title,
             style: TextStyle(color: Colors.grey, fontSize: 12),

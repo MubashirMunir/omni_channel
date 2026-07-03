@@ -156,7 +156,7 @@ class DashboardView extends StatelessWidget {
                       final String backgroundImage =
                       chat.platform.toLowerCase() == "whatsapp"
                           ? "assets/images/w_bg.png"
-                          : "assets/images/w_bg.png";
+                          : "assets/images/bgfb.jpg";
 
                       /// Normal WhatsApp / Facebook / Instagram chat
                       return Container(
