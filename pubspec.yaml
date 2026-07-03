@@ -53,6 +53,8 @@ dependencies:
   calendar_date_picker2: ^2.0.1
   url_launcher: ^6.3.2
   flutter_svg: ^2.2.0
+  fl_chart: ^0.68.0
+  emoji_picker_flutter: ^4.4.0
 
 dev_dependencies:
   flutter_test:

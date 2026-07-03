@@ -4,7 +4,6 @@ class TextWidget extends StatelessWidget {
   final String title;
 
   final TextStyle? style;
-
   final Color? color;
   final TextAlign? textAlign;
   final double? fontSize;
@@ -30,15 +29,18 @@ class TextWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final baseStyle =
+        style ??
+            Theme.of(context).textTheme.bodyMedium ??
+            const TextStyle();
+
     return Text(
       title,
-
       textAlign: textAlign,
       maxLines: maxLines,
       overflow: overflow,
-
-      style: (style ?? Theme.of(context).textTheme.bodyMedium)?.copyWith(
-        color: color,
+      style: baseStyle.copyWith(
+        color: color ?? baseStyle.color,
         fontSize: fontSize,
         fontWeight: fontWeight,
         fontStyle: fontStyle,

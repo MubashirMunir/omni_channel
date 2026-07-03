@@ -9,7 +9,7 @@ bool isObscure = true;
 
 void login(){
 
-  Get.toNamed('/dashboard');
+  Get.toNamed('/home');
 }
 
 

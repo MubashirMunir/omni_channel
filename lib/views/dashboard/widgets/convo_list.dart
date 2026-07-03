@@ -1,14 +1,17 @@
 import 'package:elite_csr/models/convo_list.dart';
 import 'package:elite_csr/views/dashboard/controller.dart';
 import 'package:elite_csr/views/dashboard/widgets/useable_list.dart';
+import 'package:elite_csr/views/gmail/widgets/list_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
-
-import '../../../main.dart';
+import 'package:get/get_state_manager/src/simple/get_state.dart';
+import '../../../models/gmail_model.dart';
+import '../../../responsive/sizes.dart';
 import '../../../theme/theme.dart';
 import '../../../widgets/input_fileds.dart';
 import '../../../widgets/text_widget.dart';
+import '../../gmail/controller.dart';
 
 class ConvoPanel extends StatelessWidget {
   final DashboardController ctrl;
@@ -19,7 +22,6 @@ class ConvoPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(10),
-      color: AppTheme.cupertinoWhite,
       child: Column(
         children: [
           /// HEADER
@@ -31,20 +33,14 @@ class ConvoPanel extends StatelessWidget {
                   Image.asset('assets/images/e.png', height: 35.h),
 
                   SizedBox(width: 5.w),
-
                   TextWidget(
                     "Elite CRM",
-                    style: Theme.of(context).textTheme.labelLarge,
-                    color: Colors.black,
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
 
                   const Spacer(),
 
-                  IconButton(
-                    icon: Icon(Icons.menu),
-                    color: Colors.grey.shade700,
-                    onPressed: () {},
-                  ),
+                  IconButton(icon: Icon(Icons.menu), onPressed: () {}),
                 ],
               ),
 
@@ -59,9 +55,8 @@ class ConvoPanel extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 18.h),
+          SizedBox(height: 20.h),
 
-          /// FILTER TABS
           Row(
             children: [
               _topTab(text: "All", context),
@@ -76,60 +71,131 @@ class ConvoPanel extends StatelessWidget {
             ],
           ),
 
-          SizedBox(height: 18.h),
+          SizedBox(height: 15.h),
 
           /// CHANNELS
           Expanded(
             child: ListView(
               children: [
-                UseableList(
-
+                UseableList<ConversationModel>(
                   title: "WhatsApp",
                   color: Colors.green,
                   icon: 'assets/images/w.png',
-                  count: 19,
-                  subtitle: 'need it',
-                  data: ctrl.conversations,
-                  onTap: (model) {
-                    ctrl.selectConversation(model);
+                  count: ctrl.countByPlatform("WhatsApp"),
+                  data: ctrl.getByPlatform("WhatsApp"),
+                  isExpanded: ctrl.expandedList == "WhatsApp",
+                  onExpansionChanged: (value) {
+                    ctrl.toggleExpandedList("WhatsApp", value);
+                  },
+                  itemBuilder: (context, item) {
+                    return conversationTile(
+                      context: context,
+                      item: item,
+                      color: Colors.green,
+                      onTap: () {
 
+                      ctrl.selectConversation(item);
+                        ctrl.openChat(item);
+
+
+                      }
+                    );
                   },
                 ),
 
                 SizedBox(height: 14.h),
 
-              UseableList(
+                UseableList<ConversationModel>(
+                  title: "Facebook",
+                  color: Colors.blue,
+                  icon: 'assets/images/facebook.png',
+                  count: ctrl.countByPlatform("Facebook"),
+                  data: ctrl.getByPlatform("Facebook"),
+                  isExpanded: ctrl.expandedList == "Facebook",
+                  onExpansionChanged: (value) {
+                    ctrl.toggleExpandedList("Facebook", value);
+                  },
+                  itemBuilder: (context, item) {
+                    return conversationTile(
+                      context: context,
+                      item: item,
+                      color: Colors.blue,
+                      onTap: () {
+                      ctrl.selectConversation(item);
+                        ctrl.openChat(item);
 
-                title: "Facebook",
-                color: Colors.green,
-                icon: 'assets/images/facebook.png',
-                count: 19, subtitle: '',
-                data: [],
-                onTap: (model) {  },
-              ),
-
-                SizedBox(height: 14.h),
-
-                UseableList(
-
-                  title: "Instagram",
-                  color: Colors.green,
-                  icon: 'assets/images/instagram.png',
-                  count: 19, subtitle: '',
-                  data: [],
-                  onTap: (model) {  },
+                      }
+                    );
+                  },
                 ),
 
                 SizedBox(height: 14.h),
 
-                UseableList(
+                UseableList<ConversationModel>(
+                  title: "Instagram",
+                  color: Colors.blue,
+                  icon: 'assets/images/instagram.png',
+                  count: ctrl.countByPlatform("Instagram"),
+                  data: ctrl.getByPlatform("Instagram"),
+                  isExpanded: ctrl.expandedList == "Instagram",
+                  onExpansionChanged: (value) {
+                    ctrl.toggleExpandedList("Instagram", value);
+                  },
+                  itemBuilder: (context, item) {
+                    return conversationTile(
+                      context: context,
+                      item: item,
+                      color: Colors.green,
+                      onTap: () {
 
-                  title: "Gmail",
-                  color: Colors.green,
-                  icon: 'assets/images/gmail.png',
-                  count: 19, subtitle: '',
-                  data: [],
-                  onTap: (model) {  },
+
+                      ctrl.selectConversation(item);
+                        ctrl.openChat(item);
+
+                      }
+                    );
+                  },
+                ),
+
+                SizedBox(height: 14.h),
+
+                GetBuilder<GmailController>(
+                  init: GmailController(),
+                  builder: (gmailCtrl) {
+                    return UseableList<GmailMessageModel>(
+                      title: "Gmail",
+                      color: Colors.yellow,
+                      icon: 'assets/images/gmail.png',
+                      count: gmailCtrl.filteredEmails.length,
+                      data: gmailCtrl.filteredEmails,
+                      isExpanded: ctrl.expandedList == "Gmail",
+                      onExpansionChanged: (value) {
+                        ctrl.toggleExpandedList("Gmail", value);
+                      },
+                      itemBuilder: (context, mail) {
+                        return
+
+
+                          MailListTile(
+                          mail: mail,
+                          selected: ctrl.isSelected,
+
+                          onStarTap: () {
+                            gmailCtrl.toggleStar(mail);
+                          },
+                          onTap: () {
+                            gmailCtrl.selectEmail(mail);
+                            ctrl.openGmail();
+                            gmailCtrl.update();
+
+                            /// yahan agar center/detail panel change karwana hai
+                            /// to apne dashboard controller me Gmail selected view bhi set kar do
+                            /// ctrl.changePlatform("Gmail");
+                          },
+                        );
+                      },
+                    );
+                  },
                 ),
 
                 SizedBox(height: 20.h),
@@ -145,22 +211,20 @@ class ConvoPanel extends StatelessWidget {
   /// TOP FILTER TAB
   /// ===================================
 
-  Widget _topTab(
-      BuildContext context, {
-        required String text,
-      }) {
+  Widget _topTab(BuildContext context, {required String text}) {
     return Obx(() {
       final isMobile = Responsive.isMobile(context);
       final isTablet = Responsive.isTablet(context);
 
-      bool active = ctrl.selectedTab.value == text;
+      final bool active = ctrl.selectedTab.value == text;
 
       return GestureDetector(
-        onTap: () => ctrl.selectedTab.value = text,
-
+        onTap: () {
+          ctrl.selectedTab.value = text;
+          ctrl.update(); // important for GetBuilder list rebuild
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-
           padding: EdgeInsets.symmetric(
             horizontal: isMobile
                 ? 10
@@ -169,34 +233,34 @@ class ConvoPanel extends StatelessWidget {
                 : 16,
             vertical: isMobile ? 6 : 8,
           ),
-
           decoration: BoxDecoration(
-            color: active ? AppTheme.primaryColor : Colors.white,
+            color: active ? AppTheme.primaryColor : Colors.black,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: active
+                  ? AppTheme.primaryColor
+                  : Colors.grey.withOpacity(0.25),
+            ),
           ),
-
           child: TextWidget(
             text,
-
-            style: Theme.of(context).textTheme.labelMedium,
-
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: active ? Colors.white : Colors.grey,
+              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+            ),
             fontSize: isMobile
                 ? 11
                 : isTablet
                 ? 12
                 : 13,
-
-            fontWeight: FontWeight.w600,
-
-            color: active ? Colors.white : Colors.black87,
+            fontWeight: active ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
       );
     });
   }
+
   /// ===================================
   /// CHANNEL TILE
   /// ===================================
-
-
 }

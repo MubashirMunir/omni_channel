@@ -1,19 +1,21 @@
 import 'dart:ui';
-
 import 'package:elite_csr/theme/theme.dart';
 import 'package:elite_csr/views/login/controller.dart';
 import 'package:elite_csr/widgets/btn.dart';
 import 'package:elite_csr/widgets/input_fileds.dart';
 import 'package:elite_csr/widgets/text_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../responsive/sizes.dart';
 
 class LoginView extends StatelessWidget {
   const LoginView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    var isMobile = Responsive.isMobile(context);
+    var isTab = Responsive.isTablet(context);
+    var isWeb = Responsive.isDesktop(context);
     return GetBuilder<LoginController>(
       init: LoginController(),
       builder: (ctrl) {
@@ -65,36 +67,35 @@ class LoginView extends StatelessWidget {
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 40,
-                        vertical: 30,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 40,
+                        horizontal: (isWeb || isTab) ? 200 : 0,
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: (isWeb || isTab)
+                            ? MainAxisAlignment.start
+                            : MainAxisAlignment.center,
                         children: [
                           Image.asset('assets/images/e.png', height: 36),
                           const SizedBox(width: 12),
-                          const Text(
+                          Text(
                             "Elite CRM",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context).textTheme.bodyLarge,
                           ),
                         ],
                       ),
                     ),
-
                     Expanded(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: EdgeInsets.only(left: 80.w),
+                      child: Padding(
+                        padding: EdgeInsets.only(left: isWeb || isTab ? 80 : 0),
+                        child: Align(
+                          alignment: isMobile
+                              ? Alignment.center
+                              : Alignment.centerLeft,
                           child: SingleChildScrollView(
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(
-                                AppTheme.radiusSM,
+                                AppTheme.radiusMD(context),
                               ),
                               child: BackdropFilter(
                                 filter: ImageFilter.blur(
@@ -102,23 +103,29 @@ class LoginView extends StatelessWidget {
                                   sigmaY: 14,
                                 ),
                                 child: Container(
-                                  width: 460,
+                                  width: isMobile
+                                      ? 350
+                                      : isTab
+                                      ? 360
+                                      : isWeb
+                                      ? 400
+                                      : 0,
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 34,
-                                    vertical: 40,
+                                    horizontal: 20,
+                                    vertical: 30,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.08),
                                     borderRadius: BorderRadius.circular(
-                                      AppTheme.radiusSM,
+                                      AppTheme.radiusSM(context),
                                     ),
                                     border: Border.all(
-                                      color: Colors.white.withOpacity(0.15),
+                                      color: Colors.white.withOpacity(0.091),
                                     ),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withOpacity(0.25),
-                                        blurRadius: 30,
+                                        blurRadius: 10,
                                         offset: const Offset(0, 15),
                                       ),
                                     ],
@@ -128,21 +135,21 @@ class LoginView extends StatelessWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                       TextWidget(
+                                      Text(
                                         "Welcome Back",
-                                         style: Theme.of(context).textTheme.labelLarge,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyLarge,
+                                      ),
 
-                                       ),
-
-                                      const SizedBox(height: 10),
+                                      const SizedBox(height: 5),
 
                                       Text(
                                         "Login to continue managing your customer conversations.",
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(0.7),
-                                          height: 1.5,
-                                          fontSize: 14,
-                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(color: Colors.grey),
                                       ),
 
                                       const SizedBox(height: 35),
@@ -231,15 +238,20 @@ class LoginView extends StatelessWidget {
 
                     /// Footer
                     Padding(
-                      padding: EdgeInsets.only(bottom: 30, top: 10),
+                      padding: EdgeInsets.only(
+                        bottom: 10,
+                        left: (isWeb || isTab) ? 220 : 0,
+                      ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: (isWeb || isTab)
+                            ? MainAxisAlignment.start
+                            : MainAxisAlignment.center,
                         children: [
                           TextWidget("Powered by ", color: Colors.grey),
                           Image.asset('assets/images/e.png', height: 25),
                         ],
                       ),
-                    ),
+                    )
                   ],
                 ),
               ),

@@ -24,17 +24,16 @@ class ProfilePanel extends StatelessWidget {
             ),
             child: Row(
               children: [
-                TextWidget("Profile",                                          style: Theme.of(context).textTheme.labelLarge,
+                TextWidget(
+                  "Profile",
+                  style: Theme.of(context).textTheme.labelLarge,
                 ),
 
                 SizedBox(width: 24.w),
 
                 Text(
                   "Calling List",
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 14.sp,
-                  ),
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppTheme.textColor)
                 ),
               ],
             ),
