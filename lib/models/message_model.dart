@@ -18,32 +18,25 @@ enum MessageStatus {
 class MessageModel {
   final String id;
 
-  /// Customer ya business phone/user id
   final String from;
-
-  /// Receiver id, optional practice ke liye
   final String to;
 
-  /// Message text/body
   final String text;
 
-  /// true = agent/business message
-  /// false = customer message
   final bool isMe;
 
-  /// UI formatted time
   final String time;
 
-  /// Real timestamp API ke liye useful
   final DateTime? timestamp;
 
-  /// text/image/video/document etc
   final MessageType type;
 
-  /// sending/sent/delivered/read/failed
   final MessageStatus status;
 
-  /// Reply/quote ke liye
+  /// Voice note / audio support
+  final String? audioPath;
+  final int? audioDuration;
+
   final String? replyToMessageId;
   final String? replyToText;
 
@@ -57,6 +50,8 @@ class MessageModel {
     this.timestamp,
     this.type = MessageType.text,
     this.status = MessageStatus.sent,
+    this.audioPath,
+    this.audioDuration,
     this.replyToMessageId,
     this.replyToText,
   });
@@ -81,12 +76,19 @@ class MessageModel {
       timestamp: createdAt,
       type: _messageTypeFromString(json['type']?.toString()),
       status: _messageStatusFromString(json['status']?.toString()),
+      audioPath: json['audio_path']?.toString() ??
+          json['audioPath']?.toString() ??
+          json['media_url']?.toString(),
+      audioDuration: int.tryParse(
+        json['audio_duration']?.toString() ??
+            json['audioDuration']?.toString() ??
+            '',
+      ),
       replyToMessageId: json['reply_to_message_id']?.toString(),
       replyToText: json['reply_to_text']?.toString(),
     );
   }
 
-  /// WhatsApp Cloud API incoming webhook text message style
   factory MessageModel.fromWhatsAppWebhook(
       Map<String, dynamic> json,
       ) {
@@ -100,20 +102,37 @@ class MessageModel {
       timestampSeconds * 1000,
     );
 
+    final type = _messageTypeFromString(
+      json['type']?.toString(),
+    );
+
     return MessageModel(
       id: json['id']?.toString() ?? '',
       from: json['from']?.toString() ?? '',
-      text: json['text']?['body']?.toString() ?? '',
+      text: type == MessageType.audio
+          ? ''
+          : json['text']?['body']?.toString() ?? '',
       isMe: false,
       time: dateTime == null ? '' : _formatTime(dateTime),
       timestamp: dateTime,
-      type: _messageTypeFromString(json['type']?.toString()),
+      type: type,
       status: MessageStatus.delivered,
+
+      /// WhatsApp audio object example:
+      /// "audio": {
+      ///   "id": "...",
+      ///   "mime_type": "audio/ogg; codecs=opus",
+      ///   "sha256": "..."
+      /// }
+      audioPath: json['audio']?['id']?.toString(),
+      audioDuration: int.tryParse(
+        json['audio']?['duration']?.toString() ?? '',
+      ),
+
       replyToMessageId: json['context']?['id']?.toString(),
     );
   }
 
-  /// Jab tum apni taraf se message send karo
   factory MessageModel.localSending({
     required String text,
     required String to,
@@ -132,6 +151,27 @@ class MessageModel {
     );
   }
 
+  factory MessageModel.localAudio({
+    required String audioPath,
+    required int audioDuration,
+    String to = '',
+  }) {
+    final now = DateTime.now();
+
+    return MessageModel(
+      id: now.microsecondsSinceEpoch.toString(),
+      to: to,
+      text: '',
+      isMe: true,
+      time: _formatTime(now),
+      timestamp: now,
+      type: MessageType.audio,
+      status: MessageStatus.sending,
+      audioPath: audioPath,
+      audioDuration: audioDuration,
+    );
+  }
+
   MessageModel copyWith({
     String? id,
     String? from,
@@ -142,6 +182,8 @@ class MessageModel {
     DateTime? timestamp,
     MessageType? type,
     MessageStatus? status,
+    String? audioPath,
+    int? audioDuration,
     String? replyToMessageId,
     String? replyToText,
   }) {
@@ -155,6 +197,8 @@ class MessageModel {
       timestamp: timestamp ?? this.timestamp,
       type: type ?? this.type,
       status: status ?? this.status,
+      audioPath: audioPath ?? this.audioPath,
+      audioDuration: audioDuration ?? this.audioDuration,
       replyToMessageId: replyToMessageId ?? this.replyToMessageId,
       replyToText: replyToText ?? this.replyToText,
     );
@@ -171,16 +215,32 @@ class MessageModel {
       "timestamp": timestamp?.toIso8601String(),
       "type": type.name,
       "status": status.name,
+      "audio_path": audioPath,
+      "audio_duration": audioDuration,
       "reply_to_message_id": replyToMessageId,
       "reply_to_text": replyToText,
     };
   }
 
-  /// WhatsApp Cloud API send text message style payload
   Map<String, dynamic> toWhatsAppSendJson({
     required String phoneNumber,
     String messagingProduct = "whatsapp",
   }) {
+    if (type == MessageType.audio) {
+      return {
+        "messaging_product": messagingProduct,
+        "to": phoneNumber,
+        "type": "audio",
+        "audio": {
+          "id": audioPath,
+        },
+        if (replyToMessageId != null)
+          "context": {
+            "message_id": replyToMessageId,
+          },
+      };
+    }
+
     return {
       "messaging_product": messagingProduct,
       "to": phoneNumber,
@@ -204,6 +264,8 @@ class MessageModel {
       case "video":
         return MessageType.video;
       case "audio":
+      case "voice":
+      case "voice_note":
         return MessageType.audio;
       case "document":
         return MessageType.document;
@@ -242,78 +304,3 @@ class MessageModel {
     return "$hour:$minute $period";
   }
 }
-
-/// DUMMY DATA
-List<MessageModel> messages = [
-  MessageModel(
-    id: "wamid.001",
-    from: "923001234567",
-    text: "Hello 👋 I need information about your CRM pricing packages.",
-    isMe: false,
-    time: "10:20 AM",
-    type: MessageType.text,
-    status: MessageStatus.delivered,
-  ),
-
-  MessageModel(
-    id: "wamid.002",
-    to: "923001234567",
-    text: "Sure 👍 Which package are you interested in?",
-    isMe: true,
-    time: "10:21 AM",
-    type: MessageType.text,
-    status: MessageStatus.read,
-  ),
-
-  MessageModel(
-    id: "wamid.003",
-    from: "923001234567",
-    text: "I want multi-agent inbox with WhatsApp integration.",
-    isMe: false,
-    time: "10:22 AM",
-    type: MessageType.text,
-    status: MessageStatus.delivered,
-  ),
-
-  MessageModel(
-    id: "wamid.004",
-    to: "923001234567",
-    text: "Yes, we support WhatsApp Cloud API, Facebook and Instagram DMs.",
-    isMe: true,
-    time: "10:23 AM",
-    type: MessageType.text,
-    status: MessageStatus.delivered,
-  ),
-
-  MessageModel(
-    id: "wamid.005",
-    from: "923001234567",
-    text: "Great. Can I assign conversations to team members?",
-    isMe: false,
-    time: "10:24 AM",
-    type: MessageType.text,
-    status: MessageStatus.delivered,
-    replyToMessageId: "wamid.004",
-    replyToText: "Yes, we support WhatsApp Cloud API, Facebook and Instagram DMs.",
-  ),
-
-  MessageModel(
-    id: "wamid.006",
-    to: "923001234567",
-    text: "Absolutely. Team assignment and internal notes are included.",
-    isMe: true,
-    time: "10:25 AM",
-    type: MessageType.text,
-    status: MessageStatus.sent,
-  ),
-
-  MessageModel(
-    id: "wamid.007",
-    from: "923001234567",
-    text: "Perfect 👍 Please share demo access.",
-    isMe: false,
-    time: "10:26 AM",
-    type: MessageType.text,
-    status: MessageStatus.delivered,
-  ),
-];
