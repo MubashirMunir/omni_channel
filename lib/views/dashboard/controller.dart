@@ -1,8 +1,6 @@
-
-
-
 import 'dart:async';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -13,13 +11,50 @@ import '../../models/message_model.dart';
 import '../../widgets/formatted_time.dart';
 
 class DashboardController extends GetxController {
-  /// =========================
+  /// ============================================================
   /// SELECTED CONVERSATION
-  /// =========================
-  var convoModel = Rxn<convo_data.ConversationModel>();
-  /// =========================
+  /// ============================================================
+
+  final Rxn<convo_data.ConversationModel> convoModel =
+      Rxn<convo_data.ConversationModel>();
+
+  /// ============================================================
+  /// GENERAL UI STATES
+  /// ============================================================
+
+  final RxInt selectedIndex = 0.obs;
+  final RxString selectedTab = 'All'.obs;
+  final RxString selectedCenterView = ''.obs;
+  final RxBool showEmojiBoard = false.obs;
+
+  String? expandedList;
+  bool isSelected = false;
+
+  /// ============================================================
+  /// TEXT AND SCROLL CONTROLLERS
+  /// ============================================================
+
+  final TextEditingController msgController = TextEditingController();
+  final ScrollController messageScrollController = ScrollController();
+
+  /// ============================================================
+  /// CONVERSATIONS
+  /// ============================================================
+
+  final List<convo_data.ConversationModel> conversations =
+      List<convo_data.ConversationModel>.from(convo_data.conversations);
+
+  /// ============================================================
+  /// MESSAGES
+  /// ============================================================
+
+  List<MessageModel> messages = [];
+
+  final Map<String, List<MessageModel>> _messagesByConversation = {};
+
+  /// ============================================================
   /// VOICE RECORDING
-  /// =========================
+  /// ============================================================
 
   final AudioRecorder _voiceRecorder = AudioRecorder();
 
@@ -31,107 +66,103 @@ class DashboardController extends GetxController {
   final RxBool isVoiceSending = false.obs;
 
   final RxInt voiceRecordingSeconds = 0.obs;
-  final RxString voiceRecordingTime = "00:00".obs;
-
-  /// Waveform / mic level ke liye useful
+  final RxString voiceRecordingTime = '00:00'.obs;
   final RxDouble voiceLevel = 0.0.obs;
 
   String? _recordingConversationId;
 
   final int maxVoiceNoteSeconds = 120;
-  /// =========================
-  /// UI STATES
-  /// =========================
 
-  RxInt selectedIndex = 0.obs;
-  RxString selectedTab = "All".obs;
-  final RxBool showEmojiBoard = false.obs;
+  /// ============================================================
+  /// VOICE PLAYBACK
+  /// ============================================================
 
-  String? expandedList;
+  final AudioPlayer voicePlayer = AudioPlayer();
 
-  /// =========================
-  /// TEXT CONTROLLERS
-  /// =========================
+  final RxnString playingVoiceMessageId = RxnString();
+  final RxBool isVoicePlaying = false.obs;
+  final Rx<Duration> voicePosition = Duration.zero.obs;
+  final Rx<Duration> voiceDuration = Duration.zero.obs;
 
-  final TextEditingController msgController = TextEditingController();
+  StreamSubscription<PlayerState>? _voicePlayerStateSub;
+  StreamSubscription<Duration>? _voicePositionSub;
+  StreamSubscription<Duration>? _voiceDurationSub;
+  StreamSubscription<void>? _voiceCompleteSub;
 
-  /// =========================
-  /// CONVERSATIONS MASTER LIST
-  /// =========================
+  /// ============================================================
+  /// CONTROLLER LIFECYCLE
+  /// ============================================================
 
-  final List<convo_data.ConversationModel> conversations =
-  List<convo_data.ConversationModel>.from(convo_data.conversations);
-  /// scroll to end automatic
-  final ScrollController messageScrollController = ScrollController();
-  void scrollToBottom() {
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (messageScrollController.hasClients) {
-        messageScrollController.animateTo(
-          messageScrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
+  @override
+  void onInit() {
+    super.onInit();
+
+    _voicePositionSub = voicePlayer.onPositionChanged.listen((position) {
+      voicePosition.value = position;
+    });
+
+    _voiceDurationSub = voicePlayer.onDurationChanged.listen((duration) {
+      voiceDuration.value = duration;
+    });
+
+    _voiceCompleteSub = voicePlayer.onPlayerComplete.listen((_) {
+      playingVoiceMessageId.value = null;
+      isVoicePlaying.value = false;
+      voicePosition.value = Duration.zero;
+      voiceDuration.value = Duration.zero;
+
+      update();
+    });
+
+    _voicePlayerStateSub = voicePlayer.onPlayerStateChanged.listen((state) {
+      isVoicePlaying.value = state == PlayerState.playing;
+
+      update();
     });
   }
 
-  /// =========================
-  /// MESSAGES
-  /// =========================
+  @override
+  void onClose() {
+    _voiceTimer?.cancel();
+    _amplitudeSub?.cancel();
 
-  List<MessageModel> messages = [];
+    _voicePlayerStateSub?.cancel();
+    _voicePositionSub?.cancel();
+    _voiceDurationSub?.cancel();
+    _voiceCompleteSub?.cancel();
 
-  final Map<String, List<MessageModel>> _messagesByConversation = {};
+    unawaited(_voiceRecorder.cancel());
+    unawaited(_voiceRecorder.dispose());
+    unawaited(voicePlayer.dispose());
 
-  /// =========================
-  /// BOTTOM / SIDE INDEX
-  /// =========================
+    msgController.dispose();
+    messageScrollController.dispose();
+
+    super.onClose();
+  }
+
+  /// ============================================================
+  /// NAVIGATION / UI METHODS
+  /// ============================================================
 
   void changeIndex(int index) {
     selectedIndex.value = index;
     update();
   }
-  /// FILTERS
-//   List<ConversationModel>
-//   get filteredConversations {
-//
-//     if (selectedTab.value == "Unread") {
-//
-//       return conversations
-//           .where((e) => e.unread > 0)
-//           .toList();
-//     }
-//
-//     if (selectedTab.value == "Assigned") {
-//
-//       return conversations
-//           .where((e) => e.assigned)
-//           .toList();
-//     }
-//
-//     return conversations;
-//   }
-  /// =========================
-  /// TABS
-  /// =========================
 
   void changeTab(String tab) {
     selectedTab.value = tab;
     update();
   }
 
-  /// =========================
-  /// EXPANSION LIST
-  /// =========================
-
   void toggleExpandedList(String title, bool value) {
     expandedList = value ? title : null;
     update();
   }
 
-  /// =========================
-  /// EMOJI BOARD
-  /// =========================
+  /// ============================================================
+  /// EMOJI METHODS
+  /// ============================================================
 
   void toggleEmojiBoard() {
     showEmojiBoard.value = !showEmojiBoard.value;
@@ -156,11 +187,7 @@ class DashboardController extends GetxController {
         ? oldText.length
         : selection.baseOffset;
 
-    final newText = oldText.replaceRange(
-      cursorPosition,
-      cursorPosition,
-      emoji,
-    );
+    final newText = oldText.replaceRange(cursorPosition, cursorPosition, emoji);
 
     msgController.text = newText;
 
@@ -171,173 +198,234 @@ class DashboardController extends GetxController {
     update();
   }
 
-  /// =========================
-  /// SELECT / OPEN CHAT
-  /// =========================
+  /// ============================================================
+  /// SCROLL TO LATEST MESSAGE
+  /// ============================================================
 
-  void selectConversation(convo_data.ConversationModel convo) {
-    final currentId = convoModel.value?.id;
-    if (currentId != convo.id) {
+  void scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (!messageScrollController.hasClients) {
+        return;
+      }
+
+      messageScrollController.animateTo(
+        messageScrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  /// ============================================================
+  /// OPEN / SELECT CONVERSATION
+  /// ============================================================
+
+  Future<void> selectConversation(
+    convo_data.ConversationModel conversation,
+  ) async {
+    final currentConversationId = convoModel.value?.id;
+    final isDifferentConversation = currentConversationId != conversation.id;
+
+    if (isDifferentConversation) {
+      await stopVoiceMessage();
+
       msgController.clear();
       hideEmojiBoard();
 
       if (isVoiceRecording.value || isVoicePaused.value) {
-        unawaited(cancelVoiceRecording());
+        await cancelVoiceRecording();
       }
     }
-    final index = conversations.indexWhere((e) => e.id == convo.id);
 
-    if (index != -1) {
-      conversations[index] = conversations[index].copyWith(
-        unread: 0,
-      );
+    final conversationIndex = conversations.indexWhere(
+      (item) => item.id == conversation.id,
+    );
 
-      convoModel.value = conversations[index];
+    if (conversationIndex != -1) {
+      conversations[conversationIndex] = conversations[conversationIndex]
+          .copyWith(unread: 0);
 
-    } else {msgController.clear();
-    hideEmojiBoard();
-      convoModel.value = convo;
+      convoModel.value = conversations[conversationIndex];
+    } else {
+      msgController.clear();
+      hideEmojiBoard();
+
+      convoModel.value = conversation;
     }
 
-    loadMessages(convo.id);
-    update();
+    loadMessages(conversation.id);
 
+    update();
+    scrollToBottom();
   }
 
-  /// =========================
-  /// LOAD CHAT MESSAGES
-  /// =========================
+  Future<void> openChat(convo_data.ConversationModel model) async {
+    selectedCenterView.value = model.platform;
 
+    await selectConversation(model);
+  }
 
-  /// =========================
-  /// SEND MESSAGE
-  /// =========================
+  /// Gmail method intentionally kept without Gmail voice functionality.
+  void openGmail() {
+    if (isVoiceRecording.value || isVoicePaused.value) {
+      unawaited(cancelVoiceRecording());
+    }
+
+    isSelected = !isSelected;
+    selectedCenterView.value = 'Gmail';
+    convoModel.value = null;
+
+    update();
+  }
+
+  /// ============================================================
+  /// SELECTED CHAT HELPERS
+  /// ============================================================
+
+  bool get hasSelectedConversation {
+    return convoModel.value != null;
+  }
+
+  convo_data.ConversationModel? get selectedConversation {
+    return convoModel.value;
+  }
+
+  /// ============================================================
+  /// LOAD MESSAGES
+  /// ============================================================
+
+  void loadMessages(String conversationId) {
+    final conversation = conversations.firstWhereOrNull(
+      (item) => item.id == conversationId,
+    );
+
+    if (conversation == null) {
+      messages = [];
+      update();
+      return;
+    }
+
+    messages = _messagesByConversation.putIfAbsent(
+      conversationId,
+      () => _getDefaultMessagesByPlatform(conversation.platform),
+    );
+
+    update();
+  }
+
+  /// ============================================================
+  /// SEND TEXT MESSAGE
+  /// ============================================================
 
   void sendMessage() {
     final text = msgController.text.trim();
 
-    if (text.isEmpty) return;
+    if (text.isEmpty) {
+      return;
+    }
 
-    final selected = convoModel.value;
+    final selectedConversation = convoModel.value;
 
-    if (selected == null) return;
+    if (selectedConversation == null) {
+      return;
+    }
 
     final now = DateTime.now();
 
     final newMessage = MessageModel(
-      id: now.toString(),
+      id: now.microsecondsSinceEpoch.toString(),
       text: text,
       isMe: true,
       time: formatTime(now),
+      timestamp: now,
+      type: MessageType.text,
+      status: MessageStatus.sent,
     );
 
-    messages.add(newMessage);
-
-    _messagesByConversation[selected.id] = messages;
-
-    final index = conversations.indexWhere(
-          (e) => e.id == selected.id,
+    final chatMessages = _messagesByConversation.putIfAbsent(
+      selectedConversation.id,
+      () => _getDefaultMessagesByPlatform(selectedConversation.platform),
     );
 
-    if (index != -1) {
-      conversations[index] = conversations[index].copyWith(
-        message: text,
-        time: formatTime(now),
-        updatedAt: now,
-        unread: 0,
-      );
+    chatMessages.add(newMessage);
+    messages = chatMessages;
 
-      sortConversations();
-
-      convoModel.value = conversations.firstWhere(
-            (e) => e.id == selected.id,
-      );
-    }
+    _updateConversationPreview(
+      conversationId: selectedConversation.id,
+      previewText: text,
+      updatedAt: now,
+    );
 
     msgController.clear();
     hideEmojiBoard();
-    scrollToBottom();
+
     update();
+    scrollToBottom();
   }
-  /// =========================
-  void sendVoiceMessage({
-    required String audioPath,
-    required int duration,
-  }) {
-    final selected = convoModel.value;
 
-    if (selected == null) return;
+  /// ============================================================
+  /// DIRECT VOICE MESSAGE ADD
+  /// ============================================================
 
-    final now = DateTime.now();
+  void sendVoiceMessage({required String audioPath, required int duration}) {
+    final selectedConversation = convoModel.value;
 
-    final newMessage = MessageModel(
-      id: now.toString(),
-      text: "🎙 Voice message",
-      isMe: true,
-      time: formatTime(now),
-      type: MessageType.audio,
-      status: MessageStatus.sent,
-      audioPath: audioPath,
-      audioDuration: duration,
-      timestamp: now,
-    );
-
-    messages.add(newMessage);
-
-    _messagesByConversation[selected.id] = messages;
-
-    final index = conversations.indexWhere(
-          (e) => e.id == selected.id,
-    );
-
-    if (index != -1) {
-      conversations[index] = conversations[index].copyWith(
-        message: "🎙 Voice message",
-        time: formatTime(now),
-        updatedAt: now,
-        unread: 0,
-      );
-
-      sortConversations();
-
-      convoModel.value = conversations.firstWhere(
-            (e) => e.id == selected.id,
-      );
+    if (selectedConversation == null) {
+      return;
     }
 
+    _sendVoiceMessageToConversation(
+      conversation: selectedConversation,
+      audioPath: audioPath,
+      duration: duration,
+    );
+
     hideEmojiBoard();
-    scrollToBottom();
+
     update();
+    scrollToBottom();
   }
-  /// VOICE NOTE RECORDING
-  /// =========================
+
+  /// ============================================================
+  /// START VOICE RECORDING
+  /// ============================================================
 
   Future<void> startVoiceRecording() async {
-    final selected = convoModel.value;
+    // Pause the currently playing voice note
+    // and keep its current playback position.
+    if (isVoicePlaying.value) {
+      await voicePlayer.pause();
+    }
+    final selectedConversation = convoModel.value;
 
-    if (selected == null) {
+    if (selectedConversation == null) {
       Get.snackbar(
-        "No Chat Selected",
-        "Please select a conversation before recording voice note.",
+        'No Chat Selected',
+        'Please select a conversation before recording voice note.',
       );
       return;
     }
 
-    if (isVoiceRecording.value || isVoicePaused.value) return;
+    if (isVoiceRecording.value || isVoicePaused.value || isVoiceSending.value) {
+      return;
+    }
 
     try {
       final hasPermission = await _voiceRecorder.hasPermission();
 
-      debugPrint("MIC PERMISSION RESULT: $hasPermission");
-      debugPrint("IS WEB: $kIsWeb");
+      debugPrint('MIC PERMISSION RESULT: $hasPermission');
+      debugPrint('IS WEB: $kIsWeb');
 
-      /// Mobile/Desktop par permission false ho to stop.
-      /// Web par Chrome already allow hone ke bawajood kabhi false return kar deta hai,
-      /// is liye web par direct start try karenge.
+      /*
+       * On mobile or desktop, permission is required.
+       *
+       * On web, some browsers can return false even after permission
+       * has been granted, so recording start is attempted directly.
+       */
       if (!hasPermission && !kIsWeb) {
         Get.snackbar(
-          "Microphone Permission",
-          "Please allow microphone permission to record voice note.",
+          'Microphone Permission',
+          'Please allow microphone permission to record voice note.',
         );
         return;
       }
@@ -349,16 +437,16 @@ class DashboardController extends GetxController {
         numChannels: 1,
       );
 
-      final supported = await _voiceRecorder.isEncoderSupported(
+      final isSupported = await _voiceRecorder.isEncoderSupported(
         config.encoder,
       );
 
-      debugPrint("WAV SUPPORTED: $supported");
+      debugPrint('WAV SUPPORTED: $isSupported');
 
-      if (!supported) {
+      if (!isSupported) {
         Get.snackbar(
-          "Unsupported Audio",
-          "Your browser does not support WAV recording.",
+          'Unsupported Audio',
+          'Your device or browser does not support WAV recording.',
         );
         return;
       }
@@ -366,15 +454,12 @@ class DashboardController extends GetxController {
       hideEmojiBoard();
       _resetVoiceState();
 
-      _recordingConversationId = selected.id;
+      _recordingConversationId = selectedConversation.id;
 
       final fileName =
-          "voice_note_${DateTime.now().millisecondsSinceEpoch}.wav";
+          'voice_note_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-      await _voiceRecorder.start(
-        config,
-        path: fileName,
-      );
+      await _voiceRecorder.start(config, path: fileName);
 
       isVoiceRecording.value = true;
       isVoicePaused.value = false;
@@ -383,20 +468,24 @@ class DashboardController extends GetxController {
       _listenVoiceAmplitude();
 
       update();
-    } catch (e) {
-      debugPrint("VOICE RECORDING ERROR: $e");
+    } catch (error) {
+      debugPrint('VOICE RECORDING ERROR: $error');
 
-      Get.snackbar(
-        "Recording Error",
-        e.toString(),
-      );
+      Get.snackbar('Recording Error', error.toString());
 
       _resetVoiceState();
       update();
     }
   }
+
+  /// ============================================================
+  /// PAUSE VOICE RECORDING
+  /// ============================================================
+
   Future<void> pauseVoiceRecording() async {
-    if (!isVoiceRecording.value) return;
+    if (!isVoiceRecording.value) {
+      return;
+    }
 
     try {
       await _voiceRecorder.pause();
@@ -405,15 +494,22 @@ class DashboardController extends GetxController {
       isVoicePaused.value = true;
 
       _voiceTimer?.cancel();
+      _voiceTimer = null;
 
       update();
-    } catch (e) {
-      Get.snackbar("Pause Error", e.toString());
+    } catch (error) {
+      Get.snackbar('Pause Error', error.toString());
     }
   }
 
+  /// ============================================================
+  /// RESUME VOICE RECORDING
+  /// ============================================================
+
   Future<void> resumeVoiceRecording() async {
-    if (!isVoicePaused.value) return;
+    if (!isVoicePaused.value) {
+      return;
+    }
 
     try {
       await _voiceRecorder.resume();
@@ -424,8 +520,8 @@ class DashboardController extends GetxController {
       _startVoiceTimer();
 
       update();
-    } catch (e) {
-      Get.snackbar("Resume Error", e.toString());
+    } catch (error) {
+      Get.snackbar('Resume Error', error.toString());
     }
   }
 
@@ -440,69 +536,93 @@ class DashboardController extends GetxController {
     }
   }
 
+  /// ============================================================
+  /// CANCEL VOICE RECORDING
+  /// ============================================================
+
   Future<void> cancelVoiceRecording() async {
-    if (!isVoiceRecording.value && !isVoicePaused.value) return;
+    if (!isVoiceRecording.value && !isVoicePaused.value) {
+      return;
+    }
 
     try {
       await _voiceRecorder.cancel();
-    } catch (_) {
-      // Ignore cancel errors
+    } catch (error) {
+      debugPrint('VOICE RECORDING CANCEL ERROR: $error');
     }
 
     _resetVoiceState();
     update();
   }
 
+  /// ============================================================
+  /// STOP RECORDING AND SEND
+  /// ============================================================
+
   Future<void> stopVoiceRecordingAndSend() async {
-    if (!isVoiceRecording.value && !isVoicePaused.value) return;
-    if (isVoiceSending.value) return;
+    if (!isVoiceRecording.value && !isVoicePaused.value) {
+      return;
+    }
+
+    if (isVoiceSending.value) {
+      return;
+    }
 
     isVoiceSending.value = true;
 
     final duration = voiceRecordingSeconds.value;
-    final conversationId = _recordingConversationId;
+    final recordingConversationId = _recordingConversationId;
+
+    _voiceTimer?.cancel();
+    _voiceTimer = null;
 
     try {
       final audioPath = await _voiceRecorder.stop();
 
       if (audioPath == null || audioPath.trim().isEmpty) {
-        Get.snackbar("Voice Note", "Recording could not be saved.");
+        Get.snackbar('Voice Note', 'Recording could not be saved.');
         return;
       }
 
       if (duration < 1) {
-        Get.snackbar("Voice Note", "Recording is too short.");
+        Get.snackbar('Voice Note', 'Recording is too short.');
         return;
       }
 
-      if (conversationId == null) {
-        Get.snackbar("Voice Note", "Conversation not found.");
+      if (recordingConversationId == null) {
+        Get.snackbar('Voice Note', 'Conversation not found.');
         return;
       }
 
-      final selected = conversations.firstWhereOrNull(
-            (e) => e.id == conversationId,
+      final conversation = conversations.firstWhereOrNull(
+        (item) => item.id == recordingConversationId,
       );
 
-      if (selected == null) {
-        Get.snackbar("Voice Note", "Conversation not found.");
+      if (conversation == null) {
+        Get.snackbar('Voice Note', 'Conversation not found.');
         return;
       }
 
       _sendVoiceMessageToConversation(
-        conversation: selected,
+        conversation: conversation,
         audioPath: audioPath,
         duration: duration,
       );
-    } catch (e) {
-      Get.snackbar("Voice Note Error", e.toString());
+    } catch (error) {
+      debugPrint('VOICE NOTE SEND ERROR: $error');
+
+      Get.snackbar('Voice Note Error', error.toString());
     } finally {
-      isVoiceSending.value = false;
       _resetVoiceState();
-      scrollToBottom();
+
       update();
+      scrollToBottom();
     }
   }
+
+  /// ============================================================
+  /// ADD VOICE MESSAGE TO A CONVERSATION
+  /// ============================================================
 
   void _sendVoiceMessageToConversation({
     required convo_data.ConversationModel conversation,
@@ -513,23 +633,19 @@ class DashboardController extends GetxController {
 
     final newMessage = MessageModel(
       id: now.microsecondsSinceEpoch.toString(),
-      text: "",
+      text: '',
       isMe: true,
       time: formatTime(now),
-
-      /// Audio fields
+      timestamp: now,
       type: MessageType.audio,
       status: MessageStatus.sent,
       audioPath: audioPath,
       audioDuration: duration,
-
-      /// Optional if your model has timestamp
-      timestamp: now,
     );
 
     final chatMessages = _messagesByConversation.putIfAbsent(
       conversation.id,
-          () => _getDefaultMessagesByPlatform(conversation.platform),
+      () => _getDefaultMessagesByPlatform(conversation.platform),
     );
 
     chatMessages.add(newMessage);
@@ -538,60 +654,69 @@ class DashboardController extends GetxController {
       messages = chatMessages;
     }
 
-    final index = conversations.indexWhere(
-          (e) => e.id == conversation.id,
+    _updateConversationPreview(
+      conversationId: conversation.id,
+      previewText: '🎙 Voice message',
+      updatedAt: now,
     );
-
-    if (index != -1) {
-      conversations[index] = conversations[index].copyWith(
-        message: "🎙 Voice message",
-        time: formatTime(now),
-        updatedAt: now,
-        unread: 0,
-      );
-
-      sortConversations();
-
-      if (convoModel.value?.id == conversation.id) {
-        convoModel.value = conversations.firstWhere(
-              (e) => e.id == conversation.id,
-        );
-      }
-    }
   }
+
+  /// ============================================================
+  /// VOICE RECORDING TIMER
+  /// ============================================================
 
   void _startVoiceTimer() {
     _voiceTimer?.cancel();
 
     _voiceTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
+      if (!isVoiceRecording.value) {
+        return;
+      }
+
       voiceRecordingSeconds.value++;
+
       voiceRecordingTime.value = _formatVoiceDuration(
         voiceRecordingSeconds.value,
       );
 
       if (voiceRecordingSeconds.value >= maxVoiceNoteSeconds) {
         await stopVoiceRecordingAndSend();
+        return;
       }
 
       update();
     });
   }
 
+  /// ============================================================
+  /// VOICE AMPLITUDE / WAVEFORM
+  /// ============================================================
+
   void _listenVoiceAmplitude() {
     _amplitudeSub?.cancel();
 
     _amplitudeSub = _voiceRecorder
         .onAmplitudeChanged(const Duration(milliseconds: 200))
-        .listen((amp) {
-      /// amp.current usually negative dB value hoti hai.
-      /// Isko 0.0 - 1.0 level me convert kar rahe hain waveform UI ke liye.
-      final normalized = ((amp.current + 45) / 45).clamp(0.0, 1.0);
+        .listen(
+          (amplitude) {
+            final normalizedLevel = ((amplitude.current + 45) / 45).clamp(
+              0.0,
+              1.0,
+            );
 
-      voiceLevel.value = normalized.toDouble();
+            voiceLevel.value = normalizedLevel.toDouble();
 
-      update();
-    });
+            update();
+          },
+          onError: (Object error) {
+            debugPrint('VOICE AMPLITUDE ERROR: $error');
+          },
+        );
   }
+
+  /// ============================================================
+  /// RESET VOICE RECORDING STATE
+  /// ============================================================
 
   void _resetVoiceState() {
     _voiceTimer?.cancel();
@@ -605,7 +730,7 @@ class DashboardController extends GetxController {
     isVoiceSending.value = false;
 
     voiceRecordingSeconds.value = 0;
-    voiceRecordingTime.value = "00:00";
+    voiceRecordingTime.value = '00:00';
     voiceLevel.value = 0.0;
 
     _recordingConversationId = null;
@@ -615,304 +740,411 @@ class DashboardController extends GetxController {
     final minutes = totalSeconds ~/ 60;
     final seconds = totalSeconds % 60;
 
-    return "${minutes.toString().padLeft(2, '0')}:"
-        "${seconds.toString().padLeft(2, '0')}";
+    return '${minutes.toString().padLeft(2, '0')}:'
+        '${seconds.toString().padLeft(2, '0')}';
   }
-  /// =========================
+
+  /// ============================================================
+  /// VOICE MESSAGE PLAYBACK HELPERS
+  /// ============================================================
+
+  bool isVoiceMessagePlaying(String messageId) {
+    return playingVoiceMessageId.value == messageId && isVoicePlaying.value;
+  }
+
+  bool isVoiceMessageSelected(String messageId) {
+    return playingVoiceMessageId.value == messageId;
+  }
+
+  Duration getVoicePosition(String messageId) {
+    if (playingVoiceMessageId.value == messageId) {
+      return voicePosition.value;
+    }
+
+    return Duration.zero;
+  }
+
+  Duration getVoiceDuration(MessageModel message) {
+    final isActiveMessage = playingVoiceMessageId.value == message.id;
+
+    if (isActiveMessage && voiceDuration.value > Duration.zero) {
+      return voiceDuration.value;
+    }
+
+    return Duration(seconds: message.audioDuration ?? 0);
+  }
+
+  /// ============================================================
+  /// PLAY / PAUSE / RESUME VOICE MESSAGE
+  /// ============================================================
+
+  Future<void> toggleVoiceMessage(MessageModel message) async {
+    final audioPath = message.audioPath;
+
+    if (audioPath == null || audioPath.trim().isEmpty) {
+      Get.snackbar('Voice Note', 'Audio file was not found.');
+      return;
+    }
+
+    try {
+      final isSameMessage = playingVoiceMessageId.value == message.id;
+
+      if (isSameMessage) {
+        if (isVoicePlaying.value) {
+          await voicePlayer.pause();
+        } else {
+          await voicePlayer.resume();
+        }
+
+        update();
+        return;
+      }
+
+      await voicePlayer.stop();
+
+      playingVoiceMessageId.value = message.id;
+      isVoicePlaying.value = false;
+      voicePosition.value = Duration.zero;
+      voiceDuration.value = Duration(seconds: message.audioDuration ?? 0);
+
+      update();
+
+      if (_isNetworkOrWebAudioPath(audioPath)) {
+        await voicePlayer.play(UrlSource(audioPath));
+      } else {
+        await voicePlayer.play(DeviceFileSource(audioPath));
+      }
+    } catch (error) {
+      debugPrint('VOICE PLAYBACK ERROR: $error');
+
+      _resetVoicePlaybackState();
+
+      Get.snackbar('Playback Error', error.toString());
+
+      update();
+    }
+  }
+
+  bool _isNetworkOrWebAudioPath(String audioPath) {
+    return kIsWeb ||
+        audioPath.startsWith('http://') ||
+        audioPath.startsWith('https://') ||
+        audioPath.startsWith('blob:');
+  }
+
+  /// ============================================================
+  /// SEEK VOICE MESSAGE
+  /// ============================================================
+
+  Future<void> seekVoiceMessage({
+    required String messageId,
+    required double seconds,
+  }) async {
+    if (playingVoiceMessageId.value != messageId) {
+      return;
+    }
+
+    if (seconds.isNaN || seconds.isInfinite || seconds < 0) {
+      return;
+    }
+
+    try {
+      await voicePlayer.seek(Duration(milliseconds: (seconds * 1000).round()));
+    } catch (error) {
+      debugPrint('VOICE SEEK ERROR: $error');
+    }
+  }
+
+  /// ============================================================
+  /// STOP VOICE MESSAGE
+  /// ============================================================
+
+  Future<void> stopVoiceMessage() async {
+    try {
+      await voicePlayer.stop();
+    } catch (error) {
+      debugPrint('VOICE STOP ERROR: $error');
+    }
+
+    _resetVoicePlaybackState();
+    update();
+  }
+
+  void _resetVoicePlaybackState() {
+    playingVoiceMessageId.value = null;
+    isVoicePlaying.value = false;
+    voicePosition.value = Duration.zero;
+    voiceDuration.value = Duration.zero;
+  }
+
+  /// ============================================================
+  /// CONVERSATION PREVIEW UPDATE
+  /// ============================================================
+
+  void _updateConversationPreview({
+    required String conversationId,
+    required String previewText,
+    required DateTime updatedAt,
+  }) {
+    final conversationIndex = conversations.indexWhere(
+      (item) => item.id == conversationId,
+    );
+
+    if (conversationIndex == -1) {
+      return;
+    }
+
+    conversations[conversationIndex] = conversations[conversationIndex]
+        .copyWith(
+          message: previewText,
+          time: formatTime(updatedAt),
+          updatedAt: updatedAt,
+          unread: 0,
+        );
+
+    sortConversations();
+
+    if (convoModel.value?.id == conversationId) {
+      convoModel.value = conversations.firstWhereOrNull(
+        (item) => item.id == conversationId,
+      );
+    }
+  }
+
+  /// ============================================================
   /// SORTING
-  /// =========================
+  /// ============================================================
 
   void sortConversations() {
-    conversations.sort(
-          (a, b) => b.updatedAt.compareTo(a.updatedAt),
-    );
+    conversations.sort((first, second) {
+      return second.updatedAt.compareTo(first.updatedAt);
+    });
   }
 
-  /// =========================
-  /// PLATFORM FILTER
-  /// =========================
+  /// ============================================================
+  /// FILTERS
+  /// ============================================================
+
+  List<convo_data.ConversationModel> get filteredConversations {
+    List<convo_data.ConversationModel> filteredList;
+
+    if (selectedTab.value == 'Unread') {
+      filteredList = conversations
+          .where((conversation) => conversation.unread > 0)
+          .toList();
+    } else if (selectedTab.value == 'Assigned') {
+      filteredList = conversations
+          .where((conversation) => conversation.assigned)
+          .toList();
+    } else {
+      filteredList = conversations.toList();
+    }
+
+    filteredList.sort((first, second) {
+      return second.updatedAt.compareTo(first.updatedAt);
+    });
+
+    return filteredList;
+  }
 
   List<convo_data.ConversationModel> getByPlatform(String platform) {
-    final list = filteredConversations
+    final filteredList = filteredConversations
         .where(
-          (e) => e.platform.toLowerCase() == platform.toLowerCase(),
-    )
+          (conversation) =>
+              conversation.platform.toLowerCase() == platform.toLowerCase(),
+        )
         .toList();
 
-    list.sort(
-          (a, b) => b.updatedAt.compareTo(a.updatedAt),
-    );
+    filteredList.sort((first, second) {
+      return second.updatedAt.compareTo(first.updatedAt);
+    });
 
-    return list;
+    return filteredList;
   }
-
-
 
   int countByPlatform(String platform) {
     return getByPlatform(platform).length;
   }
-  final RxString selectedCenterView = ''.obs;
 
-  void openChat(convo_data.ConversationModel model) {
-    convoModel.value = model;
-    selectedCenterView.value = model.platform;
-    update();
-  }
-   bool isSelected =false;
-  void openGmail() {
-    if (isVoiceRecording.value || isVoicePaused.value) {
-      unawaited(cancelVoiceRecording());
-    }
+  /// ============================================================
+  /// DEFAULT PLATFORM MESSAGES
+  /// ============================================================
 
-    isSelected = !isSelected;
-    selectedCenterView.value = 'Gmail';
-    convoModel.value = null;
-    update();
-  }
-  /// =========================
-  /// TAB FILTERS
-  /// =========================
-
-  List<convo_data.ConversationModel> get filteredConversations {
-    List<convo_data.ConversationModel> list;
-
-    if (selectedTab.value == "Unread") {
-      list = conversations.where((e) => e.unread > 0).toList();
-    } else if (selectedTab.value == "Assigned") {
-      list = conversations.where((e) => e.assigned).toList();
-    } else {
-      list = conversations.toList();
-    }
-
-    list.sort(
-          (a, b) => b.updatedAt.compareTo(a.updatedAt),
-    );
-
-    return list;
-  }
-
-  /// =========================
-  /// SELECTED CHAT HELPERS
-  /// =========================
-
-  bool get hasSelectedConversation {
-    return convoModel.value != null;
-  }
-
-  convo_data.ConversationModel? get selectedConversation {
-    return convoModel.value;
-  }
-  void loadMessages(String conversationId) {
-    final convo = conversations.firstWhereOrNull(
-          (e) => e.id == conversationId,
-    );
-
-    if (convo == null) return;
-
-    messages = _messagesByConversation.putIfAbsent(
-      conversationId,
-          () => _getDefaultMessagesByPlatform(convo.platform),
-    );
-
-    update();
-  }
-  /// =========================
-  /// CLEANUP
-  /// =========================
   List<MessageModel> _getDefaultMessagesByPlatform(String platform) {
     final channel = platform.toLowerCase();
 
-    if (channel == "whatsapp") {
+    if (channel == 'whatsapp') {
       return [
         MessageModel(
-          id: "w1",
-          text: "Assalam o Alaikum 👋",
+          id: 'w1',
+          text: 'Assa lam o Alaikum 👋',
           isMe: false,
-          time: "10:20 AM",
+          time: '10:20 AM',
         ),
         MessageModel(
-          id: "w2",
-          text: "Wa Alaikum Salam! How can I help you?",
+          id: 'w2',
+          text: 'Wa Alaikum Salam! How can I help you?',
           isMe: true,
-          time: "10:21 AM",
+          time: '10:21 AM',
         ),
         MessageModel(
-          id: "w3",
-          text: "Mujhe pricing package ki details chahiye.",
+          id: 'w3',
+          text: 'Mujhe pricing package ki details chahiye.',
           isMe: false,
-          time: "10:22 AM",
+          time: '10:22 AM',
         ),
         MessageModel(
-          id: "w4",
-          text: "Sure, humare paas Basic, Pro aur Enterprise plans hain.",
+          id: 'w4',
+          text: 'Sure, humare paas Basic, Pro aur Enterprise plans hain.',
           isMe: true,
-          time: "10:23 AM",
+          time: '10:23 AM',
         ),
         MessageModel(
-          id: "w5",
-          text: "Pro plan me kya kya included hai?",
+          id: 'w5',
+          text: 'Pro plan me kya kya included hai?',
           isMe: false,
-          time: "10:24 AM",
+          time: '10:24 AM',
         ),
         MessageModel(
-          id: "w6",
+          id: 'w6',
           text:
-          "Pro plan me WhatsApp inbox, team assignment, unread filter, analytics aur lead tracking included hai.",
+              'Pro plan me WhatsApp inbox, team assignment, unread filter, analytics aur lead tracking included hai.',
           isMe: true,
-          time: "10:25 AM",
+          time: '10:25 AM',
         ),
         MessageModel(
-          id: "w7",
-          text: "Can you share package pictures too?",
+          id: 'w7',
+          text: 'Can you share package pictures too?',
           isMe: false,
-          time: "10:26 AM",
+          time: '10:26 AM',
         ),
         MessageModel(
-          id: "w8",
-          text: "Yes, main package screenshots abhi share kar deta hun.",
+          id: 'w8',
+          text: 'Yes, main package screenshots abhi share kar deta hun.',
           isMe: true,
-          time: "10:27 AM",
+          time: '10:27 AM',
         ),
       ];
     }
 
-    if (channel == "facebook") {
+    if (channel == 'facebook') {
       return [
         MessageModel(
-          id: "f1",
-          text: "Hi, I saw your CRM ad on Facebook.",
+          id: 'f1',
+          text: 'Hi, I saw your CRM ad on Facebook.',
           isMe: false,
-          time: "09:05 AM",
+          time: '09:05 AM',
         ),
         MessageModel(
-          id: "f2",
-          text: "Hello! Thanks for reaching out. What would you like to know?",
+          id: 'f2',
+          text: 'Hello! Thanks for reaching out. What would you like to know?',
           isMe: true,
-          time: "09:06 AM",
+          time: '09:06 AM',
         ),
         MessageModel(
-          id: "f3",
-          text: "Can this CRM connect with my Facebook page?",
+          id: 'f3',
+          text: 'Can this CRM connect with my Facebook page?',
           isMe: false,
-          time: "09:07 AM",
+          time: '09:07 AM',
         ),
         MessageModel(
-          id: "f4",
+          id: 'f4',
           text:
-          "Yes, you can connect your Facebook page and manage page messages from one dashboard.",
+              'Yes, you can connect your Facebook page and manage page messages from one dashboard.',
           isMe: true,
-          time: "09:08 AM",
+          time: '09:08 AM',
         ),
         MessageModel(
-          id: "f5",
-          text: "Can my team reply to customers from the same dashboard?",
+          id: 'f5',
+          text: 'Can my team reply to customers from the same dashboard?',
           isMe: false,
-          time: "09:09 AM",
+          time: '09:09 AM',
         ),
         MessageModel(
-          id: "f6",
+          id: 'f6',
           text:
-          "Yes, you can add agents, assign conversations, and monitor replies.",
+              'Yes, you can add agents, assign conversations, and monitor replies.',
           isMe: true,
-          time: "09:10 AM",
+          time: '09:10 AM',
         ),
         MessageModel(
-          id: "f7",
-          text: "Is there any monthly package?",
+          id: 'f7',
+          text: 'Is there any monthly package?',
           isMe: false,
-          time: "09:11 AM",
+          time: '09:11 AM',
         ),
         MessageModel(
-          id: "f8",
-          text: "Yes, monthly packages are available. I can share details.",
+          id: 'f8',
+          text: 'Yes, monthly packages are available. I can share details.',
           isMe: true,
-          time: "09:12 AM",
+          time: '09:12 AM',
         ),
       ];
     }
 
-    if (channel == "instagram") {
+    if (channel == 'instagram') {
       return [
         MessageModel(
-          id: "i1",
-          text: "Hey, I need help with my order.",
+          id: 'i1',
+          text: 'Hey, I need help with my order.',
           isMe: false,
-          time: "11:15 AM",
+          time: '11:15 AM',
         ),
         MessageModel(
-          id: "i2",
-          text: "Sure! Please share your order number.",
+          id: 'i2',
+          text: 'Sure! Please share your order number.',
           isMe: true,
-          time: "11:16 AM",
+          time: '11:16 AM',
         ),
         MessageModel(
-          id: "i3",
-          text: "Order number is #ELT-1029.",
+          id: 'i3',
+          text: 'Order number is #ELT-1029.',
           isMe: false,
-          time: "11:17 AM",
+          time: '11:17 AM',
         ),
         MessageModel(
-          id: "i4",
-          text: "Thanks. Let me check the order status for you.",
+          id: 'i4',
+          text: 'Thanks. Let me check the order status for you.',
           isMe: true,
-          time: "11:18 AM",
+          time: '11:18 AM',
         ),
         MessageModel(
-          id: "i5",
-          text: "Also, do you provide support on Instagram DM?",
+          id: 'i5',
+          text: 'Also, do you provide support on Instagram DM?',
           isMe: false,
-          time: "11:19 AM",
+          time: '11:19 AM',
         ),
         MessageModel(
-          id: "i6",
+          id: 'i6',
           text:
-          "Yes, Instagram DM support can be managed from this CRM dashboard.",
+              'Yes, Instagram DM support can be managed from this CRM dashboard.',
           isMe: true,
-          time: "11:20 AM",
+          time: '11:20 AM',
         ),
         MessageModel(
-          id: "i7",
-          text: "Can I assign DMs to my team members?",
+          id: 'i7',
+          text: 'Can I assign DMs to my team members?',
           isMe: false,
-          time: "11:21 AM",
+          time: '11:21 AM',
         ),
         MessageModel(
-          id: "i8",
+          id: 'i8',
           text:
-          "Yes, every Instagram conversation can be assigned to a specific agent.",
+              'Yes, every Instagram conversation can be assigned to a specific agent.',
           isMe: true,
-          time: "11:22 AM",
+          time: '11:22 AM',
         ),
       ];
     }
 
     return [
+      MessageModel(id: 'd1', text: 'Hello 👋', isMe: false, time: '10:20 AM'),
       MessageModel(
-        id: "d1",
-        text: "Hello 👋",
-        isMe: false,
-        time: "10:20 AM",
-      ),
-      MessageModel(
-        id: "d2",
-        text: "Hi! How can I help you?",
+        id: 'd2',
+        text: 'Hi! How can I help you?',
         isMe: true,
-        time: "10:21 AM",
+        time: '10:21 AM',
       ),
     ];
-  }
-  @override
-  @override
-  void onClose() {
-    _voiceTimer?.cancel();
-    _amplitudeSub?.cancel();
-
-    unawaited(_voiceRecorder.cancel());
-    unawaited(_voiceRecorder.dispose());
-
-    msgController.dispose();
-    messageScrollController.dispose();
-
-    super.onClose();
   }
 }
