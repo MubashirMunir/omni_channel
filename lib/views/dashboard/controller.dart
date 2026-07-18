@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:record/record.dart';
-
 import '../../models/convo_list.dart' as convo_data;
 import '../../models/message_model.dart';
 import '../../widgets/formatted_time.dart';
@@ -58,19 +57,41 @@ class DashboardController extends GetxController {
 
   final AudioRecorder _voiceRecorder = AudioRecorder();
 
-  Timer? _voiceTimer;
-  StreamSubscription<Amplitude>? _amplitudeSub;
+  /// Stopwatch is used instead of relying on Timer ticks for duration.
+  /// Even if Flutter Web UI becomes busy, elapsed time stays correct.
+  final Stopwatch _voiceStopwatch = Stopwatch();
 
+  Timer? _voiceUiTimer;
+  Timer? _voiceAmplitudeTimer;
+
+  StreamSubscription<RecordState>? _voiceRecorderStateSub;
+
+  /// Recording states.
+  final RxBool isVoiceStarting = false.obs;
   final RxBool isVoiceRecording = false.obs;
   final RxBool isVoicePaused = false.obs;
   final RxBool isVoiceSending = false.obs;
 
+  /// Recording duration.
   final RxInt voiceRecordingSeconds = 0.obs;
   final RxString voiceRecordingTime = '00:00'.obs;
+
+  /// Current microphone level: 0.0 - 1.0.
   final RxDouble voiceLevel = 0.0.obs;
 
+  /// Conversation where recording originally started.
   String? _recordingConversationId;
 
+  /// Prevent overlapping start/stop/pause/resume actions.
+  bool _voiceActionInProgress = false;
+
+  /// Prevent multiple simultaneous getAmplitude() calls.
+  bool _amplitudePollInProgress = false;
+
+  /// Used to reject stale async amplitude results.
+  int _voiceSessionId = 0;
+
+  /// Maximum voice-note length.
   final int maxVoiceNoteSeconds = 120;
 
   /// ============================================================
@@ -81,6 +102,7 @@ class DashboardController extends GetxController {
 
   final RxnString playingVoiceMessageId = RxnString();
   final RxBool isVoicePlaying = false.obs;
+
   final Rx<Duration> voicePosition = Duration.zero.obs;
   final Rx<Duration> voiceDuration = Duration.zero.obs;
 
@@ -97,6 +119,10 @@ class DashboardController extends GetxController {
   void onInit() {
     super.onInit();
 
+    /// ------------------------------------------------------------
+    /// VOICE PLAYER LISTENERS
+    /// ------------------------------------------------------------
+
     _voicePositionSub = voicePlayer.onPositionChanged.listen((position) {
       voicePosition.value = position;
     });
@@ -106,25 +132,58 @@ class DashboardController extends GetxController {
     });
 
     _voiceCompleteSub = voicePlayer.onPlayerComplete.listen((_) {
-      playingVoiceMessageId.value = null;
-      isVoicePlaying.value = false;
-      voicePosition.value = Duration.zero;
-      voiceDuration.value = Duration.zero;
-
+      _resetVoicePlaybackState();
       update();
     });
 
     _voicePlayerStateSub = voicePlayer.onPlayerStateChanged.listen((state) {
       isVoicePlaying.value = state == PlayerState.playing;
-
-      update();
     });
+
+    /// ------------------------------------------------------------
+    /// RECORDER STATE LISTENER
+    /// ------------------------------------------------------------
+    ///
+    /// This helps detect cases where the browser unexpectedly stops
+    /// the microphone recording.
+    _voiceRecorderStateSub = _voiceRecorder.onStateChanged().listen(
+      (state) {
+        debugPrint('VOICE RECORDER STATE: $state');
+
+        if (state == RecordState.stop &&
+            isVoiceRecording.value &&
+            !isVoiceSending.value &&
+            !_voiceActionInProgress) {
+          debugPrint('VOICE RECORDER STOPPED UNEXPECTEDLY');
+
+          _stopVoiceRuntimeTimers();
+
+          _voiceStopwatch.stop();
+
+          isVoiceRecording.value = false;
+          isVoicePaused.value = false;
+
+          voiceLevel.value = 0.0;
+
+          Get.snackbar(
+            'Recording Stopped',
+            'The browser stopped microphone recording unexpectedly.',
+          );
+
+          update();
+        }
+      },
+      onError: (Object error) {
+        debugPrint('VOICE RECORDER STATE ERROR: $error');
+      },
+    );
   }
 
   @override
   void onClose() {
-    _voiceTimer?.cancel();
-    _amplitudeSub?.cancel();
+    _stopVoiceRuntimeTimers();
+
+    _voiceRecorderStateSub?.cancel();
 
     _voicePlayerStateSub?.cancel();
     _voicePositionSub?.cancel();
@@ -133,6 +192,7 @@ class DashboardController extends GetxController {
 
     unawaited(_voiceRecorder.cancel());
     unawaited(_voiceRecorder.dispose());
+
     unawaited(voicePlayer.dispose());
 
     msgController.dispose();
@@ -166,6 +226,7 @@ class DashboardController extends GetxController {
 
   void toggleEmojiBoard() {
     showEmojiBoard.value = !showEmojiBoard.value;
+
     update();
   }
 
@@ -224,6 +285,7 @@ class DashboardController extends GetxController {
     convo_data.ConversationModel conversation,
   ) async {
     final currentConversationId = convoModel.value?.id;
+
     final isDifferentConversation = currentConversationId != conversation.id;
 
     if (isDifferentConversation) {
@@ -232,7 +294,9 @@ class DashboardController extends GetxController {
       msgController.clear();
       hideEmojiBoard();
 
-      if (isVoiceRecording.value || isVoicePaused.value) {
+      if (isVoiceRecording.value ||
+          isVoicePaused.value ||
+          isVoiceStarting.value) {
         await cancelVoiceRecording();
       }
     }
@@ -265,14 +329,17 @@ class DashboardController extends GetxController {
     await selectConversation(model);
   }
 
-  /// Gmail method intentionally kept without Gmail voice functionality.
   void openGmail() {
-    if (isVoiceRecording.value || isVoicePaused.value) {
+    if (isVoiceRecording.value ||
+        isVoicePaused.value ||
+        isVoiceStarting.value) {
       unawaited(cancelVoiceRecording());
     }
 
     isSelected = !isSelected;
+
     selectedCenterView.value = 'Gmail';
+
     convoModel.value = null;
 
     update();
@@ -348,6 +415,7 @@ class DashboardController extends GetxController {
     );
 
     chatMessages.add(newMessage);
+
     messages = chatMessages;
 
     _updateConversationPreview(
@@ -391,11 +459,6 @@ class DashboardController extends GetxController {
   /// ============================================================
 
   Future<void> startVoiceRecording() async {
-    // Pause the currently playing voice note
-    // and keep its current playback position.
-    if (isVoicePlaying.value) {
-      await voicePlayer.pause();
-    }
     final selectedConversation = convoModel.value;
 
     if (selectedConversation == null) {
@@ -403,129 +466,449 @@ class DashboardController extends GetxController {
         'No Chat Selected',
         'Please select a conversation before recording voice note.',
       );
+
       return;
     }
 
-    if (isVoiceRecording.value || isVoicePaused.value || isVoiceSending.value) {
+    /// Prevent double tap / duplicate start.
+    if (_voiceActionInProgress ||
+        isVoiceStarting.value ||
+        isVoiceRecording.value ||
+        isVoicePaused.value ||
+        isVoiceSending.value) {
       return;
     }
+
+    _voiceActionInProgress = true;
+
+    isVoiceStarting.value = true;
+
+    update();
 
     try {
+      /// Pause currently playing voice message.
+      if (isVoicePlaying.value) {
+        await voicePlayer.pause();
+      }
+
+      /// Microphone permission.
       final hasPermission = await _voiceRecorder.hasPermission();
 
-      debugPrint('MIC PERMISSION RESULT: $hasPermission');
-      debugPrint('IS WEB: $kIsWeb');
+      debugPrint('MIC PERMISSION: $hasPermission');
 
-      /*
-       * On mobile or desktop, permission is required.
-       *
-       * On web, some browsers can return false even after permission
-       * has been granted, so recording start is attempted directly.
-       */
-      if (!hasPermission && !kIsWeb) {
+      if (!hasPermission) {
         Get.snackbar(
           'Microphone Permission',
-          'Please allow microphone permission to record voice note.',
+          'Please allow microphone access to record voice notes.',
         );
+
         return;
       }
 
-      const config = RecordConfig(
-        encoder: AudioEncoder.wav,
-        sampleRate: 44100,
-        bitRate: 128000,
-        numChannels: 1,
-      );
+      /// Clear any previous recording state.
+      _resetVoiceState(clearConversation: true);
 
-      final isSupported = await _voiceRecorder.isEncoderSupported(
-        config.encoder,
-      );
-
-      debugPrint('WAV SUPPORTED: $isSupported');
-
-      if (!isSupported) {
-        Get.snackbar(
-          'Unsupported Audio',
-          'Your device or browser does not support WAV recording.',
-        );
-        return;
-      }
-
-      hideEmojiBoard();
-      _resetVoiceState();
-
+      /// Save the conversation where
+      /// recording started.
       _recordingConversationId = selectedConversation.id;
 
-      final fileName =
-          'voice_note_${DateTime.now().millisecondsSinceEpoch}.wav';
+      /// Choose the best encoder for
+      /// the current browser/platform.
+      final config = await _createVoiceRecordConfig();
 
-      await _voiceRecorder.start(config, path: fileName);
+      debugPrint('VOICE ENCODER: ${config.encoder}');
 
+      final path = _createVoiceRecordingPath(config.encoder);
+
+      debugPrint('VOICE RECORDING PATH: $path');
+
+      /// Start actual microphone recording.
+      await _voiceRecorder.start(config, path: path);
+
+      /// Make sure recorder actually started.
+      final recorderStarted = await _voiceRecorder.isRecording();
+
+      if (!recorderStarted) {
+        throw StateError('Recorder failed to start.');
+      }
+
+      /// Create a new recording session ID.
+      final currentSessionId = _voiceSessionId;
+
+      /// Reset and start accurate clock.
+      _voiceStopwatch
+        ..reset()
+        ..start();
+
+      voiceRecordingSeconds.value = 0;
+      voiceRecordingTime.value = '00:00';
+
+      voiceLevel.value = 0.0;
+
+      isVoiceStarting.value = false;
       isVoiceRecording.value = true;
       isVoicePaused.value = false;
+      isVoiceSending.value = false;
 
-      _startVoiceTimer();
-      _listenVoiceAmplitude();
+      /// Start lightweight UI duration updates.
+      _startVoiceUiTimer(currentSessionId);
+
+      /// Start safe amplitude polling.
+      ///
+      /// We intentionally do NOT use
+      /// onAmplitudeChanged() here.
+      _startAmplitudePolling(currentSessionId);
+
+      debugPrint('VOICE RECORDING STARTED');
 
       update();
-    } catch (error) {
+    } catch (error, stackTrace) {
       debugPrint('VOICE RECORDING ERROR: $error');
+
+      debugPrintStack(stackTrace: stackTrace);
+
+      try {
+        await _voiceRecorder.cancel();
+      } catch (_) {}
+
+      _resetVoiceState(clearConversation: true);
 
       Get.snackbar('Recording Error', error.toString());
 
-      _resetVoiceState();
       update();
+    } finally {
+      isVoiceStarting.value = false;
+      _voiceActionInProgress = false;
     }
   }
 
   /// ============================================================
-  /// PAUSE VOICE RECORDING
+  /// CREATE RECORDING CONFIG
   /// ============================================================
 
-  Future<void> pauseVoiceRecording() async {
+  Future<RecordConfig> _createVoiceRecordConfig() async {
+    /// ------------------------------------------------------------
+    /// WEB
+    /// ------------------------------------------------------------
+    ///
+    /// Chrome / Edge / Firefox commonly support Opus
+    /// through the browser's native MediaRecorder.
+    ///
+    /// Prefer it when available instead of forcing
+    /// Flutter/Dart-side WAV processing.
+    if (kIsWeb) {
+      final opusSupported = await _voiceRecorder.isEncoderSupported(
+        AudioEncoder.opus,
+      );
+
+      if (opusSupported) {
+        debugPrint('USING OPUS FOR WEB RECORDING');
+
+        return const RecordConfig(
+          encoder: AudioEncoder.opus,
+          bitRate: 64000,
+          sampleRate: 48000,
+          numChannels: 1,
+          autoGain: true,
+          echoCancel: true,
+          noiseSuppress: true,
+        );
+      }
+
+      final wavSupported = await _voiceRecorder.isEncoderSupported(
+        AudioEncoder.wav,
+      );
+
+      if (!wavSupported) {
+        throw UnsupportedError(
+          'This browser does not support a compatible audio encoder.',
+        );
+      }
+
+      debugPrint('USING WAV FALLBACK FOR WEB RECORDING');
+
+      return const RecordConfig(
+        encoder: AudioEncoder.wav,
+        sampleRate: 48000,
+        numChannels: 1,
+        autoGain: true,
+        echoCancel: true,
+        noiseSuppress: true,
+      );
+    }
+
+    /// ------------------------------------------------------------
+    /// NON-WEB
+    /// ------------------------------------------------------------
+
+    final aacSupported = await _voiceRecorder.isEncoderSupported(
+      AudioEncoder.aacLc,
+    );
+
+    if (aacSupported) {
+      return const RecordConfig(
+        encoder: AudioEncoder.aacLc,
+        bitRate: 64000,
+        sampleRate: 44100,
+        numChannels: 1,
+        autoGain: true,
+        echoCancel: true,
+        noiseSuppress: true,
+      );
+    }
+
+    return const RecordConfig(
+      encoder: AudioEncoder.wav,
+      sampleRate: 44100,
+      numChannels: 1,
+    );
+  }
+
+  /// ============================================================
+  /// CREATE RECORDING PATH
+  /// ============================================================
+
+  String _createVoiceRecordingPath(AudioEncoder encoder) {
+    /// Web requires an empty path.
+    if (kIsWeb) {
+      return '';
+    }
+
+    String extension;
+
+    switch (encoder) {
+      case AudioEncoder.opus:
+        extension = 'opus';
+        break;
+
+      case AudioEncoder.aacLc:
+      case AudioEncoder.aacEld:
+      case AudioEncoder.aacHe:
+        extension = 'm4a';
+        break;
+
+      case AudioEncoder.wav:
+        extension = 'wav';
+        break;
+
+      case AudioEncoder.flac:
+        extension = 'flac';
+        break;
+
+      case AudioEncoder.pcm16bits:
+        extension = 'pcm';
+        break;
+
+      case AudioEncoder.amrNb:
+      case AudioEncoder.amrWb:
+        extension = '3gp';
+        break;
+    }
+
+    return 'voice_note_'
+        '${DateTime.now().millisecondsSinceEpoch}'
+        '.$extension';
+  }
+
+  /// ============================================================
+  /// RECORDING UI TIMER
+  /// ============================================================
+
+  void _startVoiceUiTimer(int sessionId) {
+    _voiceUiTimer?.cancel();
+
+    _voiceUiTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+      /// Ignore an old recording session.
+      if (sessionId != _voiceSessionId) {
+        return;
+      }
+
+      if (!isVoiceRecording.value) {
+        return;
+      }
+
+      /// Stopwatch remains accurate even
+      /// if Flutter UI frames are delayed.
+      final elapsedSeconds = _voiceStopwatch.elapsed.inSeconds;
+
+      /// Only notify Rx when the displayed
+      /// second actually changes.
+      if (voiceRecordingSeconds.value != elapsedSeconds) {
+        voiceRecordingSeconds.value = elapsedSeconds;
+
+        voiceRecordingTime.value = _formatVoiceDuration(elapsedSeconds);
+      }
+
+      if (elapsedSeconds >= maxVoiceNoteSeconds) {
+        _voiceUiTimer?.cancel();
+        _voiceUiTimer = null;
+
+        unawaited(stopVoiceRecordingAndSend());
+      }
+
+      /// IMPORTANT:
+      ///
+      /// NO update() here.
+      ///
+      /// Recording UI should use Obx
+      /// for voiceRecordingTime.
+    });
+  }
+
+  /// ============================================================
+  /// SAFE AMPLITUDE POLLING
+  /// ============================================================
+
+  void _startAmplitudePolling(int sessionId) {
+    _voiceAmplitudeTimer?.cancel();
+
+    /// 400 ms = only 2.5 microphone-level
+    /// reads per second.
+    ///
+    /// This is much lighter than continuously
+    /// rebuilding the dashboard.
+    _voiceAmplitudeTimer = Timer.periodic(const Duration(milliseconds: 400), (
+      _,
+    ) {
+      if (sessionId != _voiceSessionId) {
+        return;
+      }
+
+      if (!isVoiceRecording.value) {
+        return;
+      }
+
+      unawaited(_pollVoiceAmplitude(sessionId));
+    });
+  }
+
+  Future<void> _pollVoiceAmplitude(int sessionId) async {
+    if (_amplitudePollInProgress) {
+      return;
+    }
+
     if (!isVoiceRecording.value) {
       return;
     }
 
+    _amplitudePollInProgress = true;
+
+    try {
+      final amplitude = await _voiceRecorder.getAmplitude();
+
+      /// Recording may have stopped while
+      /// getAmplitude was waiting.
+      if (sessionId != _voiceSessionId || !isVoiceRecording.value) {
+        return;
+      }
+
+      /// Convert approximately -50dB..0dB
+      /// to 0.0..1.0.
+      final normalized = ((amplitude.current + 50.0) / 50.0).clamp(0.0, 1.0);
+
+      voiceLevel.value = normalized.toDouble();
+
+      /// IMPORTANT:
+      ///
+      /// NO update() here.
+      ///
+      /// Only a small Obx waveform widget
+      /// should react to voiceLevel.
+    } catch (error) {
+      debugPrint('VOICE AMPLITUDE ERROR: $error');
+    } finally {
+      _amplitudePollInProgress = false;
+    }
+  }
+
+  /// ============================================================
+  /// PAUSE RECORDING
+  /// ============================================================
+
+  Future<void> pauseVoiceRecording() async {
+    if (_voiceActionInProgress ||
+        !isVoiceRecording.value ||
+        isVoiceSending.value) {
+      return;
+    }
+
+    _voiceActionInProgress = true;
+
     try {
       await _voiceRecorder.pause();
+
+      _voiceStopwatch.stop();
+
+      _voiceAmplitudeTimer?.cancel();
+      _voiceAmplitudeTimer = null;
 
       isVoiceRecording.value = false;
       isVoicePaused.value = true;
 
-      _voiceTimer?.cancel();
-      _voiceTimer = null;
+      voiceLevel.value = 0.0;
+
+      debugPrint('VOICE RECORDING PAUSED');
 
       update();
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('VOICE PAUSE ERROR: $error');
+
+      debugPrintStack(stackTrace: stackTrace);
+
       Get.snackbar('Pause Error', error.toString());
+    } finally {
+      _voiceActionInProgress = false;
     }
   }
 
   /// ============================================================
-  /// RESUME VOICE RECORDING
+  /// RESUME RECORDING
   /// ============================================================
 
   Future<void> resumeVoiceRecording() async {
-    if (!isVoicePaused.value) {
+    if (_voiceActionInProgress ||
+        !isVoicePaused.value ||
+        isVoiceSending.value) {
       return;
     }
+
+    _voiceActionInProgress = true;
 
     try {
       await _voiceRecorder.resume();
 
+      _voiceStopwatch.start();
+
       isVoiceRecording.value = true;
       isVoicePaused.value = false;
 
-      _startVoiceTimer();
+      final currentSessionId = _voiceSessionId;
+
+      _startAmplitudePolling(currentSessionId);
+
+      debugPrint('VOICE RECORDING RESUMED');
 
       update();
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('VOICE RESUME ERROR: $error');
+
+      debugPrintStack(stackTrace: stackTrace);
+
       Get.snackbar('Resume Error', error.toString());
+    } finally {
+      _voiceActionInProgress = false;
     }
   }
 
+  /// ============================================================
+  /// TOGGLE PAUSE / RESUME
+  /// ============================================================
+
   Future<void> togglePauseResumeVoiceRecording() async {
+    if (_voiceActionInProgress || isVoiceSending.value) {
+      return;
+    }
+
     if (isVoiceRecording.value) {
       await pauseVoiceRecording();
       return;
@@ -537,22 +920,41 @@ class DashboardController extends GetxController {
   }
 
   /// ============================================================
-  /// CANCEL VOICE RECORDING
+  /// CANCEL RECORDING
   /// ============================================================
 
   Future<void> cancelVoiceRecording() async {
-    if (!isVoiceRecording.value && !isVoicePaused.value) {
+    if (_voiceActionInProgress) {
       return;
     }
 
-    try {
-      await _voiceRecorder.cancel();
-    } catch (error) {
-      debugPrint('VOICE RECORDING CANCEL ERROR: $error');
+    if (!isVoiceRecording.value &&
+        !isVoicePaused.value &&
+        !isVoiceStarting.value) {
+      return;
     }
 
-    _resetVoiceState();
-    update();
+    _voiceActionInProgress = true;
+
+    try {
+      _stopVoiceRuntimeTimers();
+
+      _voiceStopwatch.stop();
+
+      await _voiceRecorder.cancel();
+
+      debugPrint('VOICE RECORDING CANCELLED');
+    } catch (error, stackTrace) {
+      debugPrint('VOICE RECORDING CANCEL ERROR: $error');
+
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      _resetVoiceState(clearConversation: true);
+
+      _voiceActionInProgress = false;
+
+      update();
+    }
   }
 
   /// ============================================================
@@ -560,37 +962,64 @@ class DashboardController extends GetxController {
   /// ============================================================
 
   Future<void> stopVoiceRecordingAndSend() async {
+    if (_voiceActionInProgress || isVoiceSending.value) {
+      return;
+    }
+
     if (!isVoiceRecording.value && !isVoicePaused.value) {
       return;
     }
 
-    if (isVoiceSending.value) {
-      return;
-    }
+    _voiceActionInProgress = true;
 
     isVoiceSending.value = true;
 
-    final duration = voiceRecordingSeconds.value;
+    /// Stop all UI / amplitude activity
+    /// BEFORE stopping recorder.
+    _stopVoiceRuntimeTimers();
+
+    _voiceStopwatch.stop();
+
+    /// Calculate actual duration using
+    /// Stopwatch instead of Timer count.
+    final elapsedMilliseconds = _voiceStopwatch.elapsedMilliseconds;
+
+    final duration = (elapsedMilliseconds / 1000).ceil();
+
     final recordingConversationId = _recordingConversationId;
 
-    _voiceTimer?.cancel();
-    _voiceTimer = null;
+    /// Change recording UI immediately.
+    isVoiceRecording.value = false;
+    isVoicePaused.value = false;
+
+    voiceLevel.value = 0.0;
+
+    update();
 
     try {
+      debugPrint('STOPPING VOICE RECORDING...');
+
       final audioPath = await _voiceRecorder.stop();
+
+      debugPrint('VOICE AUDIO PATH: $audioPath');
+
+      debugPrint('VOICE DURATION: $duration seconds');
 
       if (audioPath == null || audioPath.trim().isEmpty) {
         Get.snackbar('Voice Note', 'Recording could not be saved.');
+
         return;
       }
 
       if (duration < 1) {
         Get.snackbar('Voice Note', 'Recording is too short.');
+
         return;
       }
 
       if (recordingConversationId == null) {
         Get.snackbar('Voice Note', 'Conversation not found.');
+
         return;
       }
 
@@ -600,6 +1029,7 @@ class DashboardController extends GetxController {
 
       if (conversation == null) {
         Get.snackbar('Voice Note', 'Conversation not found.');
+
         return;
       }
 
@@ -608,12 +1038,18 @@ class DashboardController extends GetxController {
         audioPath: audioPath,
         duration: duration,
       );
-    } catch (error) {
+
+      debugPrint('VOICE MESSAGE SENT');
+    } catch (error, stackTrace) {
       debugPrint('VOICE NOTE SEND ERROR: $error');
+
+      debugPrintStack(stackTrace: stackTrace);
 
       Get.snackbar('Voice Note Error', error.toString());
     } finally {
-      _resetVoiceState();
+      _resetVoiceState(clearConversation: true);
+
+      _voiceActionInProgress = false;
 
       update();
       scrollToBottom();
@@ -621,7 +1057,64 @@ class DashboardController extends GetxController {
   }
 
   /// ============================================================
-  /// ADD VOICE MESSAGE TO A CONVERSATION
+  /// STOP RECORDING RUNTIME TIMERS
+  /// ============================================================
+
+  void _stopVoiceRuntimeTimers() {
+    _voiceUiTimer?.cancel();
+    _voiceUiTimer = null;
+
+    _voiceAmplitudeTimer?.cancel();
+    _voiceAmplitudeTimer = null;
+  }
+
+  /// ============================================================
+  /// RESET RECORDING STATE
+  /// ============================================================
+
+  void _resetVoiceState({bool clearConversation = true}) {
+    /// Invalidates any previous async
+    /// amplitude result.
+    _voiceSessionId++;
+
+    _stopVoiceRuntimeTimers();
+
+    _voiceStopwatch
+      ..stop()
+      ..reset();
+
+    _amplitudePollInProgress = false;
+
+    isVoiceStarting.value = false;
+    isVoiceRecording.value = false;
+    isVoicePaused.value = false;
+    isVoiceSending.value = false;
+
+    voiceRecordingSeconds.value = 0;
+    voiceRecordingTime.value = '00:00';
+
+    voiceLevel.value = 0.0;
+
+    if (clearConversation) {
+      _recordingConversationId = null;
+    }
+  }
+
+  /// ============================================================
+  /// FORMAT VOICE DURATION
+  /// ============================================================
+
+  String _formatVoiceDuration(int totalSeconds) {
+    final minutes = totalSeconds ~/ 60;
+
+    final seconds = totalSeconds % 60;
+
+    return '${minutes.toString().padLeft(2, '0')}:'
+        '${seconds.toString().padLeft(2, '0')}';
+  }
+
+  /// ============================================================
+  /// ADD VOICE MESSAGE
   /// ============================================================
 
   void _sendVoiceMessageToConversation({
@@ -650,6 +1143,8 @@ class DashboardController extends GetxController {
 
     chatMessages.add(newMessage);
 
+    /// Only update visible messages if
+    /// this conversation is still open.
     if (convoModel.value?.id == conversation.id) {
       messages = chatMessages;
     }
@@ -659,89 +1154,6 @@ class DashboardController extends GetxController {
       previewText: '🎙 Voice message',
       updatedAt: now,
     );
-  }
-
-  /// ============================================================
-  /// VOICE RECORDING TIMER
-  /// ============================================================
-
-  void _startVoiceTimer() {
-    _voiceTimer?.cancel();
-
-    _voiceTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
-      if (!isVoiceRecording.value) {
-        return;
-      }
-
-      voiceRecordingSeconds.value++;
-
-      voiceRecordingTime.value = _formatVoiceDuration(
-        voiceRecordingSeconds.value,
-      );
-
-      if (voiceRecordingSeconds.value >= maxVoiceNoteSeconds) {
-        await stopVoiceRecordingAndSend();
-        return;
-      }
-
-      update();
-    });
-  }
-
-  /// ============================================================
-  /// VOICE AMPLITUDE / WAVEFORM
-  /// ============================================================
-
-  void _listenVoiceAmplitude() {
-    _amplitudeSub?.cancel();
-
-    _amplitudeSub = _voiceRecorder
-        .onAmplitudeChanged(const Duration(milliseconds: 200))
-        .listen(
-          (amplitude) {
-            final normalizedLevel = ((amplitude.current + 45) / 45).clamp(
-              0.0,
-              1.0,
-            );
-
-            voiceLevel.value = normalizedLevel.toDouble();
-
-            update();
-          },
-          onError: (Object error) {
-            debugPrint('VOICE AMPLITUDE ERROR: $error');
-          },
-        );
-  }
-
-  /// ============================================================
-  /// RESET VOICE RECORDING STATE
-  /// ============================================================
-
-  void _resetVoiceState() {
-    _voiceTimer?.cancel();
-    _amplitudeSub?.cancel();
-
-    _voiceTimer = null;
-    _amplitudeSub = null;
-
-    isVoiceRecording.value = false;
-    isVoicePaused.value = false;
-    isVoiceSending.value = false;
-
-    voiceRecordingSeconds.value = 0;
-    voiceRecordingTime.value = '00:00';
-    voiceLevel.value = 0.0;
-
-    _recordingConversationId = null;
-  }
-
-  String _formatVoiceDuration(int totalSeconds) {
-    final minutes = totalSeconds ~/ 60;
-    final seconds = totalSeconds % 60;
-
-    return '${minutes.toString().padLeft(2, '0')}:'
-        '${seconds.toString().padLeft(2, '0')}';
   }
 
   /// ============================================================
@@ -783,6 +1195,7 @@ class DashboardController extends GetxController {
 
     if (audioPath == null || audioPath.trim().isEmpty) {
       Get.snackbar('Voice Note', 'Audio file was not found.');
+
       return;
     }
 
@@ -796,26 +1209,28 @@ class DashboardController extends GetxController {
           await voicePlayer.resume();
         }
 
-        update();
         return;
       }
 
       await voicePlayer.stop();
 
       playingVoiceMessageId.value = message.id;
-      isVoicePlaying.value = false;
-      voicePosition.value = Duration.zero;
-      voiceDuration.value = Duration(seconds: message.audioDuration ?? 0);
 
-      update();
+      isVoicePlaying.value = false;
+
+      voicePosition.value = Duration.zero;
+
+      voiceDuration.value = Duration(seconds: message.audioDuration ?? 0);
 
       if (_isNetworkOrWebAudioPath(audioPath)) {
         await voicePlayer.play(UrlSource(audioPath));
       } else {
         await voicePlayer.play(DeviceFileSource(audioPath));
       }
-    } catch (error) {
+    } catch (error, stackTrace) {
       debugPrint('VOICE PLAYBACK ERROR: $error');
+
+      debugPrintStack(stackTrace: stackTrace);
 
       _resetVoicePlaybackState();
 
@@ -856,7 +1271,7 @@ class DashboardController extends GetxController {
   }
 
   /// ============================================================
-  /// STOP VOICE MESSAGE
+  /// STOP VOICE MESSAGE PLAYBACK
   /// ============================================================
 
   Future<void> stopVoiceMessage() async {
@@ -867,13 +1282,17 @@ class DashboardController extends GetxController {
     }
 
     _resetVoicePlaybackState();
+
     update();
   }
 
   void _resetVoicePlaybackState() {
     playingVoiceMessageId.value = null;
+
     isVoicePlaying.value = false;
+
     voicePosition.value = Duration.zero;
+
     voiceDuration.value = Duration.zero;
   }
 

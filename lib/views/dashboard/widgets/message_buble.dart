@@ -10,7 +10,6 @@ import '../controller.dart';
 class MessageBubble extends StatefulWidget {
   final MessageModel message;
   final String platform;
-
   const MessageBubble({
     super.key,
     required this.message,
@@ -20,7 +19,6 @@ class MessageBubble extends StatefulWidget {
   @override
   State<MessageBubble> createState() => _MessageBubbleState();
 }
-
 class _MessageBubbleState extends State<MessageBubble> {
   final DashboardController controller =
   Get.find<DashboardController>();

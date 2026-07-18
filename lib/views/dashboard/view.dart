@@ -4,6 +4,7 @@ import 'package:elite_csr/views/dashboard/widgets/convo_list.dart';
 import 'package:elite_csr/views/dashboard/widgets/message_buble.dart';
 import 'package:elite_csr/views/dashboard/widgets/message_input.dart';
 import 'package:elite_csr/views/dashboard/widgets/profile_panel.dart';
+import 'package:elite_csr/views/dashboard/widgets/reciever_profile_header.dart';
 import 'package:elite_csr/views/gmail/view.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
@@ -171,83 +172,7 @@ class DashboardView extends StatelessWidget {
                           child: Column(
                             children: [
                               /// HEADER
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: horizontalPadding,
-                                  vertical: isCompact ? 10 : 14,
-                                ),
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 24.r,
-                                      backgroundColor: AppTheme.primaryColor,
-                                      child: chat.profile.isNotEmpty
-                                          ? ClipOval(
-                                        child: Image.network(
-                                          chat.profile,
-                                          width: 48.r,
-                                          height: 48.r,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (
-                                              context,
-                                              error,
-                                              stackTrace,
-                                              ) {
-                                            return _fallbackAvatar(chat, context);
-                                          },
-                                        ),
-                                      )
-                                          : _fallbackAvatar(chat, context),
-                                    ),
-
-                                    SizedBox(width: isCompact ? 10 : 12),
-
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            name.isNotEmpty ? name : "Unknown User",
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium
-                                                ?.copyWith(
-                                              fontSize: isCompact ? 13 : 15,
-                                              fontWeight: FontWeight.w700,
-                                              color: Colors.black,
-                                            ),
-                                          ),
-
-                                          SizedBox(height: isCompact ? 2 : 4),
-
-                                          Text(
-                                            "Online",
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall
-                                                ?.copyWith(
-                                              fontSize: isCompact ? 11 : 12,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
-                                    const Spacer(),
-
-                                    IconButton(
-                                      onPressed: () {},
-                                      icon: const Icon(Icons.more_vert),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
+                              OmniChannelProfileHeader(name: name, primaryColor: Colors.white,),
                               /// CHAT BUBBLES
                               Expanded(
                                 child: ListView.builder(
