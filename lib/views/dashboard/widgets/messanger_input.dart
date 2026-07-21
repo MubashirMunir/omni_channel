@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import '../../../theme/theme.dart';
 import '../controller.dart';
 
 class MessengerMessageInput extends StatelessWidget {
@@ -37,141 +38,264 @@ class MessengerMessageInput extends StatelessWidget {
   /// NORMAL MESSENGER INPUT
   /// =========================
   Widget _normalInput(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.black.withOpacity(0.06))),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          /// PLUS BUTTON
-          _actionIcon(
-            icon: Icons.add_circle_outline_rounded,
-            onPressed: () {
-              // TODO: attachment menu
-            },
-          ),
+    return Column(
+      children: [
+        Obx(() {
+          final file = controller.selectedAttachment.value;
+          final type = controller.selectedAttachmentType.value;
 
-          const SizedBox(width: 2),
+          /// No attachment
+          if (file == null) {
+            return const SizedBox.shrink();
+          }
 
-          /// GALLERY BUTTON
-          _actionIcon(
-            icon: Icons.image_outlined,
-            onPressed: () {
-              // TODO: image / gallery picker
-            },
-          ),
+          /// Currently only image preview
+          if (type != "image") {
+            return const SizedBox.shrink();
+          }
 
-          const SizedBox(width: 5),
+          /// Image bytes unavailable
+          if (file.bytes == null || file.bytes!.isEmpty) {
+            return const SizedBox.shrink();
+          }
 
-          /// MESSAGE FIELD
-          Expanded(
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 42, maxHeight: 135),
-              decoration: BoxDecoration(
-                color: inputBg,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  /// TEXT FIELD
-                  Expanded(
-                    child: CallbackShortcuts(
-                      bindings: {
-                        const SingleActivator(
-                          LogicalKeyboardKey.enter,
-                          control: true,
-                        ): () {
-                          onSend();
+          return
+
+
+
+
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                width: 110,
+                margin: const EdgeInsets.only(
+                  left: 4,
+                  right: 4,
+                  bottom: 4,
+                ),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.black,
+                  borderRadius: BorderRadius.circular(
+                    AppTheme.radiusLG(context),
+                  ),
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    /// IMAGE PREVIEW
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.memory(
+                        file.bytes!,
+                        width: 90,
+                        height: 90,
+                        fit: BoxFit.cover,
+                        gaplessPlayback: true,
+                        errorBuilder: (
+                            context,
+                            error,
+                            stackTrace,
+                            ) {
+                          return Container(
+                            width: 90,
+                            height: 90,
+                            alignment: Alignment.center,
+                            color: Colors.white.withOpacity(0.10),
+                            child: const Icon(
+                              Icons.broken_image_outlined,
+                              color: Colors.white54,
+                              size: 32,
+                            ),
+                          );
                         },
+                      ),
+                    ),
 
-                        const SingleActivator(
-                          LogicalKeyboardKey.enter,
-                          meta: true,
-                        ): () {
-                          onSend();
-                        },
-                      },
-                      child: TextField(
-
-                        controller: controller.msgController,
-                        minLines: 1,
-                        maxLines: 5,
-                        keyboardType: TextInputType.multiline,
-                        textInputAction: TextInputAction.newline,
-                        style: const TextStyle(
-                          color: darkText,
-
-                          fontSize: 14,
-                          height: 1.4,
-                        ),
-                        decoration: const InputDecoration(
-                          fillColor: Colors.transparent,
-                        filled: true,
-                          hintText: "Aa",
-                          hintStyle: TextStyle(color: hintColor, fontSize: 15),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          disabledBorder: InputBorder.none,
-                          errorBorder: InputBorder.none,
-                          focusedErrorBorder: InputBorder.none,
-                        //   isDense: true,
-                        //   contentPadding: EdgeInsets.fromLTRB(16, 12, 8, 11),
+                    /// REMOVE IMAGE - TOP RIGHT
+                    Positioned(
+                      top: -7,
+                      right: -7,
+                      child: InkWell(
+                        onTap: controller.clearSelectedAttachment,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          width: 25,
+                          height: 25,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.80),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white24,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.close_rounded,
+                            color: Colors.white,
+                            size: 17,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-
-                  /// EMOJI BUTTON
-                  Padding(
-                    padding: const EdgeInsets.only(right: 3, bottom: 3),
-                    child: IconButton(
-                      onPressed: controller.toggleEmojiBoard,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 36,
-                        minHeight: 36,
-                      ),
-                      splashRadius: 19,
-                      icon: Obx(
-                        () => Icon(
-                          controller.showEmojiBoard.value
-                              ? Icons.keyboard_alt_outlined
-                              : Icons.sentiment_satisfied_alt_rounded,
-                          color: messengerBlue,
-                          size: 22,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            );        }),
+
+
+        Container(
+          padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Colors.black.withOpacity(0.06))),
           ),
-
-          const SizedBox(width: 5),
-
-          /// SEND OR MIC
-          ValueListenableBuilder<TextEditingValue>(
-            valueListenable: controller.msgController,
-            builder: (context, value, child) {
-              final hasText = value.text.trim().isNotEmpty;
-
-              return AnimatedSwitcher(
-                duration: const Duration(milliseconds: 150),
-                transitionBuilder: (child, animation) {
-                  return ScaleTransition(scale: animation, child: child);
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              /// PLUS BUTTON
+              _actionIcon(
+                icon: Icons.add_circle_outline_rounded,
+                onPressed: () {
+                  // TODO: attachment menu
                 },
-                child: hasText ? _sendButton() : _micButton(),
-              );
-            },
+              ),
+
+              const SizedBox(width: 2),
+
+              /// GALLERY BUTTON
+              _actionIcon(
+                icon: Icons.image_outlined,
+                onPressed: () {
+                  controller.pickImage();
+                  // TODO: image / gallery picker
+                },
+              ),
+
+              const SizedBox(width: 5),
+
+              /// MESSAGE FIELD
+              Expanded(
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 42, maxHeight: 135),
+                  decoration: BoxDecoration(
+                    color: inputBg,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      /// TEXT FIELD
+                      Expanded(
+                        child: CallbackShortcuts(
+                          bindings: {
+                            const SingleActivator(
+                              LogicalKeyboardKey.enter,
+                              control: true,
+                            ): () {
+                              onSend();
+                            },
+
+                            const SingleActivator(
+                              LogicalKeyboardKey.enter,
+                              meta: true,
+                            ): () {
+                              onSend();
+                            },
+                          },
+                          child: TextField(
+
+                            controller: controller.msgController,
+                            minLines: 1,
+                            maxLines: 5,
+                            keyboardType: TextInputType.multiline,
+                            textInputAction: TextInputAction.newline,
+                            style: const TextStyle(
+                              color: darkText,
+
+                              fontSize: 14,
+                              height: 1.4,
+                            ),
+                            decoration: const InputDecoration(
+                              fillColor: Colors.transparent,
+                            filled: true,
+                              hintText: "Aa",
+                              hintStyle: TextStyle(color: hintColor, fontSize: 15),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              disabledBorder: InputBorder.none,
+                              errorBorder: InputBorder.none,
+                              focusedErrorBorder: InputBorder.none,
+                            //   isDense: true,
+                            //   contentPadding: EdgeInsets.fromLTRB(16, 12, 8, 11),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      /// EMOJI BUTTON
+                      Padding(
+                        padding: const EdgeInsets.only(right: 3, bottom: 3),
+                        child: IconButton(
+                          onPressed: controller.toggleEmojiBoard,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                          splashRadius: 19,
+                          icon: Obx(
+                            () => Icon(
+                              controller.showEmojiBoard.value
+                                  ? Icons.keyboard_alt_outlined
+                                  : Icons.sentiment_satisfied_alt_rounded,
+                              color: messengerBlue,
+                              size: 22,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 5),
+
+              /// SEND OR MIC
+              /// SEND OR MIC
+              Obx(() {
+                final bool hasAttachment =
+                    controller.selectedAttachment.value != null &&
+                        controller.selectedAttachmentType.value == "image";
+
+                return ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: controller.msgController,
+                  builder: (context, value, child) {
+                    final bool hasText =
+                        value.text.trim().isNotEmpty;
+
+                    final bool canSend =
+                        hasText || hasAttachment;
+
+                    return AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 150),
+                      transitionBuilder: (child, animation) {
+                        return ScaleTransition(
+                          scale: animation,
+                          child: child,
+                        );
+                      },
+                      child: canSend
+                          ? _sendButton()
+                          : _micButton(),
+                    );
+                  },
+                );
+              }),            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

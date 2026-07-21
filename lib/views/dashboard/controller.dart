@@ -1,15 +1,226 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:record/record.dart';
 import '../../models/convo_list.dart' as convo_data;
 import '../../models/message_model.dart';
 import '../../widgets/formatted_time.dart';
 
 class DashboardController extends GetxController {
+  void clearSelectedAttachment() {
+    selectedAttachment.value = null;
+    selectedAttachmentType.value = '';
+  }
+  ///=========================================================
+  //pickImage method
+  final ImagePicker _imagePicker = ImagePicker();
+
+  final RxBool isPickingAttachment = false.obs;
+
+  /// Jo attachment abhi user ne select ki hai
+  final Rxn<PlatformFile> selectedAttachment = Rxn<PlatformFile>();
+
+  /// image / document / camera
+  final RxString selectedAttachmentType = ''.obs;
+  Future<void> pickImage() async {
+    try {
+      isPickingAttachment.value = true;
+
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        return;
+      }
+
+      final file = result.files.first;
+
+      if (file.bytes == null || file.bytes!.isEmpty) {
+        Get.snackbar(
+          "Image Error",
+          "Unable to read selected image.",
+          snackPosition: SnackPosition.TOP,
+        );
+
+        return;
+      }
+
+      /// 15 MB limit
+      if (file.size > 15 * 1024 * 1024) {
+        Get.snackbar(
+          "File Too Large",
+          "Please select an image smaller than 15 MB.",
+          snackPosition: SnackPosition.TOP,
+        );
+
+        return;
+      }
+
+      /// Selected attachment store karo
+      selectedAttachment.value = file;
+
+      selectedAttachmentType.value = "image";
+
+      debugPrint("IMAGE SELECTED");
+      debugPrint("Name: ${file.name}");
+      debugPrint("Size: ${file.size}");
+      debugPrint("Extension: ${file.extension}");
+    } catch (e, stack) {
+      debugPrint("pickImage error: $e");
+
+      debugPrintStack(
+        stackTrace: stack,
+      );
+
+      Get.snackbar(
+        "Image Error",
+        "Could not select image.",
+        snackPosition: SnackPosition.TOP,
+      );
+    } finally {
+      isPickingAttachment.value = false;
+    }
+  }
+
+
+
+
+// pick documents
+
+  Future<void> pickDocument() async {
+    try {
+      isPickingAttachment.value = true;
+
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowMultiple: false,
+        withData: true,
+        allowedExtensions: [
+          'pdf',
+          'doc',
+          'docx',
+          'xls',
+          'xlsx',
+          'ppt',
+          'pptx',
+          'txt',
+          'csv',
+          'zip',
+        ],
+      );
+
+      if (result == null || result.files.isEmpty) {
+        return;
+      }
+
+      final file = result.files.first;
+
+      if (file.bytes == null) {
+        Get.snackbar(
+          "File Error",
+          "Unable to read selected document.",
+          snackPosition: SnackPosition.TOP,
+        );
+        return;
+      }
+
+      /// Optional: 25 MB limit
+      if (file.size > 25 * 1024 * 1024) {
+        Get.snackbar(
+          "File Too Large",
+          "Please select a document smaller than 25 MB.",
+          snackPosition: SnackPosition.TOP,
+        );
+        return;
+      }
+
+      selectedAttachment.value = file;
+      selectedAttachmentType.value = "document";
+
+      debugPrint("DOCUMENT SELECTED");
+      debugPrint("Name: ${file.name}");
+      debugPrint("Size: ${file.size}");
+      debugPrint("Extension: ${file.extension}");
+    } catch (e, stack) {
+      debugPrint("pickDocument error: $e");
+      debugPrintStack(stackTrace: stack);
+
+      Get.snackbar(
+        "Document Error",
+        "Could not select document.",
+        snackPosition: SnackPosition.TOP,
+      );
+    } finally {
+      isPickingAttachment.value = false;
+    }
+  }
+      ///   open camera for sending image
+  ///
+  Future<void> openCamera() async {
+    try {
+      isPickingAttachment.value = true;
+
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
+      );
+
+      if (image == null) {
+        return;
+      }
+
+      final Uint8List bytes = await image.readAsBytes();
+
+      if (bytes.length > 15 * 1024 * 1024) {
+        Get.snackbar(
+          "Image Too Large",
+          "Captured image is larger than 15 MB.",
+          snackPosition: SnackPosition.TOP,
+        );
+        return;
+      }
+
+      final String fileName = image.name.isNotEmpty
+          ? image.name
+          : 'camera_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      final String? extension = fileName.contains('.')
+          ? fileName.split('.').last.toLowerCase()
+          : 'jpg';
+
+      selectedAttachment.value = PlatformFile(
+        name: fileName,
+        size: bytes.length,
+        bytes: bytes,
+      );
+
+      selectedAttachmentType.value = "camera";
+
+      debugPrint("CAMERA IMAGE SELECTED");
+      debugPrint("Name: $fileName");
+      debugPrint("Size: ${bytes.length}");
+      debugPrint("Extension: $extension");
+    } catch (e, stack) {
+      debugPrint("openCamera error: $e");
+      debugPrintStack(stackTrace: stack);
+
+      Get.snackbar(
+        "Camera Error",
+        "Could not capture image.",
+        snackPosition: SnackPosition.TOP,
+      );
+    } finally {
+      isPickingAttachment.value = false;
+    }
+  }
   /// ============================================================
   /// SELECTED CONVERSATION
   /// ============================================================
@@ -387,7 +598,18 @@ class DashboardController extends GetxController {
   void sendMessage() {
     final text = msgController.text.trim();
 
-    if (text.isEmpty) {
+    final attachment = selectedAttachment.value;
+    final attachmentType = selectedAttachmentType.value;
+
+    /// IMAGE SELECTED HAI?
+    final bool hasImage =
+        attachment != null &&
+            attachmentType == "image" &&
+            attachment.bytes != null &&
+            attachment.bytes!.isNotEmpty;
+
+    /// Na text hai na image
+    if (text.isEmpty && !hasImage) {
       return;
     }
 
@@ -399,38 +621,104 @@ class DashboardController extends GetxController {
 
     final now = DateTime.now();
 
-    final newMessage = MessageModel(
-      id: now.microsecondsSinceEpoch.toString(),
-      text: text,
-      isMe: true,
-      time: formatTime(now),
-      timestamp: now,
-      type: MessageType.text,
-      status: MessageStatus.sent,
+    late final MessageModel newMessage;
+
+    /// ============================================================
+    /// IMAGE MESSAGE
+    /// ============================================================
+
+    if (hasImage) {
+      newMessage = MessageModel.localImage(
+        imageBytes: attachment.bytes!,
+
+        /// Caption optional hai
+        caption: text,
+
+        /// Abhi local chat ke liye enough hai.
+        /// WhatsApp API integration mein receiver add kar denge.
+        to: '',
+      );
+    }
+
+    /// ============================================================
+    /// TEXT MESSAGE
+    /// ============================================================
+
+    else {
+      newMessage = MessageModel(
+        id: now.microsecondsSinceEpoch.toString(),
+        text: text,
+        isMe: true,
+        time: formatTime(now),
+        timestamp: now,
+        type: MessageType.text,
+        status: MessageStatus.sent,
+      );
+    }
+
+    /// ============================================================
+    /// GET CURRENT CONVERSATION MESSAGES
+    /// ============================================================
+
+    final chatMessages =
+    _messagesByConversation.putIfAbsent(
+      selectedConversation.id,
+          () => _getDefaultMessagesByPlatform(
+        selectedConversation.platform,
+      ),
     );
 
-    final chatMessages = _messagesByConversation.putIfAbsent(
-      selectedConversation.id,
-      () => _getDefaultMessagesByPlatform(selectedConversation.platform),
-    );
+    /// ============================================================
+    /// ADD MESSAGE
+    /// ============================================================
 
     chatMessages.add(newMessage);
 
     messages = chatMessages;
 
+    /// ============================================================
+    /// UPDATE CONVERSATION PREVIEW
+    /// ============================================================
+
+    String previewText;
+
+    if (hasImage) {
+      if (text.isNotEmpty) {
+        previewText = "📷 $text";
+      } else {
+        previewText = "📷 Photo";
+      }
+    } else {
+      previewText = text;
+    }
+
     _updateConversationPreview(
       conversationId: selectedConversation.id,
-      previewText: text,
+      previewText: previewText,
       updatedAt: now,
     );
 
+    /// ============================================================
+    /// CLEAR INPUT
+    /// ============================================================
+
     msgController.clear();
+
+    /// Image preview clear
+    if (hasImage) {
+      clearSelectedAttachment();
+    }
+
     hideEmojiBoard();
 
+    /// ============================================================
+    /// UI UPDATE
+    /// ============================================================
+
     update();
+
     scrollToBottom();
   }
-
   /// ============================================================
   /// DIRECT VOICE MESSAGE ADD
   /// ============================================================
