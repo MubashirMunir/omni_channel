@@ -1,8 +1,10 @@
 import 'package:elite_csr/theme/theme.dart';
 import 'package:elite_csr/views/dashboard/controller.dart';
 import 'package:elite_csr/views/dashboard/widgets/convo_list.dart';
+import 'package:elite_csr/views/dashboard/widgets/instagram_input.dart';
 import 'package:elite_csr/views/dashboard/widgets/message_buble.dart';
 import 'package:elite_csr/views/dashboard/widgets/message_input.dart';
+import 'package:elite_csr/views/dashboard/widgets/messanger_input.dart';
 import 'package:elite_csr/views/dashboard/widgets/profile_panel.dart';
 import 'package:elite_csr/views/dashboard/widgets/reciever_profile_header.dart';
 import 'package:elite_csr/views/gmail/view.dart';
@@ -213,6 +215,24 @@ class DashboardView extends StatelessWidget {
                               ),
 
                               /// INPUT
+                              ///
+
+                              chat.  platform.toLowerCase() == "whatsapp"
+                                  ? MessageInput(
+                                controller: ctrl,
+                                onSend: ctrl.sendMessage,
+                              )
+                                  : (chat.platform.toLowerCase() == "messenger" ||chat. platform.toLowerCase() == "facebook")
+                                  ? MessengerMessageInput(
+                                controller: ctrl,
+                                onSend: ctrl.sendMessage,
+                              )
+                                  : chat.platform.toLowerCase() == "instagram"
+                                  ? InstagramMessageInput(
+                                controller: ctrl,
+                                onSend: ctrl.sendMessage,
+                              )
+                                  :
                               MessageInput(
                                 controller: ctrl,
                                 onSend: () {
