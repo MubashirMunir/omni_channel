@@ -7,13 +7,9 @@ import 'package:elite_csr/views/dashboard/widgets/message_input.dart';
 import 'package:elite_csr/views/dashboard/widgets/messanger_input.dart';
 import 'package:elite_csr/views/dashboard/widgets/profile_panel.dart';
 import 'package:elite_csr/views/dashboard/widgets/reciever_profile_header.dart';
-import 'package:elite_csr/views/gmail/view.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-
-import '../../models/convo_list.dart';
 import '../../responsive/sizes.dart';
 import '../gmail/controller.dart';
 import '../gmail/widgets/gmail_detail_panel.dart';
@@ -36,7 +32,7 @@ class DashboardView extends StatelessWidget {
                 width: isMobile
                     ? 0
                     : isTablet
-                    ? 320
+                    ? 450
                     : 500,
                 child: ConvoPanel(ctrl: ctrl),
               ),
@@ -262,11 +258,4 @@ class DashboardView extends StatelessWidget {
   }
 }
 
-Widget _fallbackAvatar(ConversationModel item, context) {
-  return Center(
-    child: Text(
-      item.name.isNotEmpty ? item.name[0].toUpperCase() : '?',
-      style: Theme.of(context).textTheme.bodyMedium,
-    ),
-  );
-}
+

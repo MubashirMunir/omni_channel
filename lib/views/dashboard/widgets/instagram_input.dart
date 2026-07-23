@@ -202,6 +202,7 @@ class InstagramMessageInput extends StatelessWidget {
                               hintStyle: TextStyle(
                                 color: hintColor,
                                 fontSize: 14,
+                                
                               ),
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,

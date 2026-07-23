@@ -7,26 +7,528 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:record/record.dart';
+
+import '../../models/agent_model.dart';
+import '../../models/assignment_model.dart';
+import '../../models/conversation_handling_test.dart';
 import '../../models/convo_list.dart' as convo_data;
 import '../../models/message_model.dart';
 import '../../widgets/formatted_time.dart';
 
 class DashboardController extends GetxController {
+  /// ============================================================
+  /// AGENT / ASSIGNMENT STATE
+  /// ============================================================
+
+  /// Agents available for conversation assignment.
+  final RxList<AgentModel> agents = <AgentModel>[].obs;
+
+  /// True while the agents list is being loaded.
+  final RxBool isLoadingAgents = false.obs;
+
+  /// Prevents overlapping assign, reassign, and unassign actions.
+  final RxBool isAssigningConversation = false.obs;
+
+  /// ID of the conversation whose assignment action is in progress.
+  final RxnString assigningConversationId = RxnString();
+
+  /// Temporary logged-in agent.
+  ///
+  /// Replace this with the authenticated user when the real API is available.
+  final Rxn<AgentModel> currentAgent = Rxn<AgentModel>();
+
+  /// Only active agents are shown in the assignment dropdown.
+  List<AgentModel> get activeAgents {
+    return agents.where((agent) => agent.isActive).toList();
+  }
+
+  /// Current logged-in agent ID.
+  int? get currentAgentId {
+    return currentAgent.value?.id;
+  }
+
+  /// Safe display name for the current logged-in agent.
+  String get currentAgentName {
+    return currentAgent.value?.displayName ?? 'Current Agent';
+  }
+
+  /// Whether a current logged-in agent is available.
+  bool get hasCurrentAgent {
+    return currentAgent.value != null;
+  }
+
+  /// Loads temporary agents until the real agents API is connected.
+  Future<void> loadMockAgents() async {
+    try {
+      isLoadingAgents.value = true;
+
+      /// Simulates a short API delay.
+      await Future.delayed(const Duration(milliseconds: 400));
+
+      agents.assignAll(
+        const [
+          AgentModel(
+            id: 1,
+            name: 'Ahmed Ali',
+            email: 'ahmed@motifz.com',
+            isActive: true,
+            isOnline: true,
+            activeChats: 4,
+          ),
+          AgentModel(
+            id: 2,
+            name: 'Sara Khan',
+            email: 'sara@motifz.com',
+            isActive: true,
+            isOnline: true,
+            activeChats: 2,
+          ),
+          AgentModel(
+            id: 3,
+            name: 'Usman Raza',
+            email: 'usman@motifz.com',
+            isActive: true,
+            isOnline: false,
+            activeChats: 3,
+          ),
+          AgentModel(
+            id: 4,
+            name: 'Hina Shah',
+            email: 'hina@motifz.com',
+            isActive: false,
+            isOnline: false,
+            activeChats: 0,
+          ),
+        ],
+      );
+
+      /// Temporary authenticated agent.
+      currentAgent.value = agents.firstWhereOrNull(
+            (agent) => agent.id == 1,
+      );
+
+      debugPrint('Agents loaded: ${agents.length}');
+      debugPrint('Current agent: $currentAgentName');
+
+      for (final agent in activeAgents) {
+        debugPrint(
+          '${agent.displayName} | '
+              'Online: ${agent.isOnline} | '
+              'Chats: ${agent.activeChats}',
+        );
+      }
+    } catch (error, stackTrace) {
+      debugPrint('loadMockAgents error: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      isLoadingAgents.value = false;
+    }
+  }
+
+  /// Assigns an unassigned conversation to the current logged-in agent.
+  Future<bool> assignToMe(String conversationId) async {
+    if (isAssigningConversation.value) {
+      return false;
+    }
+
+    final AgentModel? loggedInAgent = currentAgent.value;
+
+    if (loggedInAgent == null) {
+      Get.snackbar(
+        'Assignment failed',
+        'Current agent is not available.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    final int conversationIndex = conversations.indexWhere(
+          (conversation) => conversation.id == conversationId,
+    );
+
+    if (conversationIndex == -1) {
+      Get.snackbar(
+        'Conversation not found',
+        'Selected conversation is unavailable.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    final conversation = conversations[conversationIndex];
+
+    if (conversation.isResolved) {
+      Get.snackbar(
+        'Conversation resolved',
+        'Conversation ko pehle reopen karein.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    if (conversation.assignment?.agentId == loggedInAgent.id) {
+      Get.snackbar(
+        'Already assigned',
+        'Ye conversation pehle se '
+            '${loggedInAgent.displayName} ko assigned hai.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return true;
+    }
+
+    if (conversation.assignment != null) {
+      Get.snackbar(
+        'Already assigned',
+        'Ye conversation ${conversation.assignedAgentName} '
+            'ko assigned hai.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    try {
+      isAssigningConversation.value = true;
+      assigningConversationId.value = conversationId;
+
+      /// Simulates the future assignment API call.
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final DateTime now = DateTime.now();
+
+      final assignment = ConversationAssignmentModel(
+        agentId: loggedInAgent.id,
+        agentName: loggedInAgent.displayName,
+        agentProfileImage: loggedInAgent.profileImage,
+        assignedAt: now,
+        assignedByUserId: loggedInAgent.id,
+        assignedByUserName: loggedInAgent.displayName,
+      );
+
+      conversations[conversationIndex] = conversation.copyWith(
+        assignment: assignment,
+        handlingStatus: ConversationHandlingStatus.open,
+        updatedAt: now,
+        clearResolvedAt: true,
+        clearResolvedByUserId: true,
+        clearResolvedByUserName: true,
+      );
+
+      /// Reuses the common workload helper instead of a duplicate method.
+      _changeAgentActiveChats(loggedInAgent.id, 1);
+
+      update();
+
+      debugPrint(
+        'Conversation $conversationId assigned to '
+            '${loggedInAgent.displayName}',
+      );
+      debugPrint(
+        'Assigned agent: '
+            '${conversations[conversationIndex].assignedAgentName}',
+      );
+      debugPrint(
+        'Status: '
+            '${conversations[conversationIndex].handlingStatus.displayName}',
+      );
+
+      Get.snackbar(
+        'Conversation assigned',
+        'Conversation aapko assign ho gayi hai.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      return true;
+    } catch (error, stackTrace) {
+      debugPrint('assignToMe error: $error');
+      debugPrintStack(stackTrace: stackTrace);
+
+      Get.snackbar(
+        'Assignment failed',
+        'Conversation assign nahi ho saki.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      return false;
+    } finally {
+      isAssigningConversation.value = false;
+      assigningConversationId.value = null;
+    }
+  }
+
+  /// Assigns or reassigns a conversation to a selected active agent.
+  Future<bool> assignToAgent({
+    required String conversationId,
+    required int agentId,
+  }) async {
+    if (isAssigningConversation.value) {
+      return false;
+    }
+
+    final int conversationIndex = conversations.indexWhere(
+          (conversation) => conversation.id == conversationId,
+    );
+
+    if (conversationIndex == -1) {
+      Get.snackbar(
+        'Conversation not found',
+        'Selected conversation available nahi hai.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    final int agentIndex = agents.indexWhere(
+          (agent) => agent.id == agentId,
+    );
+
+    if (agentIndex == -1) {
+      Get.snackbar(
+        'Agent not found',
+        'Selected agent available nahi hai.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    final conversation = conversations[conversationIndex];
+    final selectedAgent = agents[agentIndex];
+
+    if (!selectedAgent.isActive) {
+      Get.snackbar(
+        'Agent inactive',
+        '${selectedAgent.displayName} inactive hai.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    if (conversation.isResolved) {
+      Get.snackbar(
+        'Conversation resolved',
+        'Conversation ko pehle reopen karein.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    if (conversation.assignedAgentId == selectedAgent.id) {
+      Get.snackbar(
+        'Already assigned',
+        'Ye conversation pehle se '
+            '${selectedAgent.displayName} ko assigned hai.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return true;
+    }
+
+    try {
+      isAssigningConversation.value = true;
+      assigningConversationId.value = conversationId;
+
+      /// Simulates the future assignment API call.
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final DateTime now = DateTime.now();
+      final int? previousAgentId = conversation.assignedAgentId;
+
+      final ConversationAssignmentModel newAssignment =
+      ConversationAssignmentModel(
+        agentId: selectedAgent.id,
+        agentName: selectedAgent.displayName,
+        agentProfileImage: selectedAgent.profileImage,
+        assignedAt: now,
+        assignedByUserId: currentAgent.value?.id,
+        assignedByUserName: currentAgent.value?.displayName,
+      );
+
+      conversations[conversationIndex] = conversation.copyWith(
+        assignment: newAssignment,
+        handlingStatus: ConversationHandlingStatus.open,
+        updatedAt: now,
+        clearResolvedAt: true,
+        clearResolvedByUserId: true,
+        clearResolvedByUserName: true,
+      );
+
+      /// Reassignment decreases the previous agent's workload.
+      if (previousAgentId != null && previousAgentId != selectedAgent.id) {
+        _changeAgentActiveChats(previousAgentId, -1);
+      }
+
+      /// A fresh assignment or reassignment increases the new workload.
+      if (previousAgentId != selectedAgent.id) {
+        _changeAgentActiveChats(selectedAgent.id, 1);
+      }
+
+      update();
+
+      debugPrint(
+        'Conversation $conversationId assigned to '
+            '${selectedAgent.displayName}',
+      );
+
+      Get.snackbar(
+        'Conversation assigned',
+        'Conversation ${selectedAgent.displayName} ko assign ho gayi hai.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      return true;
+    } catch (error, stackTrace) {
+      debugPrint('assignToAgent error: $error');
+      debugPrintStack(stackTrace: stackTrace);
+
+      Get.snackbar(
+        'Assignment failed',
+        'Conversation assign nahi ho saki.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      return false;
+    } finally {
+      isAssigningConversation.value = false;
+      assigningConversationId.value = null;
+    }
+  }
+
+  /// Removes the current agent assignment from a conversation.
+  Future<bool> unassignConversation(String conversationId) async {
+    if (isAssigningConversation.value) {
+      return false;
+    }
+
+    final int conversationIndex = conversations.indexWhere(
+          (conversation) => conversation.id == conversationId,
+    );
+
+    if (conversationIndex == -1) {
+      Get.snackbar(
+        'Conversation not found',
+        'Selected conversation available nahi hai.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    final conversation = conversations[conversationIndex];
+
+    if (conversation.isUnassigned || conversation.assignedAgentId == null) {
+      Get.snackbar(
+        'Already unassigned',
+        'Ye conversation pehle se unassigned hai.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return true;
+    }
+
+    if (conversation.isResolved) {
+      Get.snackbar(
+        'Conversation resolved',
+        'Resolved conversation ko pehle reopen karein.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    try {
+      isAssigningConversation.value = true;
+      assigningConversationId.value = conversationId;
+
+      /// Simulates the future unassign API call.
+      await Future.delayed(const Duration(milliseconds: 400));
+
+      final int? previousAgentId = conversation.assignedAgentId;
+
+      conversations[conversationIndex] = conversation.copyWith(
+        clearAssignment: true,
+        handlingStatus: ConversationHandlingStatus.unassigned,
+        updatedAt: DateTime.now(),
+      );
+
+      if (previousAgentId != null) {
+        _changeAgentActiveChats(previousAgentId, -1);
+      }
+
+      update();
+
+      debugPrint(
+        'Conversation $conversationId unassigned successfully',
+      );
+
+      Get.snackbar(
+        'Conversation unassigned',
+        'Conversation successfully unassigned ho gayi.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      return true;
+    } catch (error, stackTrace) {
+      debugPrint('unassignConversation error: $error');
+      debugPrintStack(stackTrace: stackTrace);
+
+      Get.snackbar(
+        'Unassign failed',
+        'Conversation unassign nahi ho saki.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      return false;
+    } finally {
+      isAssigningConversation.value = false;
+      assigningConversationId.value = null;
+    }
+  }
+
+  /// Safely changes an agent's active-chat count.
+  ///
+  /// A negative result is clamped to zero. The temporary current-agent
+  /// reference is synchronized when the modified agent is logged in.
+  void _changeAgentActiveChats(int agentId, int change) {
+    final int agentIndex = agents.indexWhere(
+          (agent) => agent.id == agentId,
+    );
+
+    if (agentIndex == -1) {
+      return;
+    }
+
+    final int updatedCount = agents[agentIndex].activeChats + change;
+
+    final AgentModel updatedAgent = agents[agentIndex].copyWith(
+      activeChats: updatedCount < 0 ? 0 : updatedCount,
+    );
+
+    agents[agentIndex] = updatedAgent;
+
+    if (currentAgent.value?.id == agentId) {
+      currentAgent.value = updatedAgent;
+    }
+
+    agents.refresh();
+  }
+
+  /// ============================================================
+  /// ATTACHMENT STATE
+  /// ============================================================
+
+  final ImagePicker _imagePicker = ImagePicker();
+
+  /// True while an image, document, or camera file is being selected.
+  final RxBool isPickingAttachment = false.obs;
+
+  /// Attachment currently selected by the user.
+  final Rxn<PlatformFile> selectedAttachment = Rxn<PlatformFile>();
+
+  /// Selected attachment category: image, document, or camera.
+  final RxString selectedAttachmentType = ''.obs;
+
+  /// Clears the current attachment and removes its preview.
   void clearSelectedAttachment() {
     selectedAttachment.value = null;
     selectedAttachmentType.value = '';
   }
-  ///=========================================================
-  //pickImage method
-  final ImagePicker _imagePicker = ImagePicker();
 
-  final RxBool isPickingAttachment = false.obs;
-
-  /// Jo attachment abhi user ne select ki hai
-  final Rxn<PlatformFile> selectedAttachment = Rxn<PlatformFile>();
-
-  /// image / document / camera
-  final RxString selectedAttachmentType = ''.obs;
+  /// Opens the gallery/file picker and selects one image.
   Future<void> pickImage() async {
     try {
       isPickingAttachment.value = true;
@@ -45,44 +547,37 @@ class DashboardController extends GetxController {
 
       if (file.bytes == null || file.bytes!.isEmpty) {
         Get.snackbar(
-          "Image Error",
-          "Unable to read selected image.",
+          'Image Error',
+          'Unable to read selected image.',
           snackPosition: SnackPosition.TOP,
         );
-
         return;
       }
 
-      /// 15 MB limit
+      /// Maximum image size: 15 MB.
       if (file.size > 15 * 1024 * 1024) {
         Get.snackbar(
-          "File Too Large",
-          "Please select an image smaller than 15 MB.",
+          'File Too Large',
+          'Please select an image smaller than 15 MB.',
           snackPosition: SnackPosition.TOP,
         );
-
         return;
       }
 
-      /// Selected attachment store karo
       selectedAttachment.value = file;
+      selectedAttachmentType.value = 'image';
 
-      selectedAttachmentType.value = "image";
-
-      debugPrint("IMAGE SELECTED");
-      debugPrint("Name: ${file.name}");
-      debugPrint("Size: ${file.size}");
-      debugPrint("Extension: ${file.extension}");
-    } catch (e, stack) {
-      debugPrint("pickImage error: $e");
-
-      debugPrintStack(
-        stackTrace: stack,
-      );
+      debugPrint('IMAGE SELECTED');
+      debugPrint('Name: ${file.name}');
+      debugPrint('Size: ${file.size}');
+      debugPrint('Extension: ${file.extension}');
+    } catch (error, stackTrace) {
+      debugPrint('pickImage error: $error');
+      debugPrintStack(stackTrace: stackTrace);
 
       Get.snackbar(
-        "Image Error",
-        "Could not select image.",
+        'Image Error',
+        'Could not select image.',
         snackPosition: SnackPosition.TOP,
       );
     } finally {
@@ -90,11 +585,7 @@ class DashboardController extends GetxController {
     }
   }
 
-
-
-
-// pick documents
-
+  /// Opens the file picker and selects one supported document.
   Future<void> pickDocument() async {
     try {
       isPickingAttachment.value = true;
@@ -125,45 +616,45 @@ class DashboardController extends GetxController {
 
       if (file.bytes == null) {
         Get.snackbar(
-          "File Error",
-          "Unable to read selected document.",
+          'File Error',
+          'Unable to read selected document.',
           snackPosition: SnackPosition.TOP,
         );
         return;
       }
 
-      /// Optional: 25 MB limit
+      /// Maximum document size: 25 MB.
       if (file.size > 25 * 1024 * 1024) {
         Get.snackbar(
-          "File Too Large",
-          "Please select a document smaller than 25 MB.",
+          'File Too Large',
+          'Please select a document smaller than 25 MB.',
           snackPosition: SnackPosition.TOP,
         );
         return;
       }
 
       selectedAttachment.value = file;
-      selectedAttachmentType.value = "document";
+      selectedAttachmentType.value = 'document';
 
-      debugPrint("DOCUMENT SELECTED");
-      debugPrint("Name: ${file.name}");
-      debugPrint("Size: ${file.size}");
-      debugPrint("Extension: ${file.extension}");
-    } catch (e, stack) {
-      debugPrint("pickDocument error: $e");
-      debugPrintStack(stackTrace: stack);
+      debugPrint('DOCUMENT SELECTED');
+      debugPrint('Name: ${file.name}');
+      debugPrint('Size: ${file.size}');
+      debugPrint('Extension: ${file.extension}');
+    } catch (error, stackTrace) {
+      debugPrint('pickDocument error: $error');
+      debugPrintStack(stackTrace: stackTrace);
 
       Get.snackbar(
-        "Document Error",
-        "Could not select document.",
+        'Document Error',
+        'Could not select document.',
         snackPosition: SnackPosition.TOP,
       );
     } finally {
       isPickingAttachment.value = false;
     }
   }
-      ///   open camera for sending image
-  ///
+
+  /// Opens the device camera and stores the captured image as an attachment.
   Future<void> openCamera() async {
     try {
       isPickingAttachment.value = true;
@@ -181,8 +672,8 @@ class DashboardController extends GetxController {
 
       if (bytes.length > 15 * 1024 * 1024) {
         Get.snackbar(
-          "Image Too Large",
-          "Captured image is larger than 15 MB.",
+          'Image Too Large',
+          'Captured image is larger than 15 MB.',
           snackPosition: SnackPosition.TOP,
         );
         return;
@@ -192,7 +683,7 @@ class DashboardController extends GetxController {
           ? image.name
           : 'camera_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-      final String? extension = fileName.contains('.')
+      final String extension = fileName.contains('.')
           ? fileName.split('.').last.toLowerCase()
           : 'jpg';
 
@@ -201,32 +692,32 @@ class DashboardController extends GetxController {
         size: bytes.length,
         bytes: bytes,
       );
+      selectedAttachmentType.value = 'camera';
 
-      selectedAttachmentType.value = "camera";
-
-      debugPrint("CAMERA IMAGE SELECTED");
-      debugPrint("Name: $fileName");
-      debugPrint("Size: ${bytes.length}");
-      debugPrint("Extension: $extension");
-    } catch (e, stack) {
-      debugPrint("openCamera error: $e");
-      debugPrintStack(stackTrace: stack);
+      debugPrint('CAMERA IMAGE SELECTED');
+      debugPrint('Name: $fileName');
+      debugPrint('Size: ${bytes.length}');
+      debugPrint('Extension: $extension');
+    } catch (error, stackTrace) {
+      debugPrint('openCamera error: $error');
+      debugPrintStack(stackTrace: stackTrace);
 
       Get.snackbar(
-        "Camera Error",
-        "Could not capture image.",
+        'Camera Error',
+        'Could not capture image.',
         snackPosition: SnackPosition.TOP,
       );
     } finally {
       isPickingAttachment.value = false;
     }
   }
+
   /// ============================================================
   /// SELECTED CONVERSATION
   /// ============================================================
 
   final Rxn<convo_data.ConversationModel> convoModel =
-      Rxn<convo_data.ConversationModel>();
+  Rxn<convo_data.ConversationModel>();
 
   /// ============================================================
   /// GENERAL UI STATES
@@ -252,7 +743,7 @@ class DashboardController extends GetxController {
   /// ============================================================
 
   final List<convo_data.ConversationModel> conversations =
-      List<convo_data.ConversationModel>.from(convo_data.conversations);
+  List<convo_data.ConversationModel>.from(convo_data.mockConversations);
 
   /// ============================================================
   /// MESSAGES
@@ -358,7 +849,7 @@ class DashboardController extends GetxController {
     /// This helps detect cases where the browser unexpectedly stops
     /// the microphone recording.
     _voiceRecorderStateSub = _voiceRecorder.onStateChanged().listen(
-      (state) {
+          (state) {
         debugPrint('VOICE RECORDER STATE: $state');
 
         if (state == RecordState.stop &&
@@ -388,6 +879,9 @@ class DashboardController extends GetxController {
         debugPrint('VOICE RECORDER STATE ERROR: $error');
       },
     );
+
+    /// Load temporary agents for the assignment UI.
+    loadMockAgents();
   }
 
   @override
@@ -493,8 +987,8 @@ class DashboardController extends GetxController {
   /// ============================================================
 
   Future<void> selectConversation(
-    convo_data.ConversationModel conversation,
-  ) async {
+      convo_data.ConversationModel conversation,
+      ) async {
     final currentConversationId = convoModel.value?.id;
 
     final isDifferentConversation = currentConversationId != conversation.id;
@@ -513,7 +1007,7 @@ class DashboardController extends GetxController {
     }
 
     final conversationIndex = conversations.indexWhere(
-      (item) => item.id == conversation.id,
+          (item) => item.id == conversation.id,
     );
 
     if (conversationIndex != -1) {
@@ -574,7 +1068,7 @@ class DashboardController extends GetxController {
 
   void loadMessages(String conversationId) {
     final conversation = conversations.firstWhereOrNull(
-      (item) => item.id == conversationId,
+          (item) => item.id == conversationId,
     );
 
     if (conversation == null) {
@@ -585,7 +1079,7 @@ class DashboardController extends GetxController {
 
     messages = _messagesByConversation.putIfAbsent(
       conversationId,
-      () => _getDefaultMessagesByPlatform(conversation.platform),
+          () => _getDefaultMessagesByPlatform(conversation.platform),
     );
 
     update();
@@ -1056,8 +1550,8 @@ class DashboardController extends GetxController {
     /// This is much lighter than continuously
     /// rebuilding the dashboard.
     _voiceAmplitudeTimer = Timer.periodic(const Duration(milliseconds: 400), (
-      _,
-    ) {
+        _,
+        ) {
       if (sessionId != _voiceSessionId) {
         return;
       }
@@ -1312,7 +1806,7 @@ class DashboardController extends GetxController {
       }
 
       final conversation = conversations.firstWhereOrNull(
-        (item) => item.id == recordingConversationId,
+            (item) => item.id == recordingConversationId,
       );
 
       if (conversation == null) {
@@ -1426,7 +1920,7 @@ class DashboardController extends GetxController {
 
     final chatMessages = _messagesByConversation.putIfAbsent(
       conversation.id,
-      () => _getDefaultMessagesByPlatform(conversation.platform),
+          () => _getDefaultMessagesByPlatform(conversation.platform),
     );
 
     chatMessages.add(newMessage);
@@ -1594,7 +2088,7 @@ class DashboardController extends GetxController {
     required DateTime updatedAt,
   }) {
     final conversationIndex = conversations.indexWhere(
-      (item) => item.id == conversationId,
+          (item) => item.id == conversationId,
     );
 
     if (conversationIndex == -1) {
@@ -1603,17 +2097,17 @@ class DashboardController extends GetxController {
 
     conversations[conversationIndex] = conversations[conversationIndex]
         .copyWith(
-          message: previewText,
-          time: formatTime(updatedAt),
-          updatedAt: updatedAt,
-          unread: 0,
-        );
+      message: previewText,
+      time: formatTime(updatedAt),
+      updatedAt: updatedAt,
+      unread: 0,
+    );
 
     sortConversations();
 
     if (convoModel.value?.id == conversationId) {
       convoModel.value = conversations.firstWhereOrNull(
-        (item) => item.id == conversationId,
+            (item) => item.id == conversationId,
       );
     }
   }
@@ -1658,8 +2152,8 @@ class DashboardController extends GetxController {
     final filteredList = filteredConversations
         .where(
           (conversation) =>
-              conversation.platform.toLowerCase() == platform.toLowerCase(),
-        )
+      conversation.platform.toLowerCase() == platform.toLowerCase(),
+    )
         .toList();
 
     filteredList.sort((first, second) {
@@ -1715,7 +2209,7 @@ class DashboardController extends GetxController {
         MessageModel(
           id: 'w6',
           text:
-              'Pro plan me WhatsApp inbox, team assignment, unread filter, analytics aur lead tracking included hai.',
+          'Pro plan me WhatsApp inbox, team assignment, unread filter, analytics aur lead tracking included hai.',
           isMe: true,
           time: '10:25 AM',
         ),
@@ -1757,7 +2251,7 @@ class DashboardController extends GetxController {
         MessageModel(
           id: 'f4',
           text:
-              'Yes, you can connect your Facebook page and manage page messages from one dashboard.',
+          'Yes, you can connect your Facebook page and manage page messages from one dashboard.',
           isMe: true,
           time: '09:08 AM',
         ),
@@ -1770,7 +2264,7 @@ class DashboardController extends GetxController {
         MessageModel(
           id: 'f6',
           text:
-              'Yes, you can add agents, assign conversations, and monitor replies.',
+          'Yes, you can add agents, assign conversations, and monitor replies.',
           isMe: true,
           time: '09:10 AM',
         ),
@@ -1824,7 +2318,7 @@ class DashboardController extends GetxController {
         MessageModel(
           id: 'i6',
           text:
-              'Yes, Instagram DM support can be managed from this CRM dashboard.',
+          'Yes, Instagram DM support can be managed from this CRM dashboard.',
           isMe: true,
           time: '11:20 AM',
         ),
@@ -1837,7 +2331,7 @@ class DashboardController extends GetxController {
         MessageModel(
           id: 'i8',
           text:
-              'Yes, every Instagram conversation can be assigned to a specific agent.',
+          'Yes, every Instagram conversation can be assigned to a specific agent.',
           isMe: true,
           time: '11:22 AM',
         ),

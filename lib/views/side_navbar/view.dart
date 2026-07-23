@@ -1,9 +1,14 @@
 import 'package:elite_csr/theme/theme.dart';
+import 'package:elite_csr/views/dashboard/controller.dart';
 import 'package:elite_csr/views/dashboard/view.dart';
 import 'package:elite_csr/views/states/view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../models/gmail_model.dart';
+import '../dashboard/widgets/useable_list.dart';
+import '../gmail/controller.dart';
+import '../gmail/widgets/list_tile.dart';
 import '../setting/view.dart';
 import 'controller.dart';
 
@@ -11,6 +16,7 @@ class MainLayoutScreen extends StatelessWidget {
   MainLayoutScreen({super.key});
 
   final controller = Get.put(SideController());
+  final ctrl = Get.put(DashboardController());
 
   final List<IconData> icons = [
     Icons.chat,
@@ -90,7 +96,43 @@ class MainLayoutScreen extends StatelessWidget {
                         ),
                       );
                     }),
+                        IconButton(onPressed: (){
+                          GetBuilder<GmailController>(
+                            init: GmailController(),
+                            builder: (gmailCtrl) {
+                              return UseableList<GmailMessageModel>(
+                                title: "Gmail",
+                                color: Colors.yellow,
+                                icon: 'assets/images/gmail.png',
+                                count: gmailCtrl.filteredEmails.length,
+                                data: gmailCtrl.filteredEmails,
+                                isExpanded: ctrl.expandedList == "Gmail",
+                                onExpansionChanged: (value) {
+                                  ctrl.toggleExpandedList("Gmail", value);
+                                },
+                                itemBuilder: (context, mail) {
+                                  return MailListTile(
+                                    mail: mail,
+                                    selected: ctrl.isSelected,
+                                    onStarTap: () {
+                                      gmailCtrl.toggleStar(mail);},
+                                    onTap: () {
+                                      gmailCtrl.selectEmail(mail);
+                                      ctrl.openGmail();
+                                      gmailCtrl.update();
+                                      /// yahan agar center/detail panel change karwana hai
+                                      /// to apne dashboard controller me Gmail selected view bhi set kar do
+                                      /// ctrl.changePlatform("Gmail");
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                          );
 
+
+
+                        }, icon: Image.asset('assets/images/gmail.png',height: 30,)),
                     const Spacer(),
 
                     IconButton(

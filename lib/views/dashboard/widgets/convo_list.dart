@@ -12,6 +12,7 @@ import '../../../theme/theme.dart';
 import '../../../widgets/input_fileds.dart';
 import '../../../widgets/text_widget.dart';
 import '../../gmail/controller.dart';
+import 'filter_chip.dart';
 
 class ConvoPanel extends StatelessWidget {
   final DashboardController ctrl;
@@ -40,7 +41,25 @@ class ConvoPanel extends StatelessWidget {
 
                   const Spacer(),
 
-                  IconButton(icon: Icon(Icons.menu), onPressed: () {}),
+
+                    Obx(() {
+                      final selectedConversation =
+                          ctrl.convoModel.value;
+
+                      if (selectedConversation == null) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return assignmentDropdown(
+                        context,
+                        ctrl: ctrl,
+                        conversationId:
+                        selectedConversation.id,
+                      );
+                    })
+
+
+
                 ],
               ),
 
@@ -59,19 +78,40 @@ class ConvoPanel extends StatelessWidget {
 
           Row(
             children: [
-              _topTab(text: "All", context),
+              topTab(
+                context,
+                text: 'All',
+                ctrl: ctrl,
+              ),
 
               SizedBox(width: 10.w),
 
-              _topTab(text: "Unread", context),
+              topTab(
+                context,
+                text: 'Unread',
+                ctrl: ctrl,
+              ),
 
               SizedBox(width: 10.w),
 
-              _topTab(text: "Assigned", context),
+              topTab(
+                context,
+                text: 'Assigned',
+                ctrl: ctrl,
+              ),
+
+              SizedBox(width: 10.w),
+
+              topTab(
+                context,
+                text: 'Unassigned',
+                ctrl: ctrl,
+              ),
+
+
+              /// Selected conversation ka assignment dropdown
             ],
-          ),
-
-          SizedBox(height: 15.h),
+          ),          SizedBox(height: 15.h),
 
           /// CHANNELS
           Expanded(
@@ -173,21 +213,15 @@ class ConvoPanel extends StatelessWidget {
                         ctrl.toggleExpandedList("Gmail", value);
                       },
                       itemBuilder: (context, mail) {
-                        return
-
-
-                          MailListTile(
+                        return MailListTile(
                           mail: mail,
                           selected: ctrl.isSelected,
-
                           onStarTap: () {
-                            gmailCtrl.toggleStar(mail);
-                          },
+                            gmailCtrl.toggleStar(mail);},
                           onTap: () {
                             gmailCtrl.selectEmail(mail);
                             ctrl.openGmail();
                             gmailCtrl.update();
-
                             /// yahan agar center/detail panel change karwana hai
                             /// to apne dashboard controller me Gmail selected view bhi set kar do
                             /// ctrl.changePlatform("Gmail");
@@ -206,61 +240,4 @@ class ConvoPanel extends StatelessWidget {
       ),
     );
   }
-
-  /// ===================================
-  /// TOP FILTER TAB
-  /// ===================================
-
-  Widget _topTab(BuildContext context, {required String text}) {
-    return Obx(() {
-      final isMobile = Responsive.isMobile(context);
-      final isTablet = Responsive.isTablet(context);
-
-      final bool active = ctrl.selectedTab.value == text;
-
-      return GestureDetector(
-        onTap: () {
-          ctrl.selectedTab.value = text;
-          ctrl.update(); // important for GetBuilder list rebuild
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: EdgeInsets.symmetric(
-            horizontal: isMobile
-                ? 10
-                : isTablet
-                ? 14
-                : 16,
-            vertical: isMobile ? 6 : 8,
-          ),
-          decoration: BoxDecoration(
-            color: active ? AppTheme.primaryColor : Colors.black,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: active
-                  ? AppTheme.primaryColor
-                  : Colors.grey.withOpacity(0.25),
-            ),
-          ),
-          child: TextWidget(
-            text,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: active ? Colors.white : Colors.grey,
-              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-            ),
-            fontSize: isMobile
-                ? 11
-                : isTablet
-                ? 12
-                : 13,
-            fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-          ),
-        ),
-      );
-    });
-  }
-
-  /// ===================================
-  /// CHANNEL TILE
-  /// ===================================
 }
