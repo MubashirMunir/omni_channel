@@ -72,14 +72,12 @@ class ConvoPanel extends StatelessWidget {
               /// SEARCH
               InputFields(
                 controller: TextEditingController(),
-
                 hint: "Search conversations...",
                 icon: Icons.search,
               ),
             ],
           ),
           SizedBox(height: 20.h),
-
           Row(
             children: [
               topTab(
@@ -87,7 +85,6 @@ class ConvoPanel extends StatelessWidget {
                 text: 'All',
                 ctrl: ctrl,
               ),
-
               SizedBox(width: 10.w),
 
               topTab(
