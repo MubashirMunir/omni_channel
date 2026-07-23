@@ -1,8 +1,8 @@
 
 
 import 'package:elite_csr/routes/routes.dart';
-import 'package:elite_csr/views/gmail/view.dart';
-import 'package:elite_csr/views/side_navbar/view.dart';
+import 'package:elite_csr/views/gmail/gmail_center_view.dart';
+ import 'package:elite_csr/views/side_navbar/view.dart';
 import 'package:elite_csr/views/states/view.dart';
 import 'package:get/get_navigation/src/routes/get_route.dart';
 
@@ -16,7 +16,7 @@ class AppPages {
       page: () => const LoginView(),
     ),  GetPage(
       name: AppRoutes.gmail,
-      page: () => const GmailCenterView(accountName: '', accountEmail: '',),
+      page: () =>  GmailCenterView(accountName: '', accountEmail: '',),
     ),
     //
     GetPage(

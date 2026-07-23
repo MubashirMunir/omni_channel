@@ -3,6 +3,7 @@ import 'package:elite_csr/views/dashboard/controller.dart';
 import 'package:elite_csr/views/dashboard/view.dart';
 import 'package:elite_csr/views/gmail/controller.dart';
 import 'package:elite_csr/views/setting/view.dart';
+import 'package:elite_csr/views/side_navbar/widgets/btn.dart' hide SocialChannelButton;
 import 'package:elite_csr/views/states/view.dart';
 
 import 'package:flutter/material.dart';
@@ -190,14 +191,14 @@ class MainLayoutScreen extends StatelessWidget {
                                       title: "Gmail",
                                       icon: "assets/images/gmail.png",
                                       color: Colors.red,
-                                      count: gmailCtrl.filteredEmails.length,
+                                      count: 1,
                                       isSelected: controller.isChannelSelected(
                                         "Gmail",
                                       ),
                                       onPressed: () {
                                         FocusManager.instance.primaryFocus
                                             ?.unfocus();
-
+  Get.toNamed('/gmail');
                                         controller.openChannel("Gmail");
                                       },
                                     );
