@@ -20,6 +20,14 @@ class DashboardController extends GetxController {
   /// AGENT / ASSIGNMENT STATE
   /// ============================================================
 
+  void openGmailCenter() {
+    selectedCenterView.value = 'gmail';
+    showEmojiBoard.value = false;
+  }
+
+  void openChatCenter() {
+    selectedCenterView.value = 'chat';
+  }
   /// Agents available for conversation assignment.
   final RxList<AgentModel> agents = <AgentModel>[].obs;
 

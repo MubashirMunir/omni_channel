@@ -196,10 +196,10 @@ class MainLayoutScreen extends StatelessWidget {
                                         "Gmail",
                                       ),
                                       onPressed: () {
-                                        FocusManager.instance.primaryFocus
-                                            ?.unfocus();
-  Get.toNamed('/gmail');
-                                        controller.openChannel("Gmail");
+
+                                        FocusManager.instance.primaryFocus?.unfocus();
+
+                                        dashboardCtrl.openGmailCenter();
                                       },
                                     );
                                   },

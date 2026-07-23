@@ -1154,12 +1154,17 @@ class _MessageRow extends StatelessWidget {
           : context.gmailSurface,
       child: InkWell(
         onTap: () => controller.openMessage(message),
-        child: Container(
-          height: mobile ? 72 : 40,
-          padding: EdgeInsets.symmetric(
-            horizontal: mobile ? 8 : 10,
-            vertical: mobile ? 8 : 0,
-          ),
+        child:  Container(
+        height: mobile ? null : 40,
+        constraints: mobile
+            ? const BoxConstraints(
+          minHeight: 88,
+        )
+            : null,
+        padding: EdgeInsets.symmetric(
+          horizontal: mobile ? 8 : 10,
+          vertical: mobile ? 8 : 0,
+        ),
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(color: context.gmailBorder),
@@ -1353,7 +1358,6 @@ class _MobileMessageRowContent extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 15,
                         fontWeight: message.isRead
                             ? FontWeight.w600
                             : FontWeight.w800,
