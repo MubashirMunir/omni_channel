@@ -121,7 +121,8 @@ class ConvoPanel extends StatelessWidget {
                   title: "WhatsApp",
                   color: Colors.green,
                   icon: 'assets/images/w.png',
-                  count: ctrl.countByPlatform("WhatsApp"),
+                  // count: ctrl.countByPlatform("WhatsApp"),
+                  count: 2,
                   data: ctrl.getByPlatform("WhatsApp"),
                   isExpanded: ctrl.expandedList == "WhatsApp",
                   onExpansionChanged: (value) {
@@ -133,11 +134,8 @@ class ConvoPanel extends StatelessWidget {
                       item: item,
                       color: Colors.green,
                       onTap: () {
-
                       ctrl.selectConversation(item);
                         ctrl.openChat(item);
-
-
                       }
                     );
                   },

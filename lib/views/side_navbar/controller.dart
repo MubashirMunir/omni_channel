@@ -1,50 +1,95 @@
 import 'package:get/get.dart';
 
-class SideController extends GetxController {
+import '../../models/convo_list.dart';
 
-  RxInt selectedIndex = 0.obs;
+class SideController extends GetxController {
+  /// Main screen/sidebar navigation
+  final RxInt selectedIndex = 0.obs;
+
+  /// Selected social channel
+  final RxString selectedChannel = "WhatsApp".obs;
+
+  /// Expanded list
+  final RxString expandedList = "".obs;
+
+  /// Center panel view
+  final RxString selectedView = "Chat".obs;
+
+  /// Conversations
+  final RxList<ConversationModel> conversations =
+      <ConversationModel>[].obs;
+
+  /// Selected conversation
+  final Rxn<ConversationModel> selectedConversation =
+  Rxn<ConversationModel>();
 
   void changeIndex(int index) {
-
     selectedIndex.value = index;
   }
 
-  String expandedList = "";
-  String selectedView = "Dashboard";
+  /// Sidebar social icon button click
+  void changeChannel(String channel) {
+    selectedChannel.value = channel;
 
-  bool get isSelected => selectedView == "Gmail";
-  bool get isGmailExpanded => expandedList == "Gmail";
+    final bool shouldExpand =
+        expandedList.value != channel;
 
-  void toggleExpandedList(String platform, bool value) {
+    toggleExpandedList(
+      channel,
+      shouldExpand,
+    );
+
+    /// Dashboard page open
+    selectedIndex.value = 0;
+  }
+
+  /// ExpansionTile ya sidebar icon se expand/collapse
+  void toggleExpandedList(
+      String channel,
+      bool value,
+      ) {
     if (value) {
-      expandedList = platform;
-    } else if (expandedList == platform) {
-      expandedList = "";
+      selectedChannel.value = channel;
+      expandedList.value = channel;
+    } else if (expandedList.value == channel) {
+      expandedList.value = "";
     }
+  }
 
-    update();
+  bool isExpanded(String channel) {
+    return expandedList.value == channel;
+  }
+
+  bool isChannelSelected(String channel) {
+    return selectedChannel.value == channel;
+  }
+
+  List<ConversationModel> getByPlatform(
+      String platform,
+      ) {
+    return conversations.where((item) {
+      return item.platform == platform;
+    }).toList();
+  }
+
+  int countByPlatform(String platform) {
+    return getByPlatform(platform).length;
+  }
+
+  void selectConversation(
+      ConversationModel item,
+      ) {
+    selectedConversation.value = item;
+  }
+
+  void openChat(
+      ConversationModel item,
+      ) {
+    selectedConversation.value = item;
+    selectedView.value = "Chat";
   }
 
   void openGmail() {
-    selectedView = "Gmail";
-    expandedList = "Gmail";
-
-    update();
+    selectedView.value = "Gmail";
   }
-
-  void onGmailButtonPressed() {
-    final bool alreadyOpen = expandedList == "Gmail";
-
-    if (alreadyOpen) {
-      expandedList = "";
-      selectedView = "Dashboard";
-    } else {
-      expandedList = "Gmail";
-      selectedView = "Gmail";
-    }
-
-    update();
-  }
-
-
 }

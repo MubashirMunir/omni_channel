@@ -34,26 +34,33 @@ class UseableList<T> extends StatelessWidget {
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
         leading: icon == 'assets/images/gmail.png'
-            ? SizedBox(width: 20,height: 25,
-              child: IconButton(
-                        onPressed: () {    showComposeDialog(GmailController()); },
-                        icon: Icon(Icons.add, ), // 👈 icon ka size
+            ? SizedBox(
+                width: 20,
+                height: 25,
+                child: IconButton(
+                  onPressed: () {
+                    showComposeDialog();
+                  },
+                  icon: Icon(Icons.add), // 👈 icon ka size
 
-                        style: ButtonStyle(
-              // backgroundColor: MaterialStateProperty.all(Colors.blue),
+                  style: ButtonStyle(
+                    // backgroundColor: MaterialStateProperty.all(Colors.blue),
+                    fixedSize: MaterialStateProperty.all(
+                      Size(20, 20),
+                    ), // 👈 button ka size
 
-              fixedSize: MaterialStateProperty.all(Size(20, 20)), // 👈 button ka size
+                    padding: MaterialStateProperty.all(
+                      EdgeInsets.zero,
+                    ), // 👈 extra space hatao
 
-              padding: MaterialStateProperty.all(EdgeInsets.zero), // 👈 extra space hatao
-
-              shape: MaterialStateProperty.all(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-                        ),
+                    shape: MaterialStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-            )
+                    ),
+                  ),
+                ),
+              )
             : SizedBox(),
         key: ValueKey('$title-$isExpanded'),
         initiallyExpanded: isExpanded,
@@ -73,9 +80,7 @@ class UseableList<T> extends StatelessWidget {
         title: Row(
           children: [
             Image.asset(icon, height: 30),
-
             SizedBox(width: 15.w),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +94,6 @@ class UseableList<T> extends StatelessWidget {
                 ],
               ),
             ),
-
             Container(
               padding: EdgeInsets.all(8),
               alignment: Alignment.center,
@@ -185,4 +189,113 @@ Widget fallbackConversationAvatar(
       style: Theme.of(context).textTheme.bodyMedium,
     ),
   );
+}
+
+///     social btn he bhai he
+class SocialChannelButton extends StatelessWidget {
+  final String title;
+  final String icon;
+  final Color color;
+  final int count;
+  final bool isSelected;
+  final VoidCallback onPressed;
+  final VoidCallback? onAddPressed;
+
+  const SocialChannelButton({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.count,
+    required this.isSelected,
+    required this.onPressed,
+    this.onAddPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: title,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: isSelected ? color.withOpacity(0.15) : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? color : Colors.grey.shade300,
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            child: IconButton(
+              onPressed: onPressed,
+              padding: const EdgeInsets.all(12),
+              icon: Image.asset(
+                icon,
+                width: 30,
+                height: 30,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+
+          // Conversation count
+          if (count > 0)
+            Positioned(
+              top: -7,
+              right: -7,
+              child: Container(
+                constraints: const BoxConstraints(minWidth: 21, minHeight: 21),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    width: 2,
+                  ),
+                ),
+                child: Text(
+                  count > 99 ? "99+" : count.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+
+          // Optional plus button, Gmail compose ke liye
+          if (onAddPressed != null)
+            Positioned(
+              bottom: -5,
+              right: -5,
+              child: InkWell(
+                onTap: onAddPressed,
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  width: 21,
+                  height: 21,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      width: 2,
+                    ),
+                  ),
+                  child: const Icon(Icons.add, size: 14, color: Colors.white),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }

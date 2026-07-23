@@ -1,11 +1,13 @@
 import 'package:elite_csr/views/gmail/widgets/reply_textfield.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import '../../../theme/theme.dart';
 import '../controller.dart';
 
-void showComposeDialog(GmailController ctrl) {
+void showComposeDialog() {
+  final ctrl = Get.find<GmailController>();
   Get.dialog(
     Builder(
       builder: (context) {

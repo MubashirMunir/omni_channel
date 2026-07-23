@@ -8,7 +8,7 @@ class MobileGmailHeader extends StatelessWidget {
   final String accountName;
   final String accountEmail;
 
-  const MobileGmailHeader({
+  const MobileGmailHeader({super.key,
     required this.ctrl,
     required this.accountName,
     required this.accountEmail,
@@ -52,7 +52,7 @@ class MobileGmailHeader extends StatelessWidget {
             ),
           ),
           IconButton(
-            onPressed: () => showComposeDialog(ctrl),
+            onPressed: () => showComposeDialog(),
             icon: Icon(
               Icons.edit,
               color: theme.colorScheme.onSurface,
