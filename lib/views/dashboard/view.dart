@@ -7,18 +7,112 @@ import 'package:elite_csr/views/dashboard/widgets/message_input.dart';
 import 'package:elite_csr/views/dashboard/widgets/messanger_input.dart';
 import 'package:elite_csr/views/dashboard/widgets/profile_panel.dart';
 import 'package:elite_csr/views/dashboard/widgets/reciever_profile_header.dart';
+import 'package:elite_csr/views/dashboard/widgets/useable_list.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../responsive/sizes.dart';
 import '../gmail/controller.dart';
 import '../gmail/widgets/gmail_detail_panel.dart';
+import '../side_navbar/controller.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final SideController sideCtrl =
+    Get.find<SideController>();
+
+    Widget buildSocialConversationList({
+      required BuildContext context,
+      required DashboardController ctrl,
+      required String platform,
+    }) {
+      final conversations =
+      ctrl.getByPlatform(platform);
+
+      Color color;
+
+      switch (platform) {
+        case "WhatsApp":
+          color = Colors.green;
+          break;
+
+        case "Facebook":
+          color = Colors.blue;
+          break;
+
+        case "Instagram":
+          color = Colors.purple;
+          break;
+
+        default:
+          color = Colors.grey;
+      }
+
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    platform,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                Text(
+                  conversations.length.toString(),
+                ),
+
+                IconButton(
+                  onPressed: sideCtrl.closeChannel,
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(height: 1),
+
+          Expanded(
+            child: conversations.isEmpty
+                ? Center(
+              child: Text(
+                "No $platform conversations",
+              ),
+            )
+                : ListView.builder(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              itemCount: conversations.length,
+              itemBuilder: (context, index) {
+                final item =
+                conversations[index];
+
+                return conversationTile(
+                  context: context,
+                  item: item,
+                  color: color,
+                  onTap: () {
+                    ctrl.selectConversation(item);
+                    ctrl.openChat(item);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    }
     final isMobile = Responsive.isMobile(context);
     final isTablet = Responsive.isTablet(context);
 

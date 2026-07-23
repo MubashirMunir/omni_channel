@@ -1,192 +1,253 @@
 import 'package:elite_csr/theme/theme.dart';
 import 'package:elite_csr/views/dashboard/controller.dart';
 import 'package:elite_csr/views/dashboard/view.dart';
+import 'package:elite_csr/views/gmail/controller.dart';
+import 'package:elite_csr/views/setting/view.dart';
 import 'package:elite_csr/views/states/view.dart';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../dashboard/widgets/useable_list.dart';
-import '../setting/view.dart';
 import 'controller.dart';
 
 class MainLayoutScreen extends StatelessWidget {
   MainLayoutScreen({super.key});
 
-  final controller = Get.put(SideController());
-  final ctrl = Get.put(DashboardController());
+  /// Sidebar navigation controller
+  final SideController controller = Get.put(SideController());
 
-  final List<IconData> icons = [
+  /// Conversations controller
+  final DashboardController dashboardCtrl = Get.put(DashboardController());
+
+  /// Gmail controller
+  final GmailController gmailCtrl = Get.put(GmailController());
+
+  /// IndexedStack mein 3 screens hain,
+  /// isliye icons bhi 3 hain.
+  final List<IconData> icons = const [
     Icons.chat,
-    Icons.people,
     Icons.bar_chart,
     Icons.settings,
   ];
-  final List<String> labels = ['Home', 'Statistics', 'Analytics', 'Setting','cghfgh'];
+
+  final List<String> labels = const ['Home', 'Statistics', 'Setting'];
 
   @override
   Widget build(BuildContext context) {
-    /// FIX FOR WEB TEXT SCALING
-    final textScale = MediaQuery.of(context).textScaler.scale(1);
+    final double textScale = MediaQuery.of(context).textScaler.scale(1);
 
     return MediaQuery(
-      /// THIS PREVENTS INITIAL WEB TEXT BUG
       data: MediaQuery.of(
         context,
       ).copyWith(textScaler: const TextScaler.linear(1)),
-
       child: Scaffold(
         body: Row(
           children: [
             /// SIDEBAR
-            SizedBox(
-              width: 80,
+            Container(
+              width: 82,
+              decoration: BoxDecoration(
+                border: Border(right: BorderSide(color: Colors.grey.shade300)),
+              ),
+              child: Column(
+                children: [
+                  /// Scrollable icons
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: GetBuilder<DashboardController>(
+                        builder: (dashboardCtrl) {
+                          return Obx(
+                            () => Column(
+                              children: [
+                                SizedBox(height: 20 * textScale),
 
-              child: Obx(
-                () => Column(
-                  children: [
-                    SizedBox(height: 20 * textScale),
+                                /// Main navigation
+                                ...List.generate(icons.length, (index) {
+                                  final bool isActive =
+                                      controller.selectedIndex.value == index;
 
-                    ...List.generate(icons.length, (index) {
-                      final isActive = controller.selectedIndex.value == index;
+                                  return GestureDetector(
+                                    onTap: () {
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
 
-                      return GestureDetector(
-                        onTap: () {
-                          controller.changeIndex(index);
-                        },
+                                      controller.changeIndex(index);
+                                    },
+                                    child: Container(
+                                      margin: EdgeInsets.symmetric(
+                                        vertical: 8 * textScale,
+                                      ),
+                                      height: 60,
+                                      width: 60,
+                                      decoration: BoxDecoration(
+                                        color: isActive
+                                            ? Colors.blue.withOpacity(0.15)
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(
+                                          AppTheme.radiusSM(context),
+                                        ),
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            icons[index],
+                                            size: 20 * textScale,
+                                            color: isActive
+                                                ? Colors.blue
+                                                : Colors.grey,
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            labels[index],
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }),
 
-                        child: Container(
-                          margin: EdgeInsets.symmetric(vertical: 8 * textScale),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  child: Divider(),
+                                ),
 
-                          height: 60,
-                          width: 60,
+                                /// WhatsApp
+                                SocialChannelButton(
+                                  title: "WhatsApp",
+                                  icon: "assets/images/w.png",
+                                  color: Colors.green,
+                                  count: dashboardCtrl.countByPlatform(
+                                    "WhatsApp",
+                                  ),
+                                  isSelected: controller.isChannelSelected(
+                                    "WhatsApp",
+                                  ),
+                                  onPressed: () {
+                                    FocusManager.instance.primaryFocus
+                                        ?.unfocus();
 
-                          decoration: BoxDecoration(
-                            color: isActive
-                                ? Colors.blue.withOpacity(.15)
-                                : Colors.transparent,
+                                    controller.openChannel("WhatsApp");
+                                  },
+                                ),
 
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusSM(context),
+                                const SizedBox(height: 10),
+
+                                /// Facebook
+                                SocialChannelButton(
+                                  title: "Facebook",
+                                  icon: "assets/images/facebook.png",
+                                  color: Colors.blue,
+                                  count: dashboardCtrl.countByPlatform(
+                                    "Facebook",
+                                  ),
+                                  isSelected: controller.isChannelSelected(
+                                    "Facebook",
+                                  ),
+                                  onPressed: () {
+                                    FocusManager.instance.primaryFocus
+                                        ?.unfocus();
+
+                                    controller.openChannel("Facebook");
+                                  },
+                                ),
+
+                                const SizedBox(height: 10),
+
+                                /// Instagram
+                                SocialChannelButton(
+                                  title: "Instagram",
+                                  icon: "assets/images/instagram.png",
+                                  color: Colors.purple,
+                                  count: dashboardCtrl.countByPlatform(
+                                    "Instagram",
+                                  ),
+                                  isSelected: controller.isChannelSelected(
+                                    "Instagram",
+                                  ),
+                                  onPressed: () {
+                                    FocusManager.instance.primaryFocus
+                                        ?.unfocus();
+
+                                    controller.openChannel("Instagram");
+                                  },
+                                ),
+
+                                const SizedBox(height: 10),
+
+                                /// Gmail
+                                GetBuilder<GmailController>(
+                                  builder: (gmailCtrl) {
+                                    return SocialChannelButton(
+                                      title: "Gmail",
+                                      icon: "assets/images/gmail.png",
+                                      color: Colors.red,
+                                      count: gmailCtrl.filteredEmails.length,
+                                      isSelected: controller.isChannelSelected(
+                                        "Gmail",
+                                      ),
+                                      onPressed: () {
+                                        FocusManager.instance.primaryFocus
+                                            ?.unfocus();
+
+                                        controller.openChannel("Gmail");
+                                      },
+                                    );
+                                  },
+                                ),
+
+                                const SizedBox(height: 20),
+                              ],
                             ),
-                          ),
-
-                          child: Column(
-                            spacing: 2,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-
-                            children: [
-                              Icon(
-                                icons[index],
-
-                                size: 20 * textScale,
-
-                                color: isActive ? Colors.blue : Colors.grey,
-                              ),
-
-                              Text(
-                                labels[index],
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
-
-                    Obx(
-                          () => Column(
-                        children: [
-                          SocialChannelButton(
-                            title: "WhatsApp",
-                            icon: "assets/images/w.png",
-                            color: Colors.green,
-
-                            count: controller.countByPlatform("WhatsApp"),
-
-                            isSelected: controller.expandedList.value == "WhatsApp",
-
-                            onPressed: () {
-
-                              ctrl.toggleExpandedList("WhatsApp"  ,true);
-
-                              FocusManager.instance.primaryFocus?.unfocus();
-                              controller.changeChannel("WhatsApp");
-                            },
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          SocialChannelButton(
-                            title: "Facebook",
-                            icon: "assets/images/facebook.png",
-                            color: Colors.blue,
-                            count: controller.countByPlatform("Facebook"),
-                            isSelected:
-                            controller.selectedChannel.value == "Facebook",
-                            onPressed: () {
-                              controller.changeChannel("Facebook");
-                            },
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          SocialChannelButton(
-                            title: "Instagram",
-                            icon: "assets/images/instagram.png",
-                            color: Colors.purple,
-                            count: ctrl.countByPlatform("Instagram"),
-                            isSelected:
-                            controller.selectedChannel.value == "Instagram",
-                            onPressed: () {
-                              controller.changeChannel("Instagram");
-                            },
-                          ),
-                        ],
+                          );
+                        },
                       ),
                     ),
+                  ),
 
-                          const Spacer(),
-
-                          IconButton(
-                            onPressed: () {
-                              Get.offAllNamed('/login');
-                            },
-                            icon: const Icon(
-                              Icons.logout,
-                              color: Colors.grey,
-                            ),
-                          ),
-                                         const Spacer(),
-
-                    IconButton(
-                      onPressed: () {
-                        bool left = true;
-                        left = !left;
-                      },
-                      icon: Icon(Icons.arrow_forward_ios, color: Colors.grey),
+                  /// Bottom buttons
+                  IconButton(
+                    tooltip: "Collapse sidebar",
+                    onPressed: () {
+                      // Sidebar collapse logic baad mein.
+                    },
+                    icon: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 18,
+                      color: Colors.grey,
                     ),
-                    IconButton(
-                      onPressed: () {
-                        Get.offAllNamed('/login');
-                      },
-                      icon: Icon(Icons.logout, color: Colors.grey),
-                    ),
-                  ],
-                ),
+                  ),
+
+                  IconButton(
+                    tooltip: "Logout",
+                    onPressed: () {
+                      Get.offAllNamed('/login');
+                    },
+                    icon: const Icon(Icons.logout, color: Colors.grey),
+                  ),
+
+                  const SizedBox(height: 12),
+                ],
               ),
             ),
+
             /// BODY
             Expanded(
               child: Obx(
                 () => IndexedStack(
                   index: controller.selectedIndex.value,
-
                   children: const [
-                    DashboardView(),
-
-                    StatisticsView(),
-                    SettingsView(),
+                    DashboardView(), // index 0
+                    StatisticsView(), // index 1
+                    SettingsView(), // index 2
                   ],
                 ),
               ),
