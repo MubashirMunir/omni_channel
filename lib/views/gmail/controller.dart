@@ -4,451 +4,576 @@ import 'package:get/get.dart';
 import '../../models/gmail_model.dart';
 
 class GmailController extends GetxController {
-  final RxList<GmailMessageModel> emails = <GmailMessageModel>[].obs;
-  final Rxn<GmailMessageModel> selectedEmail = Rxn<GmailMessageModel>();
+  GmailFolder selectedFolder = GmailFolder.inbox;
+  GmailCategory selectedCategory = GmailCategory.primary;
 
+  String? selectedMessageId;
+  String searchQuery = '';
+
+  bool sidebarExpanded = true;
+  bool rightRailVisible = true;
+  bool composeOpen = false;
+  bool composeMaximized = false;
+  bool refreshing = false;
+
+  final Set<String> selectedMessageIds = <String>{};
+
+  final TextEditingController toController = TextEditingController();
+  final TextEditingController subjectController = TextEditingController();
+  final TextEditingController bodyController = TextEditingController();
   final TextEditingController searchController = TextEditingController();
 
-  /// Reply dialog controllers
-  final TextEditingController replyToController = TextEditingController();
-  final TextEditingController replyCcController = TextEditingController();
-  final TextEditingController replySubjectController = TextEditingController();
-  final TextEditingController replyBodyController = TextEditingController();
+  final List<GmailMessage> _messages = <GmailMessage>[
+    GmailMessage(
+      id: '1',
+      senderName: 'Elite ERP',
+      senderEmail: 'notifications@eliteerp.com',
+      recipients: <String>['support@elitecsr.com'],
+      subject: 'Daily production summary',
+      preview: 'Today’s production summary is ready for review.',
+      body:
+          'Hello,\n\nYour daily production summary is ready. Total production, pending jobs, machine utilization and quality alerts are now available in the ERP dashboard.\n\nRegards,\nElite ERP Team',
+      receivedAt: DateTime.now().subtract(const Duration(minutes: 14)),
+      folder: GmailFolder.inbox,
+      category: GmailCategory.primary,
+      isRead: false,
+      isStarred: true,
+      isImportant: true,
+      hasAttachment: true,
+      attachmentName: 'production-summary.pdf',
+      label: 'ERP',
+    ),
+    GmailMessage(
+      id: '2',
+      senderName: 'Ahmad Textile',
+      senderEmail: 'accounts@ahmadtextile.com',
+      recipients: <String>['support@elitecsr.com'],
+      subject: 'Invoice confirmation required',
+      preview: 'Please confirm the attached invoice before 4:00 PM.',
+      body:
+          'Assalam-o-Alaikum,\n\nPlease review the attached invoice and confirm it before 4:00 PM today.\n\nThank you.',
+      receivedAt: DateTime.now().subtract(const Duration(hours: 2)),
+      folder: GmailFolder.inbox,
+      category: GmailCategory.primary,
+      isRead: false,
+      isImportant: true,
+      hasAttachment: true,
+      attachmentName: 'invoice-4582.pdf',
+    ),
+    GmailMessage(
+      id: '3',
+      senderName: 'Google Workspace',
+      senderEmail: 'workspace-noreply@google.com',
+      recipients: <String>['support@elitecsr.com'],
+      subject: 'New features available for your team',
+      preview: 'Discover productivity updates available this month.',
+      body:
+          'Hi,\n\nNew collaboration and productivity features are now available for your organization.\n\nGoogle Workspace Team',
+      receivedAt: DateTime.now().subtract(const Duration(hours: 5)),
+      folder: GmailFolder.inbox,
+      category: GmailCategory.updates,
+      isRead: true,
+    ),
+    GmailMessage(
+      id: '4',
+      senderName: 'Daraz',
+      senderEmail: 'offers@daraz.pk',
+      recipients: <String>['support@elitecsr.com'],
+      subject: 'Big savings this weekend',
+      preview: 'Special offers are live across selected categories.',
+      body:
+          'Hello,\n\nWeekend deals are now live. Browse selected products and limited-time offers.\n\nDaraz Team',
+      receivedAt: DateTime.now().subtract(const Duration(hours: 7)),
+      folder: GmailFolder.inbox,
+      category: GmailCategory.promotions,
+      isRead: true,
+    ),
+    GmailMessage(
+      id: '5',
+      senderName: 'LinkedIn',
+      senderEmail: 'messages-noreply@linkedin.com',
+      recipients: <String>['support@elitecsr.com'],
+      subject: 'You appeared in 19 searches this week',
+      preview: 'See who is discovering your profile.',
+      body:
+          'Your profile appeared in 19 searches this week. Review your profile analytics for more details.',
+      receivedAt: DateTime.now().subtract(const Duration(days: 1)),
+      folder: GmailFolder.inbox,
+      category: GmailCategory.social,
+      isRead: true,
+    ),
+    GmailMessage(
+      id: '6',
+      senderName: 'Support Team',
+      senderEmail: 'support@example.com',
+      recipients: <String>['support@elitecsr.com'],
+      subject: 'Ticket #4582 has been resolved',
+      preview: 'The reported login issue has been resolved.',
+      body:
+          'Hi,\n\nThe login issue reported in ticket #4582 has been resolved. Please verify it from your side.\n\nSupport Team',
+      receivedAt: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
+      folder: GmailFolder.inbox,
+      category: GmailCategory.primary,
+      isRead: true,
+      label: 'Support',
+    ),
+    GmailMessage(
+      id: '7',
+      senderName: 'You',
+      senderEmail: 'support@elitecsr.com',
+      recipients: <String>['client@example.com'],
+      subject: 'ERP proposal',
+      preview: 'Please find the ERP proposal attached.',
+      body:
+          'Hello,\n\nPlease find the ERP proposal attached. Let me know if any changes are required.\n\nRegards',
+      receivedAt: DateTime.now().subtract(const Duration(days: 2)),
+      folder: GmailFolder.sent,
+      category: GmailCategory.primary,
+      isRead: true,
+      hasAttachment: true,
+      attachmentName: 'elite-erp-proposal.pdf',
+    ),
+    GmailMessage(
+      id: '8',
+      senderName: 'Draft',
+      senderEmail: '',
+      recipients: <String>['manager@example.com'],
+      subject: 'Follow-up meeting',
+      preview: 'Can we schedule a follow-up meeting next week?',
+      body:
+          'Hello,\n\nCan we schedule a follow-up meeting next week to discuss the implementation plan?',
+      receivedAt: DateTime.now().subtract(const Duration(days: 3)),
+      folder: GmailFolder.drafts,
+      category: GmailCategory.primary,
+      isRead: true,
+    ),
+  ];
 
-  /// Compose dialog controllers
-  final TextEditingController composeToController = TextEditingController();
-  final TextEditingController composeCcController = TextEditingController();
-  final TextEditingController composeSubjectController = TextEditingController();
-  final TextEditingController composeBodyController = TextEditingController();
+  List<GmailMessage> get visibleMessages {
+    Iterable<GmailMessage> result = _messages;
 
-  /// Thread scroll controller
-  final ScrollController mailScrollController = ScrollController();
-
-  /// Apni email yahan set karo
-  final String myEmail = 'me@gmail.com';
-
-  /// Current selected conversation ki mails + replies
-  List<GmailMessageModel> threadMails = [];
-
-  /// Har conversation ki replies alag save hongi
-  final Map<String, List<GmailMessageModel>> repliesByConversation = {};
-
-  /// Dialog multiple times open na ho
-  bool isReplyDialogOpen = false;
-
-  List<GmailMessageModel> get filteredEmails {
-    final query = searchController.text.trim().toLowerCase();
-
-    if (query.isEmpty) {
-      return emails;
+    switch (selectedFolder) {
+      case GmailFolder.inbox:
+        result = result.where(
+          (GmailMessage message) =>
+              message.folder == GmailFolder.inbox &&
+              message.category == selectedCategory,
+        );
+        break;
+      case GmailFolder.starred:
+        result = result.where(
+          (GmailMessage message) =>
+              message.isStarred && message.folder != GmailFolder.trash,
+        );
+        break;
+      case GmailFolder.snoozed:
+        result = result.where(
+          (GmailMessage message) => message.folder == GmailFolder.snoozed,
+        );
+        break;
+      case GmailFolder.important:
+        result = result.where(
+          (GmailMessage message) =>
+              message.isImportant && message.folder != GmailFolder.trash,
+        );
+        break;
+      case GmailFolder.sent:
+      case GmailFolder.drafts:
+      case GmailFolder.spam:
+      case GmailFolder.trash:
+        result = result.where(
+          (GmailMessage message) => message.folder == selectedFolder,
+        );
+        break;
+      case GmailFolder.allMail:
+        result = result.where(
+          (GmailMessage message) =>
+              message.folder != GmailFolder.spam &&
+              message.folder != GmailFolder.trash,
+        );
+        break;
     }
 
-    return emails.where((mail) {
-      return mail.fromName.toLowerCase().contains(query) ||
-          mail.fromEmail.toLowerCase().contains(query) ||
-          mail.subject.toLowerCase().contains(query) ||
-          mail.snippet.toLowerCase().contains(query);
-    }).toList();
-  }
-
-  @override
-  void onInit() {
-    super.onInit();
-
-    fetchDemoEmails();
-
-    searchController.addListener(() {
-      update();
-    });
-  }
-
-  String getConversationKey(GmailMessageModel mail) {
-    final threadId = mail.threadId.trim();
-
-    if (threadId.isNotEmpty) {
-      return threadId;
+    final String query = searchQuery.trim().toLowerCase();
+    if (query.isNotEmpty) {
+      result = result.where((GmailMessage message) {
+        return message.senderName.toLowerCase().contains(query) ||
+            message.senderEmail.toLowerCase().contains(query) ||
+            message.subject.toLowerCase().contains(query) ||
+            message.preview.toLowerCase().contains(query) ||
+            message.body.toLowerCase().contains(query);
+      });
     }
 
-    return mail.id;
+    final List<GmailMessage> sorted = result.toList();
+    sorted.sort(
+      (GmailMessage a, GmailMessage b) =>
+          b.receivedAt.compareTo(a.receivedAt),
+    );
+    return sorted;
   }
 
-  String makeSnippet(String text) {
-    final cleanText = text.trim();
-
-    if (cleanText.length <= 45) {
-      return cleanText;
+  GmailMessage? get selectedMessage {
+    if (selectedMessageId == null) {
+      return null;
     }
 
-    return '${cleanText.substring(0, 45)}...';
+    for (final GmailMessage message in _messages) {
+      if (message.id == selectedMessageId) {
+        return message;
+      }
+    }
+    return null;
   }
 
-  void buildCurrentThread() {
-    final mail = selectedEmail.value;
+  bool get allVisibleSelected {
+    final List<GmailMessage> visible = visibleMessages;
+    return visible.isNotEmpty &&
+        visible.every(
+          (GmailMessage message) => selectedMessageIds.contains(message.id),
+        );
+  }
 
-    if (mail == null) {
-      threadMails = [];
-      update();
+  int unreadCount(GmailFolder folder) {
+    if (folder == GmailFolder.starred) {
+      return _messages.where((GmailMessage message) {
+        return message.isStarred &&
+            !message.isRead &&
+            message.folder != GmailFolder.trash;
+      }).length;
+    }
+
+    if (folder == GmailFolder.important) {
+      return _messages.where((GmailMessage message) {
+        return message.isImportant &&
+            !message.isRead &&
+            message.folder != GmailFolder.trash;
+      }).length;
+    }
+
+    return _messages.where((GmailMessage message) {
+      return message.folder == folder && !message.isRead;
+    }).length;
+  }
+
+  int categoryUnreadCount(GmailCategory category) {
+    return _messages.where((GmailMessage message) {
+      return message.folder == GmailFolder.inbox &&
+          message.category == category &&
+          !message.isRead;
+    }).length;
+  }
+
+  void toggleSidebar() {
+    sidebarExpanded = !sidebarExpanded;
+    update();
+  }
+
+  void toggleRightRail() {
+    rightRailVisible = !rightRailVisible;
+    update();
+  }
+
+  void selectFolder(GmailFolder folder) {
+    selectedFolder = folder;
+    selectedMessageId = null;
+    selectedMessageIds.clear();
+    update();
+  }
+
+  void selectCategory(GmailCategory category) {
+    selectedCategory = category;
+    selectedMessageId = null;
+    selectedMessageIds.clear();
+    update();
+  }
+
+  void openMessage(GmailMessage message) {
+    selectedMessageId = message.id;
+    selectedMessageIds.clear();
+
+    final int index = _messages.indexWhere(
+      (GmailMessage item) => item.id == message.id,
+    );
+    if (index != -1 && !_messages[index].isRead) {
+      _messages[index] = _messages[index].copyWith(isRead: true);
+    }
+
+    update();
+  }
+
+  void closeMessage() {
+    selectedMessageId = null;
+    update();
+  }
+
+  void updateSearch(String value) {
+    searchQuery = value;
+    selectedMessageId = null;
+    selectedMessageIds.clear();
+    update();
+  }
+
+  void clearSearch() {
+    searchController.clear();
+    updateSearch('');
+  }
+
+  void toggleMessageSelection(String messageId) {
+    if (selectedMessageIds.contains(messageId)) {
+      selectedMessageIds.remove(messageId);
+    } else {
+      selectedMessageIds.add(messageId);
+    }
+    update();
+  }
+
+  void toggleSelectAllVisible() {
+    final List<GmailMessage> visible = visibleMessages;
+
+    if (allVisibleSelected) {
+      for (final GmailMessage message in visible) {
+        selectedMessageIds.remove(message.id);
+      }
+    } else {
+      for (final GmailMessage message in visible) {
+        selectedMessageIds.add(message.id);
+      }
+    }
+    update();
+  }
+
+  void clearSelection() {
+    selectedMessageIds.clear();
+    update();
+  }
+
+  void toggleStar(String messageId) {
+    final int index = _messages.indexWhere(
+      (GmailMessage item) => item.id == messageId,
+    );
+    if (index == -1) {
       return;
     }
 
-    final key = getConversationKey(mail);
-
-    threadMails = [
-      mail,
-      ...(repliesByConversation[key] ?? []),
-    ];
+    _messages[index] = _messages[index].copyWith(
+      isStarred: !_messages[index].isStarred,
+    );
+    update();
   }
 
-  void scrollThreadToBottom() {
-    Future.delayed(const Duration(milliseconds: 120), () {
-      if (mailScrollController.hasClients) {
-        mailScrollController.animateTo(
-          mailScrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+  void toggleImportant(String messageId) {
+    final int index = _messages.indexWhere(
+      (GmailMessage item) => item.id == messageId,
+    );
+    if (index == -1) {
+      return;
+    }
+
+    _messages[index] = _messages[index].copyWith(
+      isImportant: !_messages[index].isImportant,
+    );
+    update();
+  }
+
+  Future<void> refreshInbox() async {
+    if (refreshing) {
+      return;
+    }
+
+    refreshing = true;
+    update();
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    refreshing = false;
+    update();
+  }
+
+  void archiveSelectedMessages() {
+    _moveMessages(selectedMessageIds, GmailFolder.allMail);
+  }
+
+  void reportSelectedAsSpam() {
+    _moveMessages(selectedMessageIds, GmailFolder.spam);
+  }
+
+  void deleteSelectedMessages() {
+    _moveMessages(selectedMessageIds, GmailFolder.trash);
+  }
+
+  void markSelectedAsRead(bool isRead) {
+    for (int i = 0; i < _messages.length; i++) {
+      if (selectedMessageIds.contains(_messages[i].id)) {
+        _messages[i] = _messages[i].copyWith(isRead: isRead);
       }
-    });
+    }
+
+    selectedMessageIds.clear();
+    update();
   }
 
-  bool canOpenReplyDialog() {
-    if (isReplyDialogOpen) {
+  void archiveOpenMessage() {
+    _moveOpenMessage(GmailFolder.allMail);
+  }
+
+  void reportOpenMessageAsSpam() {
+    _moveOpenMessage(GmailFolder.spam);
+  }
+
+  void deleteOpenMessage() {
+    _moveOpenMessage(GmailFolder.trash);
+  }
+
+  void markOpenMessageAsUnread() {
+    final GmailMessage? message = selectedMessage;
+    if (message == null) {
+      return;
+    }
+
+    final int index = _messages.indexWhere(
+      (GmailMessage item) => item.id == message.id,
+    );
+
+    if (index != -1) {
+      _messages[index] = _messages[index].copyWith(isRead: false);
+    }
+
+    selectedMessageId = null;
+    update();
+  }
+
+  void snoozeOpenMessage() {
+    _moveOpenMessage(GmailFolder.snoozed);
+  }
+
+  void _moveOpenMessage(GmailFolder folder) {
+    final GmailMessage? message = selectedMessage;
+    if (message == null) {
+      return;
+    }
+
+    _moveMessages(<String>{message.id}, folder);
+    selectedMessageId = null;
+    update();
+  }
+
+  void _moveMessages(Set<String> ids, GmailFolder folder) {
+    if (ids.isEmpty) {
+      return;
+    }
+
+    for (int i = 0; i < _messages.length; i++) {
+      if (ids.contains(_messages[i].id)) {
+        _messages[i] = _messages[i].copyWith(folder: folder);
+      }
+    }
+
+    selectedMessageIds.clear();
+    update();
+  }
+
+  void openCompose() {
+    composeOpen = true;
+    composeMaximized = false;
+    update();
+  }
+
+  void closeCompose({bool saveDraft = true}) {
+    if (saveDraft) {
+      saveDraftMessage();
+    } else {
+      clearComposeFields();
+    }
+
+    composeOpen = false;
+    composeMaximized = false;
+    update();
+  }
+
+  void toggleComposeMaximized() {
+    composeMaximized = !composeMaximized;
+    update();
+  }
+
+  bool sendEmail() {
+    final String recipient = toController.text.trim();
+    final String subject = subjectController.text.trim();
+    final String body = bodyController.text.trim();
+
+    if (recipient.isEmpty || subject.isEmpty || body.isEmpty) {
+      Get.snackbar(
+        'Missing information',
+        'Recipient, subject and message are required.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return false;
     }
 
-    isReplyDialogOpen = true;
+    _messages.insert(
+      0,
+      GmailMessage(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        senderName: 'You',
+        senderEmail: 'support@elitecsr.com',
+        recipients: <String>[recipient],
+        subject: subject,
+        preview: body.replaceAll('\n', ' '),
+        body: body,
+        receivedAt: DateTime.now(),
+        folder: GmailFolder.sent,
+        category: GmailCategory.primary,
+        isRead: true,
+      ),
+    );
+
+    composeOpen = false;
+    composeMaximized = false;
+    clearComposeFields();
+    update();
     return true;
   }
 
-  void closeReplyDialogFlag() {
-    isReplyDialogOpen = false;
-  }
+  void saveDraftMessage() {
+    final String recipient = toController.text.trim();
+    final String subject = subjectController.text.trim();
+    final String body = bodyController.text.trim();
 
-  void fetchDemoEmails() {
-    emails.assignAll([
-      GmailMessageModel(
-        id: '1',
-        threadId: 'thread_1',
-        labels: const [],
-        fromName: 'Shopify Support',
-        fromEmail: 'support@shopify.com',
-        toEmail: 'you@company.com',
-        subject: 'Checkout phone validation issue',
-        snippet: 'We reviewed your checkout extension and found...',
-        body:
-        'Hello,\n\nWe reviewed your checkout extension and found that your phone validation logic is working correctly.\n\nPlease make sure your app is deployed to the correct checkout profile.\n\nThanks,\nShopify Support',
-        time: '10:30 AM',
-        isUnread: true,
-        isStarred: false,
-        hasAttachment: false,
+    if (recipient.isEmpty && subject.isEmpty && body.isEmpty) {
+      clearComposeFields();
+      return;
+    }
+
+    _messages.insert(
+      0,
+      GmailMessage(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        senderName: 'Draft',
+        senderEmail: '',
+        recipients: recipient.isEmpty ? <String>[] : <String>[recipient],
+        subject: subject.isEmpty ? '(no subject)' : subject,
+        preview: body.isEmpty ? 'Empty draft' : body.replaceAll('\n', ' '),
+        body: body,
+        receivedAt: DateTime.now(),
+        folder: GmailFolder.drafts,
+        category: GmailCategory.primary,
+        isRead: true,
       ),
-      GmailMessageModel(
-        id: '2',
-        threadId: 'thread_2',
-        labels: const [],
-        fromName: 'Client Project',
-        fromEmail: 'client@project.com',
-        toEmail: 'you@company.com',
-        subject: 'CRM dashboard changes',
-        snippet: 'Can you update the Gmail and WhatsApp screens...',
-        body:
-        'Hi,\n\nCan you update the Gmail and WhatsApp screens inside the CRM dashboard?\n\nWe need a clean responsive layout with mail list, detail view, reply dialog, and send message option.\n\nRegards,\nClient',
-        time: '9:15 AM',
-        isUnread: true,
-        isStarred: true,
-        hasAttachment: true,
-      ),
-      GmailMessageModel(
-        id: '3',
-        threadId: 'thread_3',
-        labels: const [],
-        fromName: 'Google Workspace',
-        fromEmail: 'workspace@google.com',
-        toEmail: 'you@company.com',
-        subject: 'Security alert',
-        snippet: 'A new sign-in was detected on your account...',
-        body:
-        'A new sign-in was detected on your Google Workspace account.\n\nDevice: Chrome Web\nLocation: Pakistan\n\nIf this was you, no action is required.',
-        time: 'Yesterday',
-        isUnread: false,
-        isStarred: false,
-        hasAttachment: false,
-      ),
-      GmailMessageModel(
-        id: '4',
-        threadId: 'thread_4',
-        labels: const [],
-        fromName: 'Billing Team',
-        fromEmail: 'billing@saascrm.com',
-        toEmail: 'you@company.com',
-        subject: 'Invoice for May',
-        snippet: 'Your invoice for this month is attached...',
-        body:
-        'Hello,\n\nYour invoice for May is attached with this email.\n\nPlease review the invoice and contact us if you have any questions.',
-        time: 'May 18',
-        isUnread: false,
-        isStarred: false,
-        hasAttachment: true,
-      ),
-    ]);
-
-    selectedEmail.value = emails.isNotEmpty ? emails.first : null;
-
-    buildCurrentThread();
-    update();
-  }
-
-  void selectEmail(GmailMessageModel mail) {
-    selectedEmail.value = mail;
-    mail.isUnread = false;
-
-    buildCurrentThread();
-
-    emails.refresh();
-    update();
-
-    scrollThreadToBottom();
-  }
-
-  void toggleStar(GmailMessageModel mail) {
-    mail.isStarred = !mail.isStarred;
-
-    emails.refresh();
-    buildCurrentThread();
-    update();
-  }
-
-  void archiveSelectedEmail() {
-    final mail = selectedEmail.value;
-
-    if (mail == null) {
-      return;
-    }
-
-    emails.removeWhere((item) => item.id == mail.id);
-
-    selectedEmail.value = emails.isNotEmpty ? emails.first : null;
-
-    buildCurrentThread();
-
-    emails.refresh();
-    update();
-  }
-
-  void deleteSelectedEmail() {
-    final mail = selectedEmail.value;
-
-    if (mail == null) {
-      return;
-    }
-
-    final key = getConversationKey(mail);
-
-    emails.removeWhere((item) => item.id == mail.id);
-    repliesByConversation.remove(key);
-
-    selectedEmail.value = emails.isNotEmpty ? emails.first : null;
-
-    buildCurrentThread();
-
-    emails.refresh();
-    update();
-  }
-
-  void markSelectedUnread() {
-    final mail = selectedEmail.value;
-
-    if (mail == null) {
-      return;
-    }
-
-    mail.isUnread = true;
-
-    emails.refresh();
-    update();
-  }
-
-  void prepareReplyDialog(GmailMessageModel mail) {
-    selectedEmail.value = mail;
-
-    replyToController.text = mail.fromEmail;
-    replyCcController.clear();
-
-    final subject = mail.subject.trim();
-
-    replySubjectController.text = subject.toLowerCase().startsWith('re:')
-        ? subject
-        : 'Re: $subject';
-
-    replyBodyController.clear();
-
-    update();
-  }
-
-  void clearReplyDialogFields() {
-    replyToController.clear();
-    replyCcController.clear();
-    replySubjectController.clear();
-    replyBodyController.clear();
-  }
-
-  void sendReplyFromDialog() {
-    final selectedMail = selectedEmail.value;
-
-    if (selectedMail == null) {
-      Get.snackbar('Error', 'No email selected');
-      return;
-    }
-
-    final to = replyToController.text.trim();
-    final subject = replySubjectController.text.trim();
-    final body = replyBodyController.text.trim();
-
-    if (to.isEmpty) {
-      Get.snackbar('Error', 'Recipient email required');
-      return;
-    }
-
-    if (subject.isEmpty) {
-      Get.snackbar('Error', 'Subject required');
-      return;
-    }
-
-    if (body.isEmpty) {
-      Get.snackbar('Error', 'Reply message required');
-      return;
-    }
-
-    final key = getConversationKey(selectedMail);
-
-    final replyMail = GmailMessageModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      threadId: key,
-      labels: const [],
-      fromName: 'Me',
-      fromEmail: myEmail,
-      toEmail: to,
-      subject: subject,
-      snippet: makeSnippet(body),
-      body: body,
-      time: 'Just now',
-      isUnread: false,
-      isStarred: false,
-      hasAttachment: false,
     );
 
-    repliesByConversation.putIfAbsent(key, () => []);
-    repliesByConversation[key]!.add(replyMail);
-
-    buildCurrentThread();
-
-    if (Get.isDialogOpen == true) {
-      Get.back();
-    }
-
-    closeReplyDialogFlag();
-
-    clearReplyDialogFields();
-
-    emails.refresh();
-    update();
-
-    scrollThreadToBottom();
-
-    Get.snackbar('Sent', 'Reply sent successfully');
-  }
-
-  void cancelReplyDialog() {
-    clearReplyDialogFields();
-
-    if (Get.isDialogOpen == true) {
-      Get.back();
-    }
-
-    closeReplyDialogFlag();
-    update();
+    clearComposeFields();
   }
 
   void clearComposeFields() {
-    composeToController.clear();
-    composeCcController.clear();
-    composeSubjectController.clear();
-    composeBodyController.clear();
-  }
-
-  void sendNewEmail() {
-    final to = composeToController.text.trim();
-    final subject = composeSubjectController.text.trim();
-    final body = composeBodyController.text.trim();
-
-    if (to.isEmpty) {
-      Get.snackbar('Error', 'Recipient email required');
-      return;
-    }
-
-    if (subject.isEmpty) {
-      Get.snackbar('Error', 'Subject required');
-      return;
-    }
-
-    if (body.isEmpty) {
-      Get.snackbar('Error', 'Email body required');
-      return;
-    }
-
-    final newMailId = DateTime.now().millisecondsSinceEpoch.toString();
-
-    final newMail = GmailMessageModel(
-      id: newMailId,
-      threadId: 'thread_$newMailId',
-      labels: const [],
-      fromName: 'Me',
-      fromEmail: myEmail,
-      toEmail: to,
-      subject: subject,
-      snippet: makeSnippet(body),
-      body: body,
-      time: 'Just now',
-      isUnread: false,
-      isStarred: false,
-      hasAttachment: false,
-    );
-
-    emails.insert(0, newMail);
-    selectedEmail.value = newMail;
-
-    buildCurrentThread();
-
-    if (Get.isDialogOpen == true) {
-      Get.back();
-    }
-
-    clearComposeFields();
-
-    emails.refresh();
-    update();
-
-    scrollThreadToBottom();
-
-    Get.snackbar('Sent', 'Email sent successfully');
+    toController.clear();
+    subjectController.clear();
+    bodyController.clear();
   }
 
   @override
   void onClose() {
+    toController.dispose();
+    subjectController.dispose();
+    bodyController.dispose();
     searchController.dispose();
-
-    replyToController.dispose();
-    replyCcController.dispose();
-    replySubjectController.dispose();
-    replyBodyController.dispose();
-
-    composeToController.dispose();
-    composeCcController.dispose();
-    composeSubjectController.dispose();
-    composeBodyController.dispose();
-
-    mailScrollController.dispose();
-
     super.onClose();
   }
 }

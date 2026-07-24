@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../responsive/sizes.dart';
 
 class AppTheme {
+
   AppTheme._();
   static const Color iconColor = Color(0xff6B7280);
 

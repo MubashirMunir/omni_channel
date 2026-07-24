@@ -1,327 +1,273 @@
 import 'package:elite_csr/theme/theme.dart';
 import 'package:elite_csr/views/dashboard/controller.dart';
 import 'package:elite_csr/views/dashboard/widgets/convo_list.dart';
+import 'package:elite_csr/views/dashboard/widgets/instagram_input.dart';
 import 'package:elite_csr/views/dashboard/widgets/message_buble.dart';
 import 'package:elite_csr/views/dashboard/widgets/message_input.dart';
+import 'package:elite_csr/views/dashboard/widgets/messanger_input.dart';
 import 'package:elite_csr/views/dashboard/widgets/profile_panel.dart';
-import 'package:elite_csr/views/gmail/view.dart';
+import 'package:elite_csr/views/dashboard/widgets/reciever_profile_header.dart';
+import 'package:elite_csr/views/gmail/gmail_center_view.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import '../../models/convo_list.dart';
 import '../../responsive/sizes.dart';
-import '../gmail/controller.dart';
-import '../gmail/widgets/gmail_detail_panel.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = Responsive.isMobile(context);
-    final isTablet = Responsive.isTablet(context);
+    final bool isMobile = Responsive.isMobile(context);
+    final bool isTablet = Responsive.isTablet(context);
 
     return GetBuilder<DashboardController>(
       init: DashboardController(),
-      builder: (ctrl) {
-        return Scaffold(
-          body: Row(
-            children: [
-              SizedBox(
-                width: isMobile
-                    ? 0
-                    : isTablet
-                    ? 320
-                    : 500,
-                child: ConvoPanel(ctrl: ctrl),
-              ),
+      builder: (DashboardController ctrl) {
+        return   Scaffold(
+          body: Obx(() {
+            final bool isGmail =
+                ctrl.selectedCenterView.value.toLowerCase() == 'gmail';
 
-              /// CENTER CHAT AREA
-              Expanded(
-                child: Obx(() {
-                  final selectedView = ctrl.selectedCenterView.value;
-                  final chat = ctrl.convoModel.value;
+            /// GMAIL MODE:
+            /// Sirf existing sidebar + complete Gmail view
+            if (isGmail) {
+              return Row(
+                children: [
+                  /// EXISTING APP SIDEBAR
+                  SizedBox(
+                    width: isMobile ? 0 : 400,
+                    child: ConvoPanel(ctrl: ctrl),
+                  ),
 
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      final double width = constraints.maxWidth;
+                  /// COMPLETE GMAIL VIEW
+                  Expanded(
+                    child: GmailCenterView(
+                      accountName: 'Elite CSR',
+                      accountEmail: 'support@elitecsr.com',
+                    ),
+                  ),
+                ],
+              );
+            }
 
-                      final bool isCompact = width < 600;
-                      final bool isMedium = width >= 600 && width < 1024;
+            /// NORMAL CHAT MODE
+            return Row(
+              children: [
+                /// EXISTING APP SIDEBAR
+                SizedBox(
+                  width: isMobile ? 0 : 400,
+                  child: ConvoPanel(ctrl: ctrl),
+                ),
 
-                      final double horizontalPadding = isCompact
-                          ? 16
-                          : isMedium
-                          ? 24
-                          : 32;
+                /// NORMAL CHAT CENTER
+                Expanded(
+                  child: Obx(() {
+                    final chat = ctrl.convoModel.value;
 
-                      final double verticalPadding = isCompact
-                          ? 14
-                          : isMedium
-                          ? 18
-                          : 22;
+                    return LayoutBuilder(
+                      builder: (
+                          BuildContext context,
+                          BoxConstraints constraints,
+                          ) {
+                        final double width = constraints.maxWidth;
 
-                      final double emptyImageHeight = isCompact
-                          ? 90
-                          : isMedium
-                          ? 150
-                          : 240;
+                        final bool isCompact = width < 600;
+                        final bool isMedium =
+                            width >= 600 && width < 1024;
 
-                      final double emptyMaxWidth = isCompact
-                          ? 300
-                          : isMedium
-                          ? 430
-                          : 520;
+                        final double horizontalPadding =
+                        isCompact ? 16 : (isMedium ? 24 : 32);
 
-                      final double titleSize = isCompact
-                          ? 14
-                          : isMedium
-                          ? 16
-                          : 18;
+                        final double verticalPadding =
+                        isCompact ? 14 : (isMedium ? 18 : 22);
 
-                      final double subTitleSize = isCompact
-                          ? 12
-                          : isMedium
-                          ? 13
-                          : 14;
+                        final double emptyImageHeight =
+                        isCompact ? 90 : (isMedium ? 150 : 240);
 
-                      /// Gmail ko sab se pehle check karo
-                      if (selectedView == 'Gmail') {
-                        return GetBuilder<GmailController>(
-                          builder: (gmailCtrl) {
-                            return Container(
-                              color: Theme.of(context).scaffoldBackgroundColor,
-                              child: GmailDetailPanel(ctrl: gmailCtrl),
-                            );
-                          },
-                        );
-                      }
+                        final double emptyMaxWidth =
+                        isCompact ? 300 : (isMedium ? 430 : 520);
 
-                      /// Empty state
-                      if (chat == null) {
-                        return Center(
-                          child: SingleChildScrollView(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: horizontalPadding,
-                              vertical: verticalPadding,
-                            ),
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxWidth: emptyMaxWidth,
+                        final double titleSize =
+                        isCompact ? 14 : (isMedium ? 16 : 18);
+
+                        final double subTitleSize =
+                        isCompact ? 12 : (isMedium ? 13 : 14);
+
+                        /// EMPTY CHAT STATE
+                        if (chat == null) {
+                          return Center(
+                            child: SingleChildScrollView(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: horizontalPadding,
+                                vertical: verticalPadding,
                               ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Image.asset(
-                                    "assets/images/box.png",
-                                    height: emptyImageHeight,
-                                    fit: BoxFit.contain,
-                                  ),
-
-                                  SizedBox(height: isCompact ? 18 : 24),
-
-                                  Text(
-                                    "Select a conversation",
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                      fontSize: titleSize,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppTheme.white.withOpacity(.8),
-                                    ),
-                                  ),
-
-                                  SizedBox(height: isCompact ? 8 : 10),
-
-                                  Text(
-                                    "Choose a conversation from your inbox to start messaging.",
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      fontSize: subTitleSize,
-                                      color: Colors.grey.shade600,
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-
-                      final String name = chat.name.trim();
-
-                      final String backgroundImage =
-                      chat.platform.toLowerCase() == "whatsapp"
-                          ? "assets/images/w_bg.png"
-                          : "assets/images/bgfb.jpg";
-
-                      /// Normal WhatsApp / Facebook / Instagram chat
-                      return Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage(backgroundImage),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        child: SafeArea(
-                          top: false,
-                          child: Column(
-                            children: [
-                              /// HEADER
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: horizontalPadding,
-                                  vertical: isCompact ? 10 : 14,
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: emptyMaxWidth,
                                 ),
-                                child: Row(
+                                child: Column(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.center,
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.center,
                                   children: [
-                                    CircleAvatar(
-                                      radius: 24.r,
-                                      backgroundColor: AppTheme.primaryColor,
-                                      child: chat.profile.isNotEmpty
-                                          ? ClipOval(
-                                        child: Image.network(
-                                          chat.profile,
-                                          width: 48.r,
-                                          height: 48.r,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (
-                                              context,
-                                              error,
-                                              stackTrace,
-                                              ) {
-                                            return _fallbackAvatar(chat, context);
-                                          },
-                                        ),
-                                      )
-                                          : _fallbackAvatar(chat, context),
+                                    Image.asset(
+                                      'assets/images/box.png',
+                                      height: emptyImageHeight,
+                                      fit: BoxFit.contain,
                                     ),
 
-                                    SizedBox(width: isCompact ? 10 : 12),
+                                    SizedBox(
+                                      height: isCompact ? 18 : 24,
+                                    ),
 
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            name.isNotEmpty ? name : "Unknown User",
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium
-                                                ?.copyWith(
-                                              fontSize: isCompact ? 13 : 15,
-                                              fontWeight: FontWeight.w700,
-                                              color: Colors.black,
-                                            ),
-                                          ),
-
-                                          SizedBox(height: isCompact ? 2 : 4),
-
-                                          Text(
-                                            "Online",
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall
-                                                ?.copyWith(
-                                              fontSize: isCompact ? 11 : 12,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                        ],
+                                    Text(
+                                      'Select a conversation',
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelLarge
+                                          ?.copyWith(
+                                        fontSize: titleSize,
+                                        fontWeight: FontWeight.w700,
+                                        color:
+                                        AppTheme.white.withOpacity(.8),
                                       ),
                                     ),
 
-                                    const Spacer(),
+                                    SizedBox(
+                                      height: isCompact ? 8 : 10,
+                                    ),
 
-                                    IconButton(
-                                      onPressed: () {},
-                                      icon: const Icon(Icons.more_vert),
+                                    Text(
+                                      'Choose a conversation from your inbox '
+                                          'to start messaging.',
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                        fontSize: subTitleSize,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                        height: 1.5,
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
+                            ),
+                          );
+                        }
 
-                              /// CHAT BUBBLES
-                              Expanded(
-                                child: ListView.builder(
-                                  controller: ctrl.messageScrollController,
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: isCompact
-                                        ? 10
-                                        : isMedium
-                                        ? 18
-                                        : 28,
-                                    vertical: isCompact ? 10 : 16,
-                                  ),
-                                  itemCount: ctrl.messages.length,
-                                  itemBuilder: (_, index) {
-                                    final msg = ctrl.messages[index];
+                        final String name = chat.name.trim();
+                        final String platform =
+                        chat.platform.toLowerCase();
 
-                                    return Padding(
-                                      padding: EdgeInsets.only(
-                                        bottom: isCompact ? 8 : 10,
-                                      ),
-                                      child: MessageBubble(
-                                        message: msg,
-                                        platform: chat.platform,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
+                        final String backgroundImage =
+                        platform == 'whatsapp'
+                            ? 'assets/images/w_bg.png'
+                            : 'assets/images/bgfb.jpg';
 
-                              /// EMOJI
-                              Obx(
-                                    () => ctrl.showEmojiBoard.value
-                                    ? EmojiPicker(
-                                  textEditingController: ctrl.msgController,
-                                  config: const Config(height: 300),
-                                )
-                                    : const SizedBox.shrink(),
-                              ),
-
-                              /// INPUT
-                              MessageInput(
-                                controller: ctrl,
-                                onSend: () {
-                                  ctrl.sendMessage();
-                                },
-                              ),
-                            ],
+                        return Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage(backgroundImage),
+                              fit: BoxFit.cover,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  );
-                }),
-              ),
-              /// RIGHT PROFILE PANEL
-              isMobile
-                  ? SizedBox()
-                  : isTablet
-                  ? SizedBox()
-                  : SizedBox(width: 400, child: ProfilePanel()),
-            ],
-          ),
-          // bottomNavigationBar: BottomWidget(),
+                          child: SafeArea(
+                            top: false,
+                            child: Column(
+                              children: [
+                                OmniChannelProfileHeader(
+                                  name: name,
+                                  primaryColor: Colors.white,
+                                ),
+
+                                Expanded(
+                                  child: ListView.builder(
+                                    controller:
+                                    ctrl.messageScrollController,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: isCompact
+                                          ? 10
+                                          : (isMedium ? 18 : 28),
+                                      vertical: isCompact ? 10 : 16,
+                                    ),
+                                    itemCount: ctrl.messages.length,
+                                    itemBuilder: (_, index) {
+                                      final msg = ctrl.messages[index];
+
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          bottom: isCompact ? 8 : 10,
+                                        ),
+                                        child: MessageBubble(
+                                          message: msg,
+                                          platform: chat.platform,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+
+                                Obx(
+                                      () => ctrl.showEmojiBoard.value
+                                      ? EmojiPicker(
+                                    textEditingController:
+                                    ctrl.msgController,
+                                    config: const Config(
+                                      height: 300,
+                                    ),
+                                  )
+                                      : const SizedBox.shrink(),
+                                ),
+
+                                if (platform == 'whatsapp')
+                                  MessageInput(
+                                    controller: ctrl,
+                                    onSend: ctrl.sendMessage,
+                                  )
+                                else if (platform == 'messenger' ||
+                                    platform == 'facebook')
+                                  MessengerMessageInput(
+                                    controller: ctrl,
+                                    onSend: ctrl.sendMessage,
+                                  )
+                                else if (platform == 'instagram')
+                                    InstagramMessageInput(
+                                      controller: ctrl,
+                                      onSend: ctrl.sendMessage,
+                                    )
+                                  else
+                                    MessageInput(
+                                      controller: ctrl,
+                                      onSend: ctrl.sendMessage,
+                                    ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }),
+                ),
+
+                /// PROFILE PANEL SIRF NORMAL CHAT MEIN
+                if (!isMobile && !isTablet)
+                    SizedBox(
+                    width: 400,
+                    child: ProfilePanel(),
+                  ),
+              ],
+            );
+          }),
         );
       },
     );
   }
-}
-
-Widget _fallbackAvatar(ConversationModel item, context) {
-  return Center(
-    child: Text(
-      item.name.isNotEmpty ? item.name[0].toUpperCase() : '?',
-      style: Theme.of(context).textTheme.bodyMedium,
-    ),
-  );
 }

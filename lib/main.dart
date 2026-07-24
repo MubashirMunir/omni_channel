@@ -63,7 +63,7 @@ class MyApp extends StatelessWidget {
         );
       },
 
-      /// REMOVE EMPTY SIZEDBOX
+      /// u can remove this sizedbox if yu want
       child: Container(),
     );
   }
